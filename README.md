@@ -1,141 +1,143 @@
-# HostingArena
+# HostingArena - Data Collection System
 
-Comparador automatizado de precios de Hosting y VPN con actualización diaria.
+Sistema de recolección de datos para proveedores de VPN y Hosting mediante APIs y web scraping.
 
-## 🚀 Proyecto
+## 🚀 Quick Start
 
-Sitio web que compara precios de 50+ proveedores de hosting y VPN, actualizando datos automáticamente cada 24 horas mediante scrapers.
+### 1. Activar entorno virtual
 
-## 👥 Equipo
+```bash
+cd /Users/juan/Documents/HostingArena
+source venv/bin/activate
+```
 
-- **Juan Carlos** - Desarrollo (Backend, Frontend, Scrapers, Infraestructura)
-- **Daniela** - Operaciones (Marketing, Contenido, SEO, Backlinks)
+### 2. Configurar API Keys
 
-## 🛠️ Tech Stack
+Copia el archivo de ejemplo y agrega tus API keys:
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Vercel KV (Redis)
-- **Scrapers**: Python (requests, BeautifulSoup, Playwright)
-- **Automation**: GitHub Actions (cron diario)
-- **Hosting**: Vercel
-- **AI Content**: Anthropic Claude 3.5 Sonnet
-- **Analytics**: Google Analytics, Google Search Console
+```bash
+cp .env.example .env
+# Edita .env y agrega tus API keys
+```
+
+### 3. Ejecutar recolección de datos
+
+```bash
+python3 scripts/collect_data.py
+```
+
+Los datos se guardarán en `data/providers_data.json`
 
 ## 📁 Estructura del Proyecto
 
 ```
-HostingArena/
-├── frontend/              # Next.js app
-│   ├── app/              # App router pages
-│   ├── components/       # React components
-│   └── lib/              # Utilities
-├── scrapers/             # Python scrapers
-│   ├── hosting/         # Hosting scrapers
-│   │   ├── api/        # API-based scrapers
-│   │   └── web/        # Web scrapers
-│   ├── vpn/            # VPN scrapers
-│   └── utils/          # Shared utilities
-├── data/                 # Scraped data (JSON)
-│   ├── hosting/
-│   └── vpn/
-├── scripts/             # Content generation scripts
-│   ├── analyze_trends.py
-│   ├── generate_drafts.py
-│   └── validate_posts.py
-└── .github/
-    └── workflows/       # GitHub Actions
+├── scrapers/
+│   ├── models.py              # Modelos de datos (Pydantic)
+│   ├── config.py              # Configuración y API keys
+│   ├── utils/                 #  Utilidades
+│   │   ├── rate_limiter.py   # Rate limiting
+│   │   └── helpers.py        # Funciones helper
+│   ├── vpn/                   # Scrapers de VPN
+│   │   ├── base_scraper.py   # Clase base
+│   │   └── nordvpn.py        # Ejemplo: NordVPN
+│   └── hosting/               # Clientes API y scrapers de hosting
+│       ├── base_api_client.py
+│       └── api/
+│           └── digitalocean.py  # Ejemplo: DigitalOcean
+├── scripts/
+│   └── collect_data.py        # Script principal
+├── data/
+│   └── providers_data.json    # Datos recolectados
+└── requirements.txt           # Dependencias
+
 ```
 
-## 🎯 Getting Started
+## 🔧 Implementados
 
-### Prerequisites
+### ✅ Infraestructura Base
+- Modelos de datos (Pydantic)
+- Sistema de configuración
+- Rate limiter
+- Helper functions
+- Logging system
 
-- Node.js 18+
-- Python 3.9+
-- GitHub CLI (opcional)
+### ✅ Ejemplos
+- **VPN:** NordVPN scraper
+- **Hosting:** DigitalOcean API client
 
-### Setup
+## 📝 Próximos Pasos
+
+### implementar los 19 providers restantes:
+
+**VPNs (9 más):**
+- ExpressVPN, Surfshark, CyberGhost, ProtonVPN
+- PIA, IPVanish, Hotspot Shield, TunnelBear, Windscribe
+
+**Hosting APIs (5 más):**
+- Vultr, Linode, Cloudways, Kinsta, GoDaddy
+
+**Hosting Scrapers (4):**
+- Bluehost, HostGator, SiteGround, A2 Hosting
+
+## 🧪 Testing
 
 ```bash
-# Clonar repo
-git clone https://github.com/TU_USUARIO/HostingArena.git
-cd HostingArena
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-
-# Scrapers
-cd ../scrapers
-pip install -r requirements.txt
-python hosting/api/digitalocean.py
+# Ejecutar tests (cuando estén implementados)
+pytest tests/ -v
 ```
 
-## 📊 Status
+## 📊 Output Format
 
-**Week:** 0 (Pre-launch)  
-**Posts:** 0  
-**Providers:** 0  
-**Traffic:** 0 visitors/week
+El archivo `data/providers_data.json` tendrá este formato:
 
-## 📝 Documentation
-
-Ver carpeta `business-plan/` (privada, no commiteada) para:
-- Guía técnica completa
-- Plan de negocio
-- Sprints y tickets
-- Documentación de entrega
-
-## 🔐 Environment Variables
-
-Crear `.env.local` con:
-
-```bash
-# APIs
-DIGITALOCEAN_API_KEY=
-VULTR_API_KEY=
-ANTHROPIC_API_KEY=
-
-# Admin
-ADMIN_PASSWORD_HASH=
-SESSION_SECRET=
-
-# Analytics
-NEXT_PUBLIC_GA_ID=
+```json
+{
+  "collection_timestamp": "2026-02-03 21:30:00",
+  "vpn_providers": [
+    {
+      "provider_name": "NordVPN",
+      "pricing_monthly": 12.99,
+      "pricing_yearly": 4.99,
+      "server_count": 6300,
+      ...
+    }
+  ],
+  "hosting_providers": [
+    {
+      "provider_name": "DigitalOcean",
+      "plan_name": "basic-droplet",
+      "pricing_monthly": 6.00,
+      ...
+    }
+  ],
+  "summary": {
+    "total_vpn_providers": 10,
+    "total_hosting_providers": 10
+  }
+}
 ```
 
-## 🚀 Deploy
+## ⚙️ API Keys Necesarios
 
-```bash
-# Vercel
-vercel
+Para los 6 hosting providers con API:
 
-# O conectar repo en dashboard de Vercel
-```
+1. **DigitalOcean**: https://cloud.digitalocean.com/account/api/tokens
+2. **Vultr**: https://my.vultr.com/settings/#settingsapi
+3. **Linode**: https://cloud.linode.com/profile/tokens
+4. **Cloudways**: https://platform.cloudways.com/api
+5. **Kinsta**: https://kinsta.com/docs/kinsta-api/#generating-an-api-key
+6. **GoDaddy**: https://developer.godaddy.com/keys
 
-## 📈 Roadmap
+La mayoría ofrecen tier gratuito.
 
-- [x] Week 0.5: Legal & Compliance
-- [ ] Week 1: Setup & Infraestructura
-- [ ] Week 2: Scrapers API-Based
-- [ ] Week 3: Frontend Básico
-- [ ] Week 4: Admin Dashboard
-- [ ] Week 5-6: AI Content Pipeline
-- [ ] Week 7-8: Content Sprint (30 posts)
-- [ ] Week 9-10: Scaling (70 posts)
-- [ ] Week 11-12: Launch (100 posts)
+## 🛡️ Best Practices
+
+- **Rate Limiting**: 1 request cada 2 segundos para scraping
+- **Retry Logic**: 3 intentos automáticos en caso de error
+- **Logging**: Todos los eventos se registran
+- **Error Handling**: Manejo robusto de errores
+- **Data Validation**: Validación con Pydantic
 
 ## 📄 License
 
 MIT
-
-## 🤝 Contributing
-
-Este es un proyecto privado por ahora. Contributing cerrado.
-
----
-
-**Started:** Febrero 2026  
-**Launch Target:** Mayo 2026  
-**Revenue Goal:** $2,500/mes en 12 meses

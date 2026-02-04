@@ -1,0 +1,76 @@
+name: Data Collection - All Providers
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # Allow manual triggers
+  push:
+    branches: [ main ]
+
+jobs:
+  collect-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run data collection
+      env:
+        DIGITALOCEAN_API_KEY: ${{ secrets.DIGITALOCEAN_API_KEY }}
+        VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+        LINODE_API_KEY: ${{ secrets.LINODE_API_KEY }}
+        CLOUDWAYS_API_KEY: ${{ secrets.CLOUDWAYS_API_KEY }}
+        KINSTA_API_KEY: ${{ secrets.KINSTA_API_KEY }}
+        GODADDY_API_KEY: ${{ secrets.GODADDY_API_KEY }}
+        DREAMHOST_API_KEY: ${{ secrets.DREAMHOST_API_KEY }}
+        NAMECHEAP_API_KEY: ${{ secrets.NAMECHEAP_API_KEY }}
+        LIQUIDWEB_API_KEY: ${{ secrets.LIQUIDWEB_API_KEY }}
+        WPENGINE_API_KEY: ${{ secrets.WPENGINE_API_KEY }}
+      run: |
+        python3 scripts/collect_data.py
+    
+    - name: Upload results
+      uses: actions/upload-artifact@v3
+      with:
+        name: provider-data
+        path: data/providers_data.json
+    
+    - name: Commit data (optional)
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add data/providers_data.json
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update provider data [automated]"
+        git push
+      continue-on-error: true
+
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        pytest tests/ -v
