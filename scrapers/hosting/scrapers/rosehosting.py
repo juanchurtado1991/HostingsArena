@@ -23,6 +23,7 @@ class RoseHostingScraper(BaseHostingScraper):
                 bandwidth="Unlimited",
                 free_domain=True,
                 free_ssl=True,
+                money_back_days=30,
                 last_updated=datetime.now()
             ))
         return providers

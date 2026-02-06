@@ -189,7 +189,8 @@ class AdaptiveBaseScraper(ABC):
                     "renewal": 12.99,
                     "storage": "50 GB",
                     "bandwidth": "Unmetered",
-                    "free_ssl": True
+                    "free_ssl": True,
+                    "money_back_days": 30
                 }]
             elif field == 'url':
                 registry_value = f"https://www.{self.provider_name.lower().replace(' ', '')}.com"
