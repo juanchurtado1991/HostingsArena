@@ -8,7 +8,6 @@ class BanaHostingScraper(BaseHostingScraper):
     BASE_URL = "https://www.banahosting.com"
     
     def scrape_plans(self) -> List[HostingProvider]:
-    def scrape_plans(self) -> List[HostingProvider]:
         providers = []
         
         # Plan 1: Starter

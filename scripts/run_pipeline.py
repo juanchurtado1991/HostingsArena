@@ -118,7 +118,7 @@ def run_scraper(scraper_class):
                 # model_dump(mode='json') handles datetime serialization to ISO strings
                 payload = item.model_dump(mode='json') 
                 
-                result = supabase.table(table_name).upsert(payload).execute()
+                result = supabase.table(table_name).upsert(payload, on_conflict="provider_name").execute()
                 # print(f"   Saved {item.provider_name} to DB")
             
         print(f"✅ {scraper.provider_name}: Synced {len(items_to_sync)} items")

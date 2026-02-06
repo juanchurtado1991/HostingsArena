@@ -5,12 +5,13 @@ from supabase import create_client
 
 PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / "frontend" / ".env.local")
 
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
+url = os.getenv("NEXT_PUBLIC_SUPABASE_URL") or os.getenv("SUPABASE_URL")
+key = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY")
 
 if not url or not key:
-    print("❌ Msising credentials")
+    print(f"❌ Missing credentials. URL={url}, KEY={key}")
     exit(1)
 
 supabase = create_client(url, key)

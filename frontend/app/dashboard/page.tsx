@@ -169,9 +169,20 @@ export default function DashboardPage() {
                         <GlassCard className="p-8">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold">Live Scraper Health</h3>
-                                <Button size="sm" variant="outline" onClick={fetchScraperStatus}>
-                                    Refresh
-                                </Button>
+                                <div className="flex gap-2">
+                                    <Button size="sm" variant="outline" onClick={() => {
+                                        const report = scraperStatuses.map(s =>
+                                            `[${s.status.toUpperCase()}] ${s.provider_name} (${s.items_synced} items) - ${s.duration_seconds}s - ${s.error_message || 'OK'}`
+                                        ).join('\n');
+                                        navigator.clipboard.writeText(report);
+                                        alert("Report copied to clipboard!");
+                                    }}>
+                                        Copy Report
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={fetchScraperStatus}>
+                                        Refresh
+                                    </Button>
+                                </div>
                             </div>
 
                             {loadingScrapers ? (

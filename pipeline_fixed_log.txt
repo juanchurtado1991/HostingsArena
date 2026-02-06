@@ -1,8 +1,8 @@
-2026-02-06 13:20:08,096 - ERROR - scrapers.hosting.base_scraper - Scraper failed: name 'HostingPlan' is not defined
 ⚠️  Warning: SUPABASE_URL or SUPABASE_KEY not found in .env
 ⚠️  Failed to init Supabase client: supabase_key is required
 Starting Daily Update Pipeline...
-ℹ️  Found 128 active scrapers.
+⚠️  Skipping banahosting.py: expected an indented block after function definition on line 10 (banahosting.py, line 11)
+ℹ️  Found 127 active scrapers.
 ⚠️  JustHost: No Data Returned
 ⚠️  GreenGeeks: No Data Returned
 ⚠️  A2 Hosting: No Data Returned
@@ -39,7 +39,6 @@ Starting Daily Update Pipeline...
 ⚠️  Flywheel: No Data Returned
 ⚠️  NameHero: No Data Returned
 ⚠️  Register.com: No Data Returned
-⚠️  Unknown: No Data Returned
 ⚠️  Aruba: No Data Returned
 ⚠️  FatCow: No Data Returned
 ⚠️  CrazyDomains: No Data Returned
@@ -131,4 +130,4 @@ Starting Daily Update Pipeline...
 ✅ Mysterium: Synced 1 items
 ✅ Hotspot Shield: Synced 1 items
 ✅ PrivadoVPN: Synced 1 items
-✅ Pipeline Finished. 67/128 verified and synced.
+✅ Pipeline Finished. 67/127 verified and synced.
