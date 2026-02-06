@@ -13,6 +13,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Load Env Vars
 load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / "frontend" / ".env.local")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
