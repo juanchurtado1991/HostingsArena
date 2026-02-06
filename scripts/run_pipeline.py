@@ -3,6 +3,7 @@ import os
 import glob
 import importlib
 import inspect
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -59,21 +60,48 @@ def discover_scrapers(directory):
                     and obj is not BaseHostingScraper 
                     and obj is not BaseVPNScraper
                     and "AdaptiveBaseScraper" not in name):
+
                     scrapers.append(obj)
         except Exception as e:
-            # print(f"⚠️  Skipping {filepath.name}: {e}")
+            print(f"⚠️  Skipping {filepath.name}: {e}")
             pass
             
     return scrapers
 
+def log_scraper_status(provider_name, provider_type, status, duration, error=None, items=0):
+    if not supabase: return
+    try:
+        data = {
+            "provider_name": provider_name,
+            "provider_type": provider_type,
+            "status": status,
+            "duration_seconds": round(duration, 2),
+            "error_message": str(error) if error else None,
+            "items_synced": items,
+            "last_run": "now()"
+        }
+        supabase.table("scraper_status").upsert(data, on_conflict="provider_name").execute()
+    except Exception as e:
+        print(f"⚠️  Failed to log status for {provider_name}: {e}")
+
 def run_scraper(scraper_class):
+    start_time = time.time()
+    scraper_name = scraper_class.__name__
+    # Try to guess provider name from class name if instantiation fails
+    provider_name = scraper_name.replace("Scraper", "")
+    
     try:
         scraper = scraper_class()
+        provider_name = scraper.provider_name
+        provider_type = getattr(scraper, 'provider_type', 'vpn') # Default to VPN if not set
+        
         # print(f"🚀 Running {scraper.provider_name}...")
         data = scraper.run()
+        duration = time.time() - start_time
         
         if not data:
             print(f"⚠️  {scraper.provider_name}: No Data Returned")
+            log_scraper_status(provider_name, provider_type, "warning", duration, "No Data Returned")
             return None
 
         # Handle list (Hosting) or single object (VPN)
@@ -87,21 +115,22 @@ def run_scraper(scraper_class):
             
             # Upsert to Supabase
             if supabase:
-                # payload = item.dict() # Pydantic v1
-                payload = item.model_dump() # Pydantic v2
-                
-                # Use provider_name as unique key for upsert usually
-                # But here we probably want to assume the DB has a unique constraint on provider_name + plan_name?
-                # For simplified MVP, let's just push.
+                # model_dump(mode='json') handles datetime serialization to ISO strings
+                payload = item.model_dump(mode='json') 
                 
                 result = supabase.table(table_name).upsert(payload).execute()
                 # print(f"   Saved {item.provider_name} to DB")
             
         print(f"✅ {scraper.provider_name}: Synced {len(items_to_sync)} items")
+        log_scraper_status(provider_name, provider_type, "success", duration, items=len(items_to_sync))
         return data
 
     except Exception as e:
-        print(f"❌ {scraper_class.__name__}: Failed ({e})")
+        duration = time.time() - start_time
+        print(f"❌ {scraper_name}: Failed ({e})")
+        # Try to determine type from module path if possible, else default to unknown
+        p_type = 'hosting' if 'hosting' in str(scraper_class) else 'vpn'
+        log_scraper_status(provider_name, p_type, "error", duration, str(e))
         return None
 
 def main():

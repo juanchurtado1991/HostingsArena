@@ -7,34 +7,62 @@ from typing import List
 class BanaHostingScraper(BaseHostingScraper):
     BASE_URL = "https://www.banahosting.com"
     
-    def scrape(self) -> List[HostingProvider]:
-        plans_list = [
-HostingPlan(name='Bana Starter', price_monthly=4.95, renewal_price_monthly=4.95, storage_gb='50 GB SSD', bandwidth='Unmetered', features=['SSL', 'Backup']),
-            HostingPlan(name='Bana Professional', price_monthly=6.95, renewal_price_monthly=6.95, storage_gb='100 GB SSD', bandwidth='Unmetered', features=['SSL', 'Backup']),
-            HostingPlan(name='Bana Corporate', price_monthly=9.95, renewal_price_monthly=9.95, storage_gb='150 GB SSD', bandwidth='Unmetered', features=['SSL', 'Backup']),
-        ]
-
-        # Primary record (usually the cheapest or first plan)
-        first_plan = plans_list[0] if plans_list else None
+    def scrape_plans(self) -> List[HostingProvider]:
+    def scrape_plans(self) -> List[HostingProvider]:
+        providers = []
         
-        provider = HostingProvider(
+        # Plan 1: Starter
+        p1 = HostingProvider(
             provider_name='BanaHosting',
             provider_type='shared',
-            plan_name=first_plan.name if first_plan else 'Basic',
-            pricing_monthly=first_plan.price_monthly if first_plan else 0,
-            renewal_price=first_plan.renewal_price_monthly if first_plan else 0,
-            plans=plans_list,
-            hidden_fees={"renewal_hike": "Standard", "setup_fee": "Check checkout"},
-            storage_gb=int(str(first_plan.storage_gb).split()[0]) if first_plan and str(first_plan.storage_gb).split() else 0,
+            plan_name='Bana Starter',
+            pricing_monthly=4.95,
+            renewal_price=4.95,
+            storage_gb=50,
             storage_type=StorageType.SSD,
             bandwidth='Unmetered',
-            web_server=WebServer.UNKNOWN,
-            php_versions=['8.1', '8.2', '8.3'],
-            inodes=200000,
-            performance_grade='A',
-            support_score=90,
-            free_ssl=True,
             website_url=self.BASE_URL,
-            last_updated=datetime.now()
+            free_ssl=True,
+            backup_included=True,
+            uptime_guarantee=99.9,
+            money_back_days=30
         )
-        return [provider]
+        providers.append(p1)
+
+        # Plan 2: Professional
+        p2 = HostingProvider(
+            provider_name='BanaHosting',
+            provider_type='shared',
+            plan_name='Bana Professional',
+            pricing_monthly=6.95,
+            renewal_price=6.95,
+            storage_gb=100,
+            storage_type=StorageType.SSD,
+            bandwidth='Unmetered',
+            website_url=self.BASE_URL,
+            free_ssl=True,
+            backup_included=True,
+            uptime_guarantee=99.9,
+            money_back_days=30
+        )
+        providers.append(p2)
+
+        # Plan 3: Corporate
+        p3 = HostingProvider(
+            provider_name='BanaHosting',
+            provider_type='shared',
+            plan_name='Bana Corporate',
+            pricing_monthly=9.95,
+            renewal_price=9.95,
+            storage_gb=150,
+            storage_type=StorageType.SSD,
+            bandwidth='Unmetered',
+            website_url=self.BASE_URL,
+            free_ssl=True,
+            backup_included=True,
+            uptime_guarantee=99.9,
+            money_back_days=30
+        )
+        providers.append(p3)
+
+        return providers

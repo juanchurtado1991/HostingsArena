@@ -1,0 +1,133 @@
+⚠️  Warning: SUPABASE_URL or SUPABASE_KEY not found in .env
+⚠️  Failed to init Supabase client: supabase_key is required
+Starting Daily Update Pipeline...
+⚠️  Skipping justhost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping contabo.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping vultr.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping onecom.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hostgator_cloud.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping milesweb.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping strato.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping turnkeyinternet.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping networksolutions.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping chemicloud.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping kinsta.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hostarmada.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping domaincom.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping leaseweb.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping linode.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hostpapa.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hostmonster.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping stablehost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping netfirms.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hetzner.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping digitalocean.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping ionos.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping rosehosting.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping scalahosting.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping accuwebhosting.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hawkhost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping godaddy.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping flywheel.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping namehero.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping registercom.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping banahosting.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping aruba.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping fatcow.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping crazydomains.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping bigrock.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping dreamhost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping mochahost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping liquidweb.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping knownhost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping fastcomet.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping namecheap.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping resellerclub.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping wpengine.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping hostnet.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping powweb.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping cloudways.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping verpex.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping tmdhosting.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping webhostingpad.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping glowhost.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping loopia.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+⚠️  Skipping ovhcloud.py: cannot import name 'HostwindsScraper' from 'scrapers.hosting.scrapers.hostwinds' (/Users/juan/Documents/HostingArena/scrapers/hosting/scrapers/hostwinds.py)
+ℹ️  Found 76 active scrapers.
+⚠️  GreenGeeks: No Data Returned
+⚠️  A2 Hosting: No Data Returned
+⚠️  InterServer: No Data Returned
+⚠️  HostGator: No Data Returned
+⚠️  Hostinger: No Data Returned
+✅ Unknown: Synced 1 items
+⚠️  InMotion Hosting: No Data Returned
+⚠️  HostWinds: No Data Returned
+⚠️  iPage: No Data Returned
+⚠️  SiteGround: No Data Returned
+⚠️  Bluehost: No Data Returned
+✅ Touch VPN: Synced 1 items
+✅ Norton Secure VPN: Synced 1 items
+✅ ProtonVPN: Synced 1 items
+✅ SaferVPN: Synced 1 items
+✅ Bitdefender VPN: Synced 1 items
+✅ Hola VPN: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ X-VPN: Synced 1 items
+✅ WireGuard: Synced 1 items
+✅ Perfect Privacy: Synced 1 items
+✅ Betternet: Synced 1 items
+✅ IPVanish: Synced 1 items
+✅ Astrill: Synced 1 items
+✅ UltraSurf: Synced 1 items
+✅ Surfshark: Synced 1 items
+✅ Atlas VPN: Synced 1 items
+✅ PrivateVPN: Synced 1 items
+✅ AVG Secure VPN: Synced 1 items
+✅ HideMyName: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ TorGuard: Synced 1 items
+✅ Goose VPN: Synced 1 items
+✅ TunnelBear: Synced 1 items
+✅ CactusVPN: Synced 1 items
+✅ ZenMate: Synced 1 items
+✅ Trust.Zone: Synced 1 items
+✅ ExpressVPN: Synced 1 items
+✅ Windscribe: Synced 1 items
+✅ AzireVPN: Synced 1 items
+✅ PIA: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ Google One VPN: Synced 1 items
+✅ Freegate: Synced 1 items
+✅ HMA: Synced 1 items
+✅ Opera VPN: Synced 1 items
+✅ AirVPN: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ Avast SecureLine: Synced 1 items
+✅ Sentinel dVPN: Synced 1 items
+✅ Outline: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ PureVPN: Synced 1 items
+✅ Mozilla VPN: Synced 1 items
+✅ Turbo VPN: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ Orchid: Synced 1 items
+✅ FastestVPN: Synced 1 items
+✅ Mullvad: Synced 1 items
+✅ VPNArea: Synced 1 items
+✅ Streisand: Synced 1 items
+✅ Urban VPN: Synced 1 items
+✅ McAfee VPN: Synced 1 items
+✅ Algo VPN: Synced 1 items
+✅ Hide.me: Synced 1 items
+✅ SoftEther: Synced 1 items
+✅ Ivacy: Synced 1 items
+✅ Psiphon: Synced 1 items
+✅ StrongVPN: Synced 1 items
+✅ CyberGhost: Synced 1 items
+✅ OpenVPN Cloud: Synced 1 items
+✅ Lantern: Synced 1 items
+✅ VyprVPN: Synced 1 items
+✅ Mysterium: Synced 1 items
+✅ Hotspot Shield: Synced 1 items
+✅ PrivadoVPN: Synced 1 items
+✅ Pipeline Finished. 66/76 verified and synced.

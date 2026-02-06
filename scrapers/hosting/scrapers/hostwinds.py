@@ -4,7 +4,7 @@ from ...models import HostingProvider, StorageType
 from datetime import datetime
 from typing import List
 
-class HostWindsScraper(BaseHostingScraper):
+class HostwindsScraper(BaseHostingScraper):
     def __init__(self):
         super().__init__(provider_name="HostWinds")
 

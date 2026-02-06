@@ -2,23 +2,49 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AFFILIATE_LINKS } from "@/lib/affiliates";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"; // Assuming sonner or toast is available, or use alert
+import { createClient } from "@/utils/supabase/client";
 
 export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState("overview");
     const [workflowRuns, setWorkflowRuns] = useState<any[]>([]);
+    const [scraperStatuses, setScraperStatuses] = useState<any[]>([]);
     const [loadingWorkflows, setLoadingWorkflows] = useState(false);
+    const [loadingScrapers, setLoadingScrapers] = useState(false);
     const [triggering, setTriggering] = useState(false);
+    const supabase = createClient();
 
     useEffect(() => {
         if (activeTab === "workflows") {
             fetchWorkflows();
         }
+        if (activeTab === "overview") {
+            fetchScraperStatus();
+        }
     }, [activeTab]);
+
+    const fetchScraperStatus = async () => {
+        setLoadingScrapers(true);
+        try {
+            const { data, error } = await supabase
+                .from('scraper_status')
+                .select('*')
+                .order('last_run', { ascending: false });
+
+            if (error) {
+                console.error("Supabase Error:", error);
+                throw error;
+            }
+            if (data) setScraperStatuses(data);
+        } catch (error) {
+            console.error("Failed to fetch scraper statuses", error);
+        } finally {
+            setLoadingScrapers(false);
+        }
+    };
 
     const fetchWorkflows = async () => {
         setLoadingWorkflows(true);
@@ -27,7 +53,9 @@ export default function DashboardPage() {
             const data = await res.json();
             if (data.runs) setWorkflowRuns(data.runs);
         } catch (e) {
-            console.error(e);
+            console.error("Failed to fetch workflows:", e);
+            // Don't crash the UI, just show empty or previous state
+            if (!workflowRuns.length) setWorkflowRuns([]);
         } finally {
             setLoadingWorkflows(false);
         }
@@ -50,6 +78,15 @@ export default function DashboardPage() {
             setTriggering(false);
         }
     };
+
+    // Calculate Summary Metrics
+    const activeProviders = scraperStatuses.length;
+    const successCount = scraperStatuses.filter(s => s.status === 'success').length;
+    const errorCount = scraperStatuses.filter(s => s.status === 'error').length;
+    const successRate = activeProviders > 0 ? (successCount / activeProviders) * 100 : 0;
+    const avgDuration = activeProviders > 0
+        ? scraperStatuses.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0) / activeProviders
+        : 0;
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6">
@@ -91,21 +128,30 @@ export default function DashboardPage() {
                                     <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
                                         <Server className="w-6 h-6" />
                                     </div>
-                                    <span className="text-xs font-medium text-green-500">+12%</span>
                                 </div>
-                                <div className="text-3xl font-bold mb-1">120</div>
-                                <div className="text-sm text-muted-foreground">Active Providers</div>
+                                <div className="text-3xl font-bold mb-1">{activeProviders}</div>
+                                <div className="text-sm text-muted-foreground">Monitored Scrapers</div>
+                            </GlassCard>
+
+                            <GlassCard className="p-6">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`p-3 rounded-xl ${successRate > 90 ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                                        <Activity className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-xs font-medium text-muted-foreground">{successCount} Success / {errorCount} Fail</span>
+                                </div>
+                                <div className="text-3xl font-bold mb-1">{successRate.toFixed(1)}%</div>
+                                <div className="text-sm text-muted-foreground">Success Rate</div>
                             </GlassCard>
 
                             <GlassCard className="p-6">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
-                                        <Activity className="w-6 h-6" />
+                                        <Clock className="w-6 h-6" />
                                     </div>
-                                    <span className="text-xs font-medium text-green-500">99.8%</span>
                                 </div>
-                                <div className="text-3xl font-bold mb-1">2.4s</div>
-                                <div className="text-sm text-muted-foreground">Avg. Scrape Time</div>
+                                <div className="text-3xl font-bold mb-1">{avgDuration.toFixed(2)}s</div>
+                                <div className="text-sm text-muted-foreground">Avg. Duration</div>
                             </GlassCard>
 
                             <GlassCard className="p-6">
@@ -113,7 +159,6 @@ export default function DashboardPage() {
                                     <div className="p-3 bg-green-500/10 rounded-xl text-green-500">
                                         <DollarSign className="w-6 h-6" />
                                     </div>
-                                    <span className="text-xs font-medium text-green-500">+5%</span>
                                 </div>
                                 <div className="text-3xl font-bold mb-1">$4,250</div>
                                 <div className="text-sm text-muted-foreground">Proj. Revenue</div>
@@ -122,47 +167,67 @@ export default function DashboardPage() {
 
                         {/* Status Table */}
                         <GlassCard className="p-8">
-                            <h3 className="text-xl font-bold mb-6">Recent Scraper Activity</h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="text-xs uppercase text-muted-foreground border-b border-white/10">
-                                        <tr>
-                                            <th className="pb-4 pl-4">Provider</th>
-                                            <th className="pb-4">Type</th>
-                                            <th className="pb-4">Status</th>
-                                            <th className="pb-4">Last Price</th>
-                                            <th className="pb-4">Last Update</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {[
-                                            { name: "NordVPN", type: "VPN", status: "success", price: 3.09, time: "2 mins ago" },
-                                            { name: "Bluehost", type: "Hosting", status: "success", price: 2.95, time: "5 mins ago" },
-                                            { name: "ExpressVPN", type: "VPN", status: "success", price: 6.67, time: "12 mins ago" },
-                                            { name: "SiteGround", type: "Hosting", status: "warning", price: 2.99, time: "1 hour ago" },
-                                            { name: "Surfshark", type: "VPN", status: "success", price: 2.19, time: "2 hours ago" },
-                                        ].map((item) => (
-                                            <tr key={item.name} className="hover:bg-white/5 transition-colors">
-                                                <td className="py-4 pl-4 font-medium">{item.name}</td>
-                                                <td className="py-4 text-muted-foreground">{item.type}</td>
-                                                <td className="py-4">
-                                                    {item.status === "success" ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
-                                                            <CheckCircle className="w-3 h-3" /> Online
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500">
-                                                            <AlertCircle className="w-3 h-3" /> Retrying
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="py-4 font-mono">{formatCurrency(item.price)}</td>
-                                                <td className="py-4 text-muted-foreground text-sm">{item.time}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold">Live Scraper Health</h3>
+                                <Button size="sm" variant="outline" onClick={fetchScraperStatus}>
+                                    Refresh
+                                </Button>
                             </div>
+
+                            {loadingScrapers ? (
+                                <div className="text-center py-12 text-muted-foreground">Loading status...</div>
+                            ) : (
+                                <div className="overflow-x-auto max-h-[600px]">
+                                    <table className="w-full text-left">
+                                        <thead className="text-xs uppercase text-muted-foreground border-b border-white/10 sticky top-0 bg-background/95 backdrop-blur z-10">
+                                            <tr>
+                                                <th className="pb-4 pl-4">Provider</th>
+                                                <th className="pb-4">Type</th>
+                                                <th className="pb-4">Status</th>
+                                                <th className="pb-4">Items Synced</th>
+                                                <th className="pb-4">Duration</th>
+                                                <th className="pb-4">Last Update</th>
+                                                <th className="pb-4 w-[200px]">Message</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {scraperStatuses.map((item) => (
+                                                <tr key={item.id} className="hover:bg-white/5 transition-colors">
+                                                    <td className="py-3 pl-4 font-medium">{item.provider_name}</td>
+                                                    <td className="py-3 text-muted-foreground capitalize">{item.provider_type}</td>
+                                                    <td className="py-3">
+                                                        {item.status === "success" && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                                                                <CheckCircle className="w-3 h-3" /> Online
+                                                            </span>
+                                                        )}
+                                                        {item.status === "warning" && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500">
+                                                                <AlertCircle className="w-3 h-3" /> Warning
+                                                            </span>
+                                                        )}
+                                                        {item.status === "error" && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500">
+                                                                <AlertTriangle className="w-3 h-3" /> Error
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 text-center w-24">
+                                                        <span className="font-mono bg-white/5 px-2 py-1 rounded text-xs">{item.items_synced}</span>
+                                                    </td>
+                                                    <td className="py-3 font-mono text-xs text-muted-foreground">{item.duration_seconds}s</td>
+                                                    <td className="py-3 text-muted-foreground text-xs">
+                                                        {new Date(item.last_run).toLocaleTimeString()}
+                                                    </td>
+                                                    <td className="py-3 text-xs text-red-400 truncate max-w-[200px]" title={item.error_message}>
+                                                        {item.error_message || "-"}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </GlassCard>
                     </>
                 )}

@@ -1,0 +1,133 @@
+⚠️  Warning: SUPABASE_URL or SUPABASE_KEY not found in .env
+⚠️  Failed to init Supabase client: supabase_key is required
+Starting Daily Update Pipeline...
+ℹ️  Found 128 active scrapers.
+⚠️  JustHost: No Data Returned
+⚠️  GreenGeeks: No Data Returned
+⚠️  A2 Hosting: No Data Returned
+⚠️  Contabo: No Data Returned
+⚠️  Vultr: No Data Returned
+⚠️  One.com: No Data Returned
+✅ Unknown: Synced 1 items
+⚠️  MilesWeb: No Data Returned
+⚠️  Strato: No Data Returned
+⚠️  TurnKey Internet: No Data Returned
+⚠️  Network Solutions: No Data Returned
+⚠️  ChemiCloud: No Data Returned
+⚠️  Kinsta: No Data Returned
+⚠️  HostArmada: No Data Returned
+⚠️  Domain.com: No Data Returned
+⚠️  Leaseweb: No Data Returned
+⚠️  InterServer: No Data Returned
+⚠️  Linode: No Data Returned
+⚠️  HostPapa: No Data Returned
+⚠️  HostMonster: No Data Returned
+⚠️  StableHost: No Data Returned
+⚠️  HostGator: No Data Returned
+⚠️  Hostinger: No Data Returned
+⚠️  Netfirms: No Data Returned
+⚠️  Hetzner: No Data Returned
+⚠️  DigitalOcean: No Data Returned
+⚠️  IONOS: No Data Returned
+⚠️  RoseHosting: No Data Returned
+✅ Unknown: Synced 1 items
+⚠️  ScalaHosting: No Data Returned
+⚠️  AccuWebHosting: No Data Returned
+⚠️  HawkHost: No Data Returned
+⚠️  GoDaddy: No Data Returned
+⚠️  Flywheel: No Data Returned
+⚠️  NameHero: No Data Returned
+⚠️  Register.com: No Data Returned
+❌ BanaHostingScraper: Failed (Can't instantiate abstract class BanaHostingScraper without an implementation for abstract method 'scrape_plans')
+⚠️  Aruba: No Data Returned
+⚠️  FatCow: No Data Returned
+⚠️  CrazyDomains: No Data Returned
+⚠️  BigRock: No Data Returned
+⚠️  DreamHost: No Data Returned
+⚠️  Mochahost: No Data Returned
+⚠️  Liquid Web: No Data Returned
+⚠️  KnownHost: No Data Returned
+⚠️  InMotion Hosting: No Data Returned
+⚠️  FastComet: No Data Returned
+⚠️  HostWinds: No Data Returned
+⚠️  Namecheap: No Data Returned
+⚠️  iPage: No Data Returned
+⚠️  ResellerClub: No Data Returned
+⚠️  WP Engine: No Data Returned
+⚠️  Hostnet: No Data Returned
+⚠️  PowWeb: No Data Returned
+⚠️  Cloudways: No Data Returned
+⚠️  SiteGround: No Data Returned
+⚠️  Verpex: No Data Returned
+⚠️  TMDHosting: No Data Returned
+⚠️  WebHostingPad: No Data Returned
+⚠️  GlowHost: No Data Returned
+⚠️  Loopia: No Data Returned
+⚠️  OVHcloud: No Data Returned
+⚠️  Bluehost: No Data Returned
+✅ Touch VPN: Synced 1 items
+✅ Norton Secure VPN: Synced 1 items
+✅ ProtonVPN: Synced 1 items
+✅ SaferVPN: Synced 1 items
+✅ Bitdefender VPN: Synced 1 items
+✅ Hola VPN: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ X-VPN: Synced 1 items
+✅ WireGuard: Synced 1 items
+✅ Perfect Privacy: Synced 1 items
+✅ Betternet: Synced 1 items
+✅ IPVanish: Synced 1 items
+✅ Astrill: Synced 1 items
+✅ UltraSurf: Synced 1 items
+✅ Surfshark: Synced 1 items
+✅ Atlas VPN: Synced 1 items
+✅ PrivateVPN: Synced 1 items
+✅ AVG Secure VPN: Synced 1 items
+✅ HideMyName: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ TorGuard: Synced 1 items
+✅ Goose VPN: Synced 1 items
+✅ TunnelBear: Synced 1 items
+✅ CactusVPN: Synced 1 items
+✅ ZenMate: Synced 1 items
+✅ Trust.Zone: Synced 1 items
+✅ ExpressVPN: Synced 1 items
+✅ Windscribe: Synced 1 items
+✅ AzireVPN: Synced 1 items
+✅ PIA: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ Google One VPN: Synced 1 items
+✅ Freegate: Synced 1 items
+✅ HMA: Synced 1 items
+✅ Opera VPN: Synced 1 items
+✅ AirVPN: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ Avast SecureLine: Synced 1 items
+✅ Sentinel dVPN: Synced 1 items
+✅ Outline: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ PureVPN: Synced 1 items
+✅ Mozilla VPN: Synced 1 items
+✅ Turbo VPN: Synced 1 items
+✅ Unknown: Synced 1 items
+✅ Orchid: Synced 1 items
+✅ FastestVPN: Synced 1 items
+✅ Mullvad: Synced 1 items
+✅ VPNArea: Synced 1 items
+✅ Streisand: Synced 1 items
+✅ Urban VPN: Synced 1 items
+✅ McAfee VPN: Synced 1 items
+✅ Algo VPN: Synced 1 items
+✅ Hide.me: Synced 1 items
+✅ SoftEther: Synced 1 items
+✅ Ivacy: Synced 1 items
+✅ Psiphon: Synced 1 items
+✅ StrongVPN: Synced 1 items
+✅ CyberGhost: Synced 1 items
+✅ OpenVPN Cloud: Synced 1 items
+✅ Lantern: Synced 1 items
+✅ VyprVPN: Synced 1 items
+✅ Mysterium: Synced 1 items
+✅ Hotspot Shield: Synced 1 items
+✅ PrivadoVPN: Synced 1 items
+✅ Pipeline Finished. 67/128 verified and synced.

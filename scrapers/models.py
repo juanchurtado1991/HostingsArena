@@ -47,11 +47,11 @@ class VPNProvider(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.now)
     
     # ===== PRICING & TRUE COST =====
-    pricing_monthly: float = Field(ge=0)
-    pricing_yearly: float = Field(ge=0)
+    pricing_monthly: Optional[float] = Field(default=None, ge=0)
+    pricing_yearly: Optional[float] = Field(default=None, ge=0)
     pricing_2year: Optional[float] = Field(default=None, ge=0)
     pricing_3year: Optional[float] = Field(default=None, ge=0)
-    money_back_days: int = Field(ge=0)
+    money_back_days: Optional[int] = Field(default=None, ge=0)
     free_trial_days: Optional[int] = Field(default=0, ge=0)
     
     # 🔥 CRITICAL: Renewal pricing (for True Cost Calculator)
@@ -65,10 +65,10 @@ class VPNProvider(BaseModel):
     refund_processing_days: Optional[int] = Field(default=None, ge=0)
     
     # ===== NETWORK INFRASTRUCTURE =====
-    server_count: int = Field(ge=0)
-    country_count: int = Field(ge=0)
+    server_count: Optional[int] = Field(default=None, ge=0)
+    country_count: Optional[int] = Field(default=None, ge=0)
     city_count: Optional[int] = Field(default=None, ge=0)
-    simultaneous_connections: int = Field(ge=0)  # 999 = unlimited
+    simultaneous_connections: Optional[int] = Field(default=None, ge=0)  # 999 = unlimited
     
     # 🔥 CRITICAL: Server details for quality assessment
     server_locations_detailed: List[str] = []  # ["New York, US", "London, UK"]
@@ -87,15 +87,15 @@ class VPNProvider(BaseModel):
     connection_drop_rate_percentage: Optional[float] = Field(default=None, ge=0, le=100)
     
     # ===== SECURITY & ENCRYPTION =====
-    protocols: List[str]
+    protocols: List[str] = []
     encryption_type: EncryptionType = EncryptionType.UNKNOWN
-    has_kill_switch: bool
+    has_kill_switch: bool = False
     dns_leak_protection: bool = True
     ipv6_leak_protection: bool = True
     webrtc_leak_protection: bool = True
     
     # ===== PRIVACY (CRITICAL for Privacy Score) =====
-    logging_policy: str
+    logging_policy: Optional[str] = None
     jurisdiction: VPNJurisdiction = VPNJurisdiction.UNKNOWN
     jurisdiction_country: Optional[str] = None
     has_warrant_canary: bool = False
@@ -124,7 +124,7 @@ class VPNProvider(BaseModel):
     malware_protection: bool = False
     
     # ===== STREAMING & P2P (CRITICAL for Streaming Matrix) =====
-    streaming_support: bool
+    streaming_support: bool = False
     streaming_services: List[str] = []  # ["Netflix US", "BBC iPlayer"]
     
     # 🔥 CRITICAL: Detailed streaming info
@@ -133,7 +133,7 @@ class VPNProvider(BaseModel):
     streaming_buffering_issues: bool = False
     streaming_last_tested: Optional[date] = None
     
-    torrenting_allowed: bool
+    torrenting_allowed: bool = False
     p2p_servers: Optional[str] = Field(default="all")  # "all", "dedicated", "none"
     p2p_unlimited: bool = True
     
