@@ -17,7 +17,7 @@ from .strongvpn import StrongVPNScraper
 from .hide_me import HidemeScraper
 from .privatevpn import PrivateVPNScraper
 from .ivacy import IvacyVPNScraper
-from .vpn_unlimited import VPNUnlimitedScraper
+
 from .zenmate import ZenmateScraper
 from .norton_vpn import NortonVPNScraper
 from .mcafee_vpn import McAfeeVPNScraper
@@ -32,7 +32,7 @@ __all__ = [
     'WindscribeScraper', 'MullvadVPNScraper', 'VyprVPNScraper',
     'AtlasVPNScraper', 'PureVPNScraper', 'StrongVPNScraper',
     'HidemeScraper', 'PrivateVPNScraper', 'IvacyVPNScraper',
-    'VPNUnlimitedScraper', 'ZenmateScraper', 'NortonVPNScraper',
+    'ZenmateScraper', 'NortonVPNScraper',
     'McAfeeVPNScraper', 'AstrillVPNScraper', 'PerfectPrivacyScraper',
     'AirVPNScraper'
 ]
