@@ -187,7 +187,7 @@ class AdaptiveBaseScraper(ABC):
                     "name": "Standard Plan (Verified)",
                     "price": 9.99,
                     "renewal": 12.99,
-                    "storage": "Unmetered",
+                    "storage": "50 GB",
                     "bandwidth": "Unmetered",
                     "free_ssl": True
                 }]
