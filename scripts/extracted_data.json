@@ -1,0 +1,223 @@
+{
+    "hosting": [
+        {
+            "name": "BanaHosting",
+            "url": "https://www.banahosting.com",
+            "plans": [
+                {
+                    "name": "Bana Starter",
+                    "price": 4.95,
+                    "renewal": 4.95,
+                    "storage": "50 GB SSD",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "Bana Professional",
+                    "price": 6.95,
+                    "renewal": 6.95,
+                    "storage": "100 GB SSD",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "Bana Corporate",
+                    "price": 9.95,
+                    "renewal": 9.95,
+                    "storage": "150 GB SSD",
+                    "bandwidth": "Unmetered"
+                }
+            ],
+            "money_back": "30 Days"
+        },
+        {
+            "name": "Hostinger",
+            "url": "https://www.hostinger.com",
+            "plans": [
+                {
+                    "name": "Premium",
+                    "price": 1.99,
+                    "renewal": 10.99,
+                    "storage": "20 GB SSD",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "Business",
+                    "price": 2.99,
+                    "renewal": 16.99,
+                    "storage": "50 GB NVMe",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "Cloud Startup",
+                    "price": 6.99,
+                    "renewal": 25.99,
+                    "storage": "100 GB NVMe",
+                    "bandwidth": "Unmetered"
+                }
+            ],
+            "money_back": "30 Days"
+        },
+        {
+            "name": "SiteGround",
+            "url": "https://www.siteground.com",
+            "plans": [
+                {
+                    "name": "StartUp",
+                    "price": 2.99,
+                    "renewal": 17.99,
+                    "storage": "10 GB SSD",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "GrowBig",
+                    "price": 4.99,
+                    "renewal": 29.99,
+                    "storage": "20 GB SSD",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "GoGeek",
+                    "price": 7.99,
+                    "renewal": 44.99,
+                    "storage": "40 GB SSD",
+                    "bandwidth": "Unmetered"
+                }
+            ],
+            "money_back": "30 Days"
+        },
+        {
+            "name": "DreamHost",
+            "url": "https://www.dreamhost.com",
+            "plans": [
+                {
+                    "name": "Launch",
+                    "price": 2.89,
+                    "renewal": 10.99,
+                    "storage": "25 GB NVMe",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "Growth",
+                    "price": 3.99,
+                    "renewal": 12.99,
+                    "storage": "50 GB NVMe",
+                    "bandwidth": "Unmetered"
+                },
+                {
+                    "name": "Scale",
+                    "price": 9.99,
+                    "renewal": 25.99,
+                    "storage": "100 GB NVMe",
+                    "bandwidth": "Unmetered"
+                }
+            ],
+            "money_back": "30 Days"
+        }
+    ],
+    "vpn": [
+        {
+            "name": "NordVPN",
+            "url": "https://nordvpn.com",
+            "server_count": 6500,
+            "country_count": 110,
+            "plans": [
+                {
+                    "name": "Basic",
+                    "price": 2.99,
+                    "renewal": 11.59,
+                    "contract": 24
+                },
+                {
+                    "name": "Plus",
+                    "price": 3.49,
+                    "renewal": 14.99,
+                    "contract": 24
+                },
+                {
+                    "name": "Ultimate",
+                    "price": 5.39,
+                    "renewal": 18.29,
+                    "contract": 24
+                }
+            ],
+            "money_back": "30 Days"
+        },
+        {
+            "name": "Surfshark",
+            "url": "https://surfshark.com",
+            "server_count": 4500,
+            "country_count": 100,
+            "plans": [
+                {
+                    "name": "Starter",
+                    "price": 1.99,
+                    "renewal": 4.98,
+                    "contract": 24
+                },
+                {
+                    "name": "One",
+                    "price": 2.29,
+                    "renewal": 5.99,
+                    "contract": 24
+                },
+                {
+                    "name": "One+",
+                    "price": 4.19,
+                    "renewal": 9.99,
+                    "contract": 24
+                }
+            ],
+            "money_back": "30 Days"
+        },
+        {
+            "name": "ExpressVPN",
+            "url": "https://expressvpn.com",
+            "server_count": 3000,
+            "country_count": 105,
+            "plans": [
+                {
+                    "name": "Yearly",
+                    "price": 2.44,
+                    "renewal": 8.32,
+                    "contract": 28
+                },
+                {
+                    "name": "Monthly",
+                    "price": 12.95,
+                    "renewal": 12.95,
+                    "contract": 1
+                }
+            ],
+            "money_back": "30 Days"
+        },
+        {
+            "name": "CyberGhost",
+            "url": "https://www.cyberghostvpn.com",
+            "server_count": 11690,
+            "country_count": 100,
+            "plans": [
+                {
+                    "name": "2-Year Plan",
+                    "price": 2.03,
+                    "renewal": 4.75,
+                    "contract": 28
+                }
+            ],
+            "money_back": "45 Days"
+        },
+        {
+            "name": "PIA",
+            "url": "https://www.privateinternetaccess.com",
+            "server_count": 30000,
+            "country_count": 91,
+            "plans": [
+                {
+                    "name": "3-Year Plan",
+                    "price": 1.98,
+                    "renewal": 2.19,
+                    "contract": 40
+                }
+            ],
+            "money_back": "30 Days"
+        }
+    ]
+}

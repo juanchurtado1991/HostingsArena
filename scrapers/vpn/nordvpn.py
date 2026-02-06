@@ -42,7 +42,12 @@ class NordVPNScraper(BaseVPNScraper):
         }
     
     def scrape_features(self) -> dict:
-        """Comprehensive features with all critical data"""
+        """Comprehensive features with verified deep data"""
+        
+        # Get deep data from Verified Registry (Adaptive Framework)
+        audit_history = self.get_verified_field('audit_history', [])
+        ram_only = self.get_verified_field('ram_only_servers', False)
+        
         return {
             # Network Infrastructure
             'server_count': 6300,
@@ -50,9 +55,12 @@ class NordVPNScraper(BaseVPNScraper):
             'city_count': 50,
             'simultaneous_connections': 10,
             
+            # 🔥 DEEP DATA: Verified Infrastructure
+            'ram_only_servers': ram_only,
+            'audit_history': audit_history,
+            
             # 🔥 Server quality details
             'server_locations_detailed': [
-                'New York, US', 'Los Angeles, US', 'Chicago, US',
                 'London, UK', 'Paris, France', 'Frankfurt, Germany',
                 'Tokyo, Japan', 'Sydney, Australia'
             ],

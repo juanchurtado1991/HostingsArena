@@ -1,29 +1,26 @@
-"""AirVPN scraper implementation"""
+"""AirVPN Scraper (Adaptive)"""
 from .base_scraper import BaseVPNScraper
+from ..models import VPNProvider
 from datetime import datetime
 
 class AirVPNScraper(BaseVPNScraper):
-    BASE_URL = "https://airvpn.org"
-    
+    def __init__(self):
+        super().__init__(provider_name="AirVPN")
+        
     def scrape_pricing(self) -> dict:
         return {
-            'provider_name': 'AirVPN',
-            'pricing_monthly': 9.0,
-            'pricing_yearly': 4.5,
-            'pricing_2year': None,
-            'website_url': self.BASE_URL,
+            'provider_name': "AirVPN",
+            'website_url': "https://www.airvpn.com",
+            'pricing_monthly': 9.99, # Fallback
             'last_updated': datetime.now()
         }
-    
+        
     def scrape_features(self) -> dict:
+        ram_only = self.get_verified_field('ram_only_servers', False)
+        audits = self.get_verified_field('audit_history', [])
         return {
-            'server_count': 260,
-            'country_count': 23,
-            'simultaneous_connections': 5,
-            'protocols': ['OpenVPN', 'IKEv2', 'WireGuard'],
-            'has_kill_switch': True,
-            'logging_policy': 'No logs',
-            'streaming_support': True,
-            'torrenting_allowed': True,
-            'money_back_days': 30
+            'server_count': self.get_verified_field('server_count', 1000),
+            'country_count': self.get_verified_field('country_count', 50),
+            'ram_only_servers': ram_only,
+            'audit_history': audits
         }

@@ -1,38 +1,26 @@
-"""Enhanced Surfshark scraper with comprehensive technical data"""
+"""Surfshark Scraper (Adaptive)"""
 from .base_scraper import BaseVPNScraper
-from ..models import VPNJurisdiction, EncryptionType
+from ..models import VPNProvider
 from datetime import datetime
 
 class SurfsharkScraper(BaseVPNScraper):
-    BASE_URL = "https://surfshark.com"
-    
+    def __init__(self):
+        super().__init__(provider_name="Surfshark")
+        
     def scrape_pricing(self) -> dict:
         return {
-            'provider_name': 'Surfshark',
-            'website_url': self.BASE_URL,
-            'pricing_monthly': 15.45,
-            'pricing_yearly': 2.19,
-            'pricing_2year': 1.99,
-            'money_back_days': 30,
+            'provider_name': "Surfshark",
+            'website_url': "https://www.surfshark.com",
+            'pricing_monthly': 9.99, # Fallback
             'last_updated': datetime.now()
         }
-    
+        
     def scrape_features(self) -> dict:
+        ram_only = self.get_verified_field('ram_only_servers', False)
+        audits = self.get_verified_field('audit_history', [])
         return {
-            'server_count': 3200,
-            'country_count': 100,
-            'simultaneous_connections': 999,
-            'protocols': ['OpenVPN', 'IKEv2', 'WireGuard'],
-            'encryption_type': EncryptionType.AES_256_GCM,
-            'has_kill_switch': True,
-            'dns_leak_protection': True,
-            'ipv6_leak_protection': True,
-            'webrtc_leak_protection': True,
-            'logging_policy': 'No logs',
-            'jurisdiction': VPNJurisdiction.PRIVACY_FRIENDLY,
-            'streaming_support': True,
-            'torrenting_allowed': True,
-            'platforms': ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
-            'support_channels': ['24/7 Live Chat', 'Email'],
-            'accepts_crypto': True
+            'server_count': self.get_verified_field('server_count', 1000),
+            'country_count': self.get_verified_field('country_count', 50),
+            'ram_only_servers': ram_only,
+            'audit_history': audits
         }

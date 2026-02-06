@@ -16,7 +16,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // Attempt Login
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -27,7 +27,7 @@ export default function LoginPage() {
       alert("Error: " + error.message);
       setLoading(false);
     } else {
-      router.push("/admin"); // Redirect to Dashboard
+      router.push("/"); // Redirect to Home
       router.refresh();
     }
   };

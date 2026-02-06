@@ -7,19 +7,25 @@ from ..models import HostingProvider
 from ..utils import RateLimiter
 from ..config import USER_AGENT, REQUEST_TIMEOUT, MAX_RETRIES
 import logging
+from scrapers.adaptive_base import AdaptiveBaseScraper
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class BaseHostingScraper(ABC):
+class BaseHostingScraper(AdaptiveBaseScraper):
     """Base class for hosting provider scrapers"""
     
-    def __init__(self):
+    def __init__(self, provider_name: str = "Unknown"):
+        super().__init__(provider_name, provider_type='hosting')
         self.rate_limiter = RateLimiter(requests_per_second=0.5)
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': USER_AGENT
+            'User-Agent': USER_AGENT,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
         })
         self.timeout = REQUEST_TIMEOUT
         self.max_retries = MAX_RETRIES
@@ -28,6 +34,14 @@ class BaseHostingScraper(ABC):
     def scrape_plans(self) -> List[HostingProvider]:
         """Scrape all plans - must be implemented"""
         pass
+        
+    def run(self):
+        """Standard execution for Adaptive Framework"""
+        try:
+            return self.scrape_plans()
+        except Exception as e:
+            logger.error(f"Scraper failed: {e}")
+            return []
     
     def fetch_page(self, url: str):
         """Fetch page with rate limiting"""

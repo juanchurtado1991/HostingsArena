@@ -127,7 +127,7 @@ export interface HostingProvider {
         support_wait_time_actual_minutes?: number;
         support_hours?: string;
         dedicate_support_agent?: boolean;
-        [key: string]: any; 
+        [key: string]: any;
     };
 }
 
@@ -136,4 +136,14 @@ export interface ProviderData {
     vpn_providers: VPNProvider[];
     hosting_providers: HostingProvider[];
     summary: any;
+}
+
+export interface Comment {
+    id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    user_email?: string;
+    provider_type: 'hosting' | 'vpn';
+    provider_slug: string;
 }

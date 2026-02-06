@@ -1,25 +1,28 @@
-"""GreenGeeks scraper"""
+"""GreenGeeks Scraper (Adaptive)"""
 from ..base_scraper import BaseHostingScraper
-from ...models import HostingProvider
+from ...models import HostingProvider, StorageType
 from datetime import datetime
 from typing import List
 
 class GreenGeeksScraper(BaseHostingScraper):
-    BASE_URL = "https://greengeeks.com"
-    
+    def __init__(self):
+        super().__init__(provider_name="GreenGeeks")
+
     def scrape_plans(self) -> List[HostingProvider]:
-        return [HostingProvider(
-            provider_name='GreenGeeks',
-            provider_type='shared',
-            plan_name='Basic',
-            pricing_monthly=2.95,
-            storage_gb=10,
-            bandwidth='unlimited',
-            free_domain=True,
-            free_ssl=True,
-            uptime_guarantee=99.9,
-            money_back_days=30,
-            control_panel='cPanel',
-            website_url=self.BASE_URL,
-            last_updated=datetime.now()
-        )]
+        verified_plans = self.get_verified_field('plans', [])
+        providers = []
+        for p in verified_plans:
+            providers.append(HostingProvider(
+                provider_name="GreenGeeks",
+                provider_type='shared',
+                plan_name=p['name'],
+                website_url="https://www.greengeeks.com",
+                pricing_monthly=p['price'],
+                renewal_price=p['renewal'],
+                storage_gb=int(str(p['storage']).split()[0]),
+                bandwidth="Unlimited",
+                free_domain=True,
+                free_ssl=True,
+                last_updated=datetime.now()
+            ))
+        return providers

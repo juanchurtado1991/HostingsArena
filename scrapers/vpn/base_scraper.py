@@ -7,20 +7,26 @@ from ..models import VPNProvider
 from ..utils import RateLimiter
 from ..config import USER_AGENT, REQUEST_TIMEOUT, MAX_RETRIES
 import logging
+from scrapers.adaptive_base import AdaptiveBaseScraper
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class BaseVPNScraper(ABC):
+class BaseVPNScraper(AdaptiveBaseScraper):
     """Base class for VPN provider scrapers"""
     
-    def __init__(self):
+    def __init__(self, provider_name: str = "Unknown"):
+        super().__init__(provider_name, provider_type='vpn')
         self.rate_limiter = RateLimiter(requests_per_second=0.5)  # 1 request per 2 seconds
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': USER_AGENT
+            'User-Agent': USER_AGENT,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
         })
         self.timeout = REQUEST_TIMEOUT
         self.max_retries = MAX_RETRIES
@@ -45,31 +51,31 @@ class BaseVPNScraper(ABC):
         """
         pass
     
+    def run(self):
+        """Standard execution for Adaptive Framework"""
+        try:
+            pricing = self.scrape_pricing()
+            features = self.scrape_features()
+            
+            # Meritge dicts
+            data = {**pricing, **features}
+            
+            return VPNProvider(**data)
+        except Exception as e:
+            logger.error(f"Scraper failed: {e}")
+            return None
+    
     def fetch_page(self, url: str) -> Optional[BeautifulSoup]:
         """
         Fetch and parse a web page with rate limiting and retry logic
         
         Args:
-            url: URL to fetch
-        
+            url: The URL to scrape
+            
         Returns:
             BeautifulSoup object or None if failed
         """
-        self.rate_limiter.wait()
-        
-        for attempt in range(self.max_retries):
-            try:
-                logger.info(f"Fetching {url} (attempt {attempt + 1}/{self.max_retries})")
-                response = self.session.get(url, timeout=self.timeout)
-                response.raise_for_status()
-                return BeautifulSoup(response.content, 'html.parser')
-            except requests.RequestException as e:
-                logger.warning(f"Error fetching {url}: {e}")
-                if attempt == self.max_retries - 1:
-                    logger.error(f"Failed to fetch {url} after {self.max_retries} attempts")
-                    return None
-        
-        return None
+        return super().fetch_page(url)
     
     def scrape(self) -> Optional[VPNProvider]:
         """

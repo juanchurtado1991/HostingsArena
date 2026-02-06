@@ -1,33 +1,28 @@
-"""DreamHost scraper (MVP - simple version)"""
+"""DreamHost Scraper (Adaptive)"""
 from ..base_scraper import BaseHostingScraper
-from ...models import HostingProvider, StorageType, WebServer
+from ...models import HostingProvider, StorageType
 from datetime import datetime
 from typing import List
 
 class DreamHostScraper(BaseHostingScraper):
-    BASE_URL = "https://dreamhost.com"
-    
+    def __init__(self):
+        super().__init__(provider_name="DreamHost")
+
     def scrape_plans(self) -> List[HostingProvider]:
-        """Simple scraper with basic data (will enhance later)"""
-        return [HostingProvider(
-            provider_name='DreamHost',
-            provider_type='shared',
-            plan_name='Basic',
-            website_url=self.BASE_URL,
-            pricing_monthly=2.59,
-            storage_gb=25 if 'shared' == 'cloud' else 10,
-            storage_type=StorageType.SSD,
-            bandwidth='unlimited',
-            web_server=WebServer.NGINX if 'shared' == 'cloud' else WebServer.APACHE,
-            php_versions=['8.0', '8.1', '8.2'],
-            databases_allowed=None,
-            database_types=['MySQL'],
-            free_ssl=True,
-            backup_included=True,
-            backup_frequency='daily',
-            control_panel='Custom' if 'shared' == 'cloud' else 'cPanel',
-            uptime_guarantee=99.9,
-            support_channels=['24/7 Live Chat', 'Email'],
-            money_back_days=30,
-            last_updated=datetime.now()
-        )]
+        verified_plans = self.get_verified_field('plans', [])
+        providers = []
+        for p in verified_plans:
+            providers.append(HostingProvider(
+                provider_name="DreamHost",
+                provider_type='shared',
+                plan_name=p['name'],
+                website_url="https://www.dreamhost.com",
+                pricing_monthly=p['price'],
+                renewal_price=p['renewal'],
+                storage_gb=int(str(p['storage']).split()[0]),
+                bandwidth="Unlimited",
+                free_domain=True,
+                free_ssl=True,
+                last_updated=datetime.now()
+            ))
+        return providers

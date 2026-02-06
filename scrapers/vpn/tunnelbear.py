@@ -1,29 +1,26 @@
-"""TunnelBear scraper implementation"""
+"""TunnelBear Scraper (Adaptive)"""
 from .base_scraper import BaseVPNScraper
+from ..models import VPNProvider
 from datetime import datetime
 
 class TunnelBearScraper(BaseVPNScraper):
-    BASE_URL = "https://tunnelbear.com"
-    
+    def __init__(self):
+        super().__init__(provider_name="TunnelBear")
+        
     def scrape_pricing(self) -> dict:
         return {
-            'provider_name': 'TunnelBear',
-            'pricing_monthly': 9.99,
-            'pricing_yearly': 4.99,
-            'pricing_2year': 3.33,
-            'website_url': self.BASE_URL,
+            'provider_name': "TunnelBear",
+            'website_url': "https://www.tunnelbear.com",
+            'pricing_monthly': 9.99, # Fallback
             'last_updated': datetime.now()
         }
-    
+        
     def scrape_features(self) -> dict:
+        ram_only = self.get_verified_field('ram_only_servers', False)
+        audits = self.get_verified_field('audit_history', [])
         return {
-            'server_count': 5000,
-            'country_count': 48,
-            'simultaneous_connections': 5,
-            'protocols': ['OpenVPN', 'IKEv2', 'WireGuard'],
-            'has_kill_switch': True,
-            'logging_policy': 'No logs',
-            'streaming_support': True,
-            'torrenting_allowed': True,
-            'money_back_days': 30
+            'server_count': self.get_verified_field('server_count', 1000),
+            'country_count': self.get_verified_field('country_count', 50),
+            'ram_only_servers': ram_only,
+            'audit_history': audits
         }
