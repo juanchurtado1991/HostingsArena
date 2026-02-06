@@ -3,7 +3,7 @@ from .base_scraper import BaseVPNScraper
 from ..models import VPNProvider
 from datetime import datetime
 
-class IvacyScraper(BaseVPNScraper):
+class IvacyVPNScraper(BaseVPNScraper):
     def __init__(self):
         super().__init__(provider_name="Ivacy")
         
