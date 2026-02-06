@@ -12,7 +12,7 @@ import random
 import time
 import json
 from abc import ABC, abstractmethod
-from typing import Optional, List, Any, Any, List
+from typing import Optional, List, Any, Dict
 from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
