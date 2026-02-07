@@ -8,6 +8,7 @@ import { useState } from "react";
 import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ComparisonTable } from "@/components/comparisons/ComparisonTable";
 
 export default function ComparePage() {
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
@@ -76,111 +77,18 @@ export default function ComparePage() {
                     </Tabs>
                 </div>
 
-                {/* Comparison Table */}
+                {/* Comparison Table (Money First) */}
                 {p1 && p2 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-700 fade-in">
-
-                        {/* Column 1: Provider A */}
-                        <GlassCard className="p-8 border-t-4 border-t-primary/50 relative">
-                            <h3 className="text-2xl font-bold text-center mb-2">{p1.provider_name}</h3>
-                            <div className="text-center mb-8">
-                                <div className="text-4xl font-bold text-primary">{formatCurrency(p1.pricing_monthly)}</div>
-                                <div className="text-sm text-muted-foreground">Initial Price</div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="py-2 border-b border-border/40">
-                                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">True Renewal</div>
-                                    <div className="font-semibold text-lg flex items-center gap-2">
-                                        {formatCurrency(category === 'hosting' ? p1.renewal_price : p1.pricing_monthly * 2)}
-                                        {(p1.renewal_price > p1.pricing_monthly * 1.5) && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
-                                    </div>
-                                </div>
-                                <div className="py-2 border-b border-border/40">
-                                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                                        {category === 'hosting' ? 'Storage' : 'Server Count'}
-                                    </div>
-                                    <div className="font-medium">
-                                        {category === 'hosting'
-                                            ? `${p1.storage_gb || "?"} GB ${p1.storage_type}`
-                                            : p1.server_count?.toLocaleString()}
-                                    </div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Score</div>
-                                    <div className="font-bold text-xl">{category === 'hosting' ? (p1.performance_grade || "B") : "Verified"}</div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8">
-                                <Button className="w-full" asChild>
-                                    <Link href={`/${category}/${p1.slug || p1.provider_name.toLowerCase().replace(/\s+/g, '-')}`}>Full Analysis</Link>
-                                </Button>
-                            </div>
-                        </GlassCard>
-
-                        {/* Column 2: Metrics */}
-                        <div className="hidden md:flex flex-col justify-center space-y-6 text-center text-sm text-muted-foreground px-4">
-                            <div className="h-32 flex items-center justify-center font-medium">Pricing & Renewal</div>
-                            <div className="h-16 flex items-center justify-center border-b border-border/30">
-                                <Coins className="w-4 h-4" />
-                            </div>
-                            <div className="h-16 flex items-center justify-center border-b border-border/30">
-                                {category === 'hosting' ? <Server className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                            </div>
-                            <div className="h-16 flex items-center justify-center">
-                                <Zap className="w-4 h-4" />
-                            </div>
-                        </div>
-
-                        {/* Column 3: Provider B */}
-                        <GlassCard className="p-8 border-t-4 border-t-secondary/50 relative">
-                            <h3 className="text-2xl font-bold text-center mb-2">{p2.provider_name}</h3>
-                            <div className="text-center mb-8">
-                                <div className="text-4xl font-bold text-secondary-foreground">{formatCurrency(p2.pricing_monthly)}</div>
-                                <div className="text-sm text-muted-foreground">Initial Price</div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="py-2 border-b border-border/40">
-                                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">True Renewal</div>
-                                    <div className="font-semibold text-lg flex items-center gap-2">
-                                        {formatCurrency(category === 'hosting' ? p2.renewal_price : p2.pricing_monthly * 2)}
-                                        {(p2.renewal_price > p2.pricing_monthly * 1.5) && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
-                                    </div>
-                                </div>
-                                <div className="py-2 border-b border-border/40">
-                                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                                        {category === 'hosting' ? 'Storage' : 'Server Count'}
-                                    </div>
-                                    <div className="font-medium">
-                                        {category === 'hosting'
-                                            ? `${p2.storage_gb || "?"} GB ${p2.storage_type}`
-                                            : p2.server_count?.toLocaleString()}
-                                    </div>
-                                </div>
-                                <div className="py-2">
-                                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Score</div>
-                                    <div className="font-bold text-xl">{category === 'hosting' ? (p2.performance_grade || "B") : "Verified"}</div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8">
-                                <Button className="w-full" variant="secondary" asChild>
-                                    <Link href={`/${category}/${p2.slug || p2.provider_name.toLowerCase().replace(/\s+/g, '-')}`}>Full Analysis</Link>
-                                </Button>
-                            </div>
-                        </GlassCard>
-
+                    <div className="animate-in slide-in-from-bottom-4 duration-700 fade-in">
+                        <ComparisonTable data={[p1, p2]} title="Direct Comparison" />
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-primary/5 rounded-3xl border border-primary/10">
-                        <Search className="w-12 h-12 text-primary/30 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-primary/70 mb-2">Select Providers to Compare</h3>
-                        <p className="text-muted-foreground">Choose two providers above to reveal the truth.</p>
+                    <div className="text-center py-20 text-muted-foreground bg-card/30 rounded-3xl border border-dashed border-border/50">
+                        <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <h3 className="text-lg font-medium mb-1">Select providers to compare</h3>
+                        <p className="text-sm">Choose two providers above to see the breakdown.</p>
                     </div>
                 )}
-
             </div>
         </div>
     );
