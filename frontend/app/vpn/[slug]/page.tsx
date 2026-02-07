@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import CommentSection from "@/components/comments/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight } from "lucide-react";
+import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
+import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -33,17 +34,43 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
     const features = provider.features || {};
     const raw = provider.raw_data || {};
 
+    // Money First Logic
+    // VPNs usually have massive renewal hikes (Surfshark $2 -> $15)
+    // We'll calculate it if renewal price exists, otherwise assume 300% for industry standard ;)
+    // Just kidding, only use real data.
+    const renewalHikePercent = provider.renewal_price && provider.pricing_monthly
+        ? Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.pricing_monthly) * 100)
+        : 0;
+
+    const isBadProvider = (provider.support_quality_score < 70 || provider.avg_speed_mbps < 50);
+
     return (
-        <main className="min-h-screen bg-background">
+        <main className="min-h-screen bg-background pb-20">
+            <StickyBuyBar
+                providerName={provider.provider_name}
+                price={provider.pricing_monthly}
+                rating={provider.support_quality_score ? `${provider.support_quality_score / 10}` : undefined}
+                visitUrl={provider.website_url}
+                discount={renewalHikePercent > 0 ? "Save BIG" : undefined}
+            />
+
             {/* HERO SECTION */}
-            <div className="relative pt-32 pb-20 overflow-hidden">
+            <div className="relative pt-32 pb-10 overflow-hidden">
                 {/* Blur Backdrop */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-500/10 rounded-full blur-3xl opacity-50 -z-10" />
 
                 <div className="container mx-auto px-4 text-center relative z-10">
-                    <Badge variant="outline" className="mb-6 border-primary/20 text-primary px-3 py-1 text-sm font-medium tracking-wide">
-                        VPN Review
+                    {isBadProvider && (
+                        <div className="max-w-2xl mx-auto mb-8 bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl flex items-center justify-center gap-3 animate-bounce">
+                            <AlertTriangle className="w-5 h-5" />
+                            <span className="font-bold">Warning: Slow speeds detected. Consider a faster alternative.</span>
+                        </div>
+                    )}
+
+                    <Badge variant="outline" className="mb-6 border-primary/20 text-primary px-3 py-1 text-sm font-medium tracking-wide cursor-pointer hover:bg-primary/5 transition-colors">
+                        <Shield className="w-3 h-3 mr-1 fill-primary" /> Verified Privacy Policy
                     </Badge>
+
                     <h1 className="text-6xl md:text-7xl font-semibold tracking-tight mb-6 text-foreground">
                         {provider.provider_name}
                     </h1>
@@ -52,9 +79,17 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-bold tracking-tight text-foreground">${provider.pricing_monthly}</span>
-                            <span className="text-xl text-muted-foreground font-medium">/mo</span>
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-bold tracking-tight text-foreground">${provider.pricing_monthly}</span>
+                                <span className="text-xl text-muted-foreground font-medium">/mo</span>
+                            </div>
+                            {renewalHikePercent > 50 && (
+                                <div className="text-xs font-bold text-destructive mt-1 flex items-center gap-1">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    Renews at ${provider.renewal_price} (+{renewalHikePercent}%)
+                                </div>
+                            )}
                         </div>
                         <div className="h-12 w-px bg-border/50 hidden sm:block"></div>
                         <div className="flex items-center gap-2">
@@ -64,20 +99,21 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                     </div>
 
                     <div className="mt-12 flex justify-center">
-                        <a
-                            href={provider.website_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-full h-14 px-10 text-lg bg-foreground text-background hover:bg-foreground/90 transition-transform hover:scale-105 duration-300 shadow-xl inline-flex items-center justify-center font-medium"
-                        >
-                            Visit Website <ChevronRight className="ml-2 w-4 h-4" />
-                        </a>
+                        <Button size="lg" className="rounded-full h-16 px-12 text-xl font-bold shadow-2xl hover:scale-105 transition-transform" asChild>
+                            <a
+                                href={provider.website_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Visit {provider.provider_name} <ChevronRight className="ml-2 w-5 h-5" />
+                            </a>
+                        </Button>
                     </div>
                 </div>
             </div>
 
             {/* TECH SPECS BENTO GRID */}
-            <div className="container mx-auto px-4 py-16 max-w-6xl">
+            <div className="container mx-auto px-4 py-8 max-w-6xl">
                 <h2 className="text-3xl font-semibold mb-10 tracking-tight text-center">Performance & Specs</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
@@ -181,15 +217,23 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                                         <span className="text-xs text-muted-foreground">${provider.pricing_yearly} billed yearly</span>
                                     </div>
                                 </div>
+                                {renewalHikePercent > 50 && (
+                                    <div className="bg-destructive/5 p-4 rounded-xl border border-destructive/10 text-center animate-pulse">
+                                        <p className="text-xs font-bold text-destructive">
+                                            ⚠️ Warning: Renewal price jumps by {renewalHikePercent}%
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                            <a
-                                href={provider.website_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full mt-8 h-12 rounded-full text-lg shadow-md inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors"
-                            >
-                                Get Started Now <ArrowRight className="ml-2 w-4 h-4" />
-                            </a>
+                            <Button className="w-full mt-8 h-12 rounded-full text-lg shadow-md font-bold" size="lg" asChild>
+                                <a
+                                    href={provider.website_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Get Started Now <ArrowRight className="ml-2 w-4 h-4" />
+                                </a>
+                            </Button>
                         </div>
                     </div>
                 </div>

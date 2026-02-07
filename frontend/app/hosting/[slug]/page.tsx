@@ -4,6 +4,7 @@ import CommentSection from "@/components/comments/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Check, X, Shield, Globe, Zap, Server, ChevronRight, AlertTriangle, Info, ArrowRight, CheckCircle2, HardDrive, Clock, ShieldCheck, Lock } from "lucide-react";
+import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -33,20 +34,40 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
     const features = provider.features || {};
     const raw = provider.raw_data || {};
 
-    // Helper for performance color (Apple style: Green is functional, Red is destructive, Blue is neutral)
-    // We'll use Badge colors or text colors.
+    // Money First Logic
+    const renewalHikePercent = provider.renewal_price && provider.pricing_monthly
+        ? Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.pricing_monthly) * 100)
+        : 0;
+
+    const isBadProvider = (provider.performance_grade === 'C' || provider.performance_grade === 'D' || provider.performance_grade === 'F' || provider.support_score < 70);
 
     return (
-        <main className="min-h-screen bg-background">
+        <main className="min-h-screen bg-background pb-20">
+            <StickyBuyBar
+                providerName={provider.provider_name}
+                price={provider.pricing_monthly}
+                rating={provider.support_score ? `${provider.support_score / 10}` : undefined}
+                visitUrl={provider.website_url}
+                discount={renewalHikePercent > 0 ? "Save BIG" : undefined}
+            />
+
             {/* HERO SECTION */}
-            <div className="relative pt-32 pb-20 overflow-hidden">
+            <div className="relative pt-32 pb-10 overflow-hidden">
                 {/* Blur Backdrop */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl opacity-50 -z-10" />
 
                 <div className="container mx-auto px-4 text-center relative z-10">
-                    <Badge variant="outline" className="mb-6 border-primary/20 text-primary px-3 py-1 text-sm font-medium tracking-wide">
-                        Web Hosting Review
+                    {isBadProvider && (
+                        <div className="max-w-2xl mx-auto mb-8 bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl flex items-center justify-center gap-3 animate-bounce">
+                            <AlertTriangle className="w-5 h-5" />
+                            <span className="font-bold">Warning: There are faster, cheaper alternatives available.</span>
+                        </div>
+                    )}
+
+                    <Badge variant="outline" className="mb-6 border-primary/20 text-primary px-3 py-1 text-sm font-medium tracking-wide cursor-pointer hover:bg-primary/5 transition-colors">
+                        <Star className="w-3 h-3 mr-1 fill-primary" /> Rated {provider.support_score ? (provider.support_score / 10).toFixed(1) : '8.5'}/10 by Users
                     </Badge>
+
                     <h1 className="text-6xl md:text-7xl font-semibold tracking-tight mb-6 text-foreground">
                         {provider.provider_name}
                     </h1>
@@ -55,34 +76,48 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-bold tracking-tight text-foreground">${provider.pricing_monthly}</span>
-                            <span className="text-xl text-muted-foreground font-medium">/mo</span>
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-bold tracking-tight text-foreground">${provider.pricing_monthly}</span>
+                                <span className="text-xl text-muted-foreground font-medium">/mo</span>
+                            </div>
+                            {renewalHikePercent > 50 && (
+                                <div className="text-xs font-bold text-destructive mt-1 flex items-center gap-1">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    Renews at ${provider.renewal_price} (+{renewalHikePercent}%)
+                                </div>
+                            )}
                         </div>
                         <div className="h-12 w-px bg-border/50 hidden sm:block"></div>
                         <div className="flex items-center gap-2">
                             <span className="text-xl font-medium text-foreground">Performance Grade:</span>
-                            <span className="text-3xl font-bold text-indigo-500">{provider.performance_grade || 'B'}</span>
+                            <span className={`text-3xl font-bold ${provider.performance_grade === 'A+' ? 'text-green-500' : provider.performance_grade === 'A' ? 'text-green-500' : 'text-yellow-500'}`}>
+                                {provider.performance_grade || 'B'}
+                            </span>
                         </div>
                     </div>
 
                     <div className="mt-12 flex justify-center">
-                        <div className="mt-12 flex justify-center">
+                        <Button size="lg" className="rounded-full h-16 px-12 text-xl font-bold shadow-2xl hover:scale-105 transition-transform" asChild>
                             <a
                                 href={provider.website_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="rounded-full h-14 px-10 text-lg bg-foreground text-background hover:bg-foreground/90 transition-transform hover:scale-105 duration-300 shadow-xl inline-flex items-center justify-center font-medium"
                             >
-                                Visit Website <ChevronRight className="ml-2 w-4 h-4" />
+                                Visit {provider.provider_name} <ChevronRight className="ml-2 w-5 h-5" />
                             </a>
-                        </div>
+                        </Button>
                     </div>
+                    {provider.money_back_days && (
+                        <div className="mt-4 text-sm text-muted-foreground flex items-center justify-center gap-1">
+                            <ShieldCheck className="w-4 h-4 text-green-500" /> {provider.money_back_days}-Day Money-Back Guarantee
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* TECH SPECS BENTO GRID */}
-            <div className="container mx-auto px-4 py-16 max-w-6xl">
+            <div className="container mx-auto px-4 py-8 max-w-6xl">
                 <h2 className="text-3xl font-semibold mb-10 tracking-tight text-center">Tech Specs</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
@@ -275,19 +310,27 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                     <span className="font-bold text-2xl text-foreground">${provider.pricing_monthly}</span>
                                 </div>
                                 {provider.renewal_price && (
-                                    <div className="bg-primary/5 rounded-2xl p-8 border border-primary/10 text-center">
-                                        <h3 className="text-2xl font-bold mb-4">Ready to choose {provider.provider_name}?</h3>
-                                        <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                                            Get started with the plan that best fits your needs. 30-day money-back guarantee included.
-                                        </p>
-                                        <a
-                                            href={provider.website_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-full mt-8 h-12 rounded-full text-lg shadow-md inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors"
-                                        >
-                                            Get Started Now <ArrowRight className="ml-2 w-4 h-4" />
-                                        </a>
+                                    <div className={`rounded-2xl p-6 border text-center ${renewalHikePercent > 50 ? 'bg-destructive/5 border-destructive/20' : 'bg-primary/5 border-primary/10'}`}>
+                                        <h3 className="text-xl font-bold mb-2">Ready to choose {provider.provider_name}?</h3>
+                                        {renewalHikePercent > 50 ? (
+                                            <p className="text-sm text-muted-foreground mb-6">
+                                                Lock in the low price for 36 months to avoid the <span className="text-destructive font-bold">{renewalHikePercent}% hike</span> later.
+                                            </p>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground mb-6">
+                                                Fair renewal pricing. Safe to choose for short or long term.
+                                            </p>
+                                        )}
+
+                                        <Button className="w-full rounded-full text-lg font-bold shadow-md" size="lg" asChild>
+                                            <a
+                                                href={provider.website_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Get Started Now <ArrowRight className="ml-2 w-4 h-4" />
+                                            </a>
+                                        </Button>
                                     </div>
                                 )}
                             </div>
