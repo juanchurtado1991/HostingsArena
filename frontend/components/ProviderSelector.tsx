@@ -50,42 +50,34 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
     React.useEffect(() => {
         const fetchProviders = async () => {
             setLoading(true);
-            logger.log('SEARCH', `Fetching providers for ${type} from DB`);
+            logger.log('SEARCH', `Fetching providers for ${type} via PROXY API`);
 
             try {
-                const table = type === "hosting" ? "hosting_providers" : "vpn_providers";
+                // Call our internal API Proxy
+                const response = await fetch(`/api/providers?type=${type}`);
 
-                // Create a promise that rejects after 15 seconds
-                const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('TIMEOUT_15S: Supabase did not respond in 15s')), 15000)
-                );
-
-                const dataPromise = supabase
-                    .from(table)
-                    .select("*")
-                    .order("provider_name", { ascending: true });
-
-                // Race the data fetch against the timeout
-                const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any;
-
-                if (error) {
-                    logger.error('Supabase Error Trace', error);
-                } else {
-                    logger.log('SEARCH', `Supabase Response Success`, {
-                        count: data?.length,
-                        sample: data?.[0] ? { name: data[0].provider_name, id: data[0].id } : 'Empty'
-                    });
-                    setProviders(data || []);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Proxy Error ${response.status}`);
                 }
+
+                const data = await response.json();
+
+                logger.log('SEARCH', `Proxy Response Success`, {
+                    count: data?.length,
+                    sample: data?.[0] ? { name: data[0].provider_name, id: data[0].id } : 'Empty'
+                });
+                setProviders(data || []);
+
             } catch (err) {
-                logger.error('CRITICAL SEARCH CRASH', err);
+                logger.error('CRITICAL SEARCH CRASH (Proxy)', err);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchProviders();
-    }, [type, supabase]);
+    }, [type]);
 
     const handleSelect = (currentValue: string) => {
         setValue(currentValue === value ? "" : currentValue);
