@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') as 'hosting' | 'vpn';
+    const search = searchParams.get('search');
 
     if (!type || (type !== 'hosting' && type !== 'vpn')) {
         return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
@@ -26,11 +27,21 @@ export async function GET(request: Request) {
     try {
         const table = type === 'hosting' ? 'hosting_providers' : 'vpn_providers';
 
-        // Fetch all providers sorted by name
-        const { data, error } = await supabase
+        let query = supabase
             .from(table)
             .select('*')
             .order('provider_name', { ascending: true });
+
+        if (search) {
+            query = query.ilike('provider_name', `%${search}%`);
+        } else {
+            // Only apply limit if NOT searching (searching should return all matches, assuming < 20 for now)
+            // or still limit to avoid heavy payloads?
+            // Let's keep it safe.
+            query = query.limit(50);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Supabase Proxy Error:', error);
@@ -38,6 +49,8 @@ export async function GET(request: Request) {
         }
 
         // Cache Control: Cache for 1 hour (3600s), stale-while-revalidate for 1 day
+        // SEARCH results should be cached shorter though? or same?
+        // Let's keep it standard for now as provider names rarely change.
         return NextResponse.json(data, {
             status: 200,
             headers: {

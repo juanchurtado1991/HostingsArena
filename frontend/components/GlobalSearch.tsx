@@ -5,15 +5,6 @@ import { Check, ChevronsUpDown, Search, Server, Globe, Loader2 } from "lucide-re
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    CommandSeparator,
-} from "@/components/ui/command";
-import {
     Popover,
     PopoverContent,
     PopoverTrigger,
@@ -29,40 +20,68 @@ export function GlobalSearch() {
     const supabase = createClient();
     const router = useRouter();
 
+    const [searchTerm, setSearchTerm] = React.useState("");
+
     React.useEffect(() => {
         const fetchAll = async () => {
-            // Only fetch when open to save resources, or pre-fetch on mount? 
-            // For global search, maybe better to fetch on open or type.
-            // Let's fetch on open for now to ensure fresh data.
             if (!open) return;
 
             setLoading(true);
 
-            // Fetch Hosting
-            const { data: hostingData } = await supabase
-                .from("hosting_providers")
-                .select("id, provider_name, slug")
-                .order("provider_name", { ascending: true })
-                .limit(20);
+            try {
+                // Fetch Hosting via Proxy
+                let hostingUrl = `/api/providers?type=hosting`;
+                if (searchTerm) hostingUrl += `&search=${encodeURIComponent(searchTerm)}`;
 
-            // Fetch VPNs
-            const { data: vpnData } = await supabase
-                .from("vpn_providers")
-                .select("id, provider_name, website_url") // VPNs might not have slugs yet, using name fallback
-                .order("provider_name", { ascending: true })
-                .limit(20);
+                const hostingRes = await fetch(hostingUrl);
+                let hostingData = [];
+                if (hostingRes.ok) {
+                    try {
+                        hostingData = await hostingRes.json();
+                    } catch (e) {
+                        console.error("Hosting JSON parse error", e);
+                    }
+                }
 
-            setHostingResults(hostingData || []);
-            setVpnResults(vpnData || []);
-            setLoading(false);
+                // Fetch VPNs via Proxy
+                let vpnUrl = `/api/providers?type=vpn`;
+                if (searchTerm) vpnUrl += `&search=${encodeURIComponent(searchTerm)}`;
+
+                const vpnRes = await fetch(vpnUrl);
+                let vpnData = [];
+                if (vpnRes.ok) {
+                    try {
+                        vpnData = await vpnRes.json();
+                    } catch (e) {
+                        console.error("VPN JSON parse error", e);
+                    }
+                }
+
+                // Handle potential errors (empty array fallback)
+                // Proxy returns { error: ... } on failure, so check for Array.isArray
+                setHostingResults(Array.isArray(hostingData) ? hostingData.slice(0, 5) : []);
+                setVpnResults(Array.isArray(vpnData) ? vpnData.slice(0, 5) : []);
+
+            } catch (err) {
+                console.error("Global Search Fetch Error:", err);
+                setHostingResults([]);
+                setVpnResults([]);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        fetchAll();
-    }, [open, supabase]);
+        // Debounce fetching
+        const timeoutId = setTimeout(() => {
+            fetchAll();
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [open, searchTerm, supabase]);
 
     const handleSelect = (result: any, type: 'hosting' | 'vpn') => {
         setOpen(false);
-        // Normalize slug
+        setSearchTerm("");
         const slug = result.slug || result.provider_name.toLowerCase().replace(/\s+/g, '-');
         router.push(`/${type}/${slug}`);
     };
@@ -86,49 +105,67 @@ export function GlobalSearch() {
                     </kbd>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] lg:w-[400px] p-0 backdrop-blur-xl bg-popover/90 border-border text-popover-foreground">
-                <Command className="bg-transparent">
-                    <CommandInput placeholder="Search Hosting or VPNs..." />
-                    <CommandList className="max-h-[400px] overflow-y-auto">
-                        <CommandEmpty>No results found.</CommandEmpty>
-                        {loading && (
-                            <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin" /> Loading...
-                            </div>
-                        )}
-                        {!loading && (
-                            <>
-                                <CommandGroup heading="Hosting Providers">
+            <PopoverContent className="w-[300px] lg:w-[400px] p-0 backdrop-blur-xl bg-popover/95 border-border text-popover-foreground shadow-2xl">
+                <div className="flex items-center border-b px-3">
+                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                    <input
+                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder="Search Hosting or VPNs..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        autoFocus
+                    />
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto p-1">
+                    {loading && (
+                        <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+                        </div>
+                    )}
+
+                    {!loading && hostingResults.length === 0 && vpnResults.length === 0 && (
+                        <div className="py-6 text-center text-sm text-muted-foreground">No results found.</div>
+                    )}
+
+                    {!loading && (
+                        <>
+                            {hostingResults.length > 0 && (
+                                <div className="mb-2">
+                                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Hosting Providers</div>
                                     {hostingResults.map((provider) => (
-                                        <CommandItem
+                                        <div
                                             key={provider.id}
-                                            value={`hosting-${provider.provider_name}`}
-                                            onSelect={() => handleSelect(provider, 'hosting')}
-                                            className="cursor-pointer aria-selected:bg-accent aria-selected:text-accent-foreground"
+                                            onClick={() => handleSelect(provider, 'hosting')}
+                                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
                                         >
                                             <Server className="mr-2 h-4 w-4 text-primary" />
                                             {provider.provider_name}
-                                        </CommandItem>
+                                        </div>
                                     ))}
-                                </CommandGroup>
-                                <CommandSeparator />
-                                <CommandGroup heading="VPN Services">
+                                </div>
+                            )}
+
+                            {hostingResults.length > 0 && vpnResults.length > 0 && <div className="h-px bg-border my-1" />}
+
+                            {vpnResults.length > 0 && (
+                                <div>
+                                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">VPN Services</div>
                                     {vpnResults.map((provider) => (
-                                        <CommandItem
+                                        <div
                                             key={provider.id}
-                                            value={`vpn-${provider.provider_name}`}
-                                            onSelect={() => handleSelect(provider, 'vpn')}
-                                            className="cursor-pointer aria-selected:bg-accent aria-selected:text-accent-foreground"
+                                            onClick={() => handleSelect(provider, 'vpn')}
+                                            className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
                                         >
                                             <Globe className="mr-2 h-4 w-4 text-green-500" />
                                             {provider.provider_name}
-                                        </CommandItem>
+                                        </div>
                                     ))}
-                                </CommandGroup>
-                            </>
-                        )}
-                    </CommandList>
-                </Command>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
             </PopoverContent>
         </Popover>
     );
