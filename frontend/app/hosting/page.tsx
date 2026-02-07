@@ -118,12 +118,26 @@ export default async function HostingPage({
                 )}
               </div>
 
-              {/* CTA */}
-              <Link href={`/hosting/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="w-full mt-auto">
-                <Button className="w-full rounded-full" variant="outline">
-                  View Deep Insights
-                </Button>
-              </Link>
+              {/* Money Maker Logic: Calculated Discount */}
+              {provider.renewal_price && provider.pricing_monthly && provider.renewal_price > provider.pricing_monthly && (
+                <div className="mb-4">
+                  <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-1 rounded-full border border-green-500/20">
+                    Save {Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.renewal_price) * 100)}%
+                  </span>
+                </div>
+              )}
+
+              {/* CTA - Money First */}
+              <div className="mt-auto space-y-3">
+                <Link href={`https://www.google.com/search?q=${provider.provider_name}+hosting+deal`} target="_blank" className="w-full block">
+                  <Button className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform" size="lg">
+                    Ver Oferta Exclusiva ⚡️
+                  </Button>
+                </Link>
+                <Link href={`/hosting/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+                  Ver análisis de {provider.provider_name}
+                </Link>
+              </div>
 
             </GlassCard>
           ))}

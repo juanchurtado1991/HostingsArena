@@ -114,6 +114,14 @@ export default async function VPNPage({
                   </span>
                   <span className="font-medium">{provider.server_count ? provider.server_count.toLocaleString() : "N/A"}</span>
                 </div>
+                {provider.simultaneous_connections && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-2">
+                      <Check className="w-4 h-4" /> Devices
+                    </span>
+                    <span className="font-medium">{provider.simultaneous_connections} Simultaneous</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground flex items-center gap-2">
                     <Lock className="w-4 h-4" /> Audited By
@@ -124,12 +132,26 @@ export default async function VPNPage({
                 </div>
               </div>
 
-              {/* CTA */}
-              <Link href={`/vpn/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="w-full mt-auto">
-                <Button className="w-full rounded-full" variant="outline">
-                  View Privacy Report
-                </Button>
-              </Link>
+              {/* Money Maker Logic: Calculated Discount */}
+              {provider.renewal_price && provider.pricing_monthly && provider.renewal_price > provider.pricing_monthly && (
+                <div className="mb-4">
+                  <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-1 rounded-full border border-green-500/20">
+                    Save {Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.renewal_price) * 100)}%
+                  </span>
+                </div>
+              )}
+
+              {/* CTA - Money First */}
+              <div className="mt-auto space-y-3">
+                <Link href={`https://www.google.com/search?q=${provider.provider_name}+vpn+deal`} target="_blank" className="w-full block">
+                  <Button className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform" size="lg">
+                    Ver Oferta Exclusiva ⚡️
+                  </Button>
+                </Link>
+                <Link href={`/vpn/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+                  Ver análisis de {provider.provider_name}
+                </Link>
+              </div>
 
             </GlassCard>
           ))}
