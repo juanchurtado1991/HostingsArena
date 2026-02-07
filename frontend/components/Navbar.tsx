@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Menu, X, LayoutDashboard, LogOut, User } from "lucide-react";
+import { logger } from "@/utils/logger";
 import { useState, useEffect } from "react";
 import { GlobalSearch } from "./GlobalSearch";
 import { createClient } from "@/utils/supabase/client";
@@ -28,6 +29,7 @@ export function Navbar() {
     let mounted = true;
 
     const checkUserRole = async (uid: string) => {
+      logger.log('ADMIN', `Checking role for user ${uid}`);
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -37,11 +39,16 @@ export function Navbar() {
 
         if (error) {
           console.warn("Error checking user role:", error);
+          logger.error('Error checking user role', error);
           return;
         }
 
-        if (mounted && profile?.role === 'admin') {
+        if (profile?.role === 'admin' && mounted) {
+          logger.log('ADMIN', 'User is admin', { uid });
           setIsAdmin(true);
+        } else {
+          logger.log('ADMIN', 'User is NOT admin', { role: profile?.role });
+          setIsAdmin(false);
         }
       } catch (err) {
         console.error("Failed to check user role:", err);
@@ -80,6 +87,7 @@ export function Navbar() {
   }, [supabase]);
 
   const handleSignOut = async () => {
+    logger.log('AUTH', 'Sign Out clicked');
     // 🚀 Optimistic UI: Reset state immediately before waiting for network
     setUser(null);
     setIsAdmin(false);

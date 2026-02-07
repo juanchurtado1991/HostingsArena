@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { logger } from "@/utils/logger";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
+      logger.log('AUTH', `Attempting login for ${email}`);
       // Attempt Login
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -27,12 +29,15 @@ export default function LoginPage() {
       });
 
       if (error) {
+        logger.error('Login failed', error);
         setErrorMsg(error.message);
       } else {
+        logger.log('AUTH', 'Login successful. Redirecting...');
         router.push("/"); // Redirect to Home
         router.refresh();
       }
     } catch (err) {
+      logger.error('Unexpected login error', err);
       setErrorMsg("An unexpected error occurred.");
       console.error(err);
     } finally {

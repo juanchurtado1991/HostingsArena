@@ -18,6 +18,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { createClient } from "@/utils/supabase/client";
+import { logger } from "@/utils/logger";
 
 interface ProviderSelectorProps {
     type: "hosting" | "vpn";
@@ -36,6 +37,7 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
     React.useEffect(() => {
         const fetchProviders = async () => {
             setLoading(true);
+            logger.log('SEARCH', `Fetching providers for ${type}`);
             const table = type === "hosting" ? "hosting_providers" : "vpn_providers";
 
             const { data, error } = await supabase
@@ -45,10 +47,10 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
 
             if (error) {
                 console.error("Error fetching providers (Detailed):", error);
-                console.error("Error Message:", error.message);
-                console.error("Error Code:", error.code);
-                console.error("Error Hint:", error.hint);
+                logger.error('Error fetching providers', error);
+                // ... existing console logs ...
             } else {
+                logger.log('SEARCH', `Fetched ${data?.length || 0} providers for ${type}`);
                 setProviders(data || []);
             }
             setLoading(false);
