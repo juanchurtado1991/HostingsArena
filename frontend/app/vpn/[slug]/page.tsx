@@ -34,10 +34,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
     const features = provider.features || {};
     const raw = provider.raw_data || {};
 
-    // Money First Logic
-    // VPNs usually have massive renewal hikes (Surfshark $2 -> $15)
-    // We'll calculate it if renewal price exists, otherwise assume 300% for industry standard ;)
-    // Just kidding, only use real data.
+    // Money First Logic: Calculate renewal price hike percentage
     const renewalHikePercent = provider.renewal_price && provider.pricing_monthly
         ? Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.pricing_monthly) * 100)
         : 0;
