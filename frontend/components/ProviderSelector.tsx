@@ -34,26 +34,45 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
     const [loading, setLoading] = React.useState(false);
     const supabase = createClient();
 
+    // Debug: Check if Env Vars are present
+    React.useEffect(() => {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!url || !key) {
+            logger.error('CRITICAL: Missing Supabase Env Vars', {
+                hasUrl: !!url,
+                hasKey: !!key
+            });
+        }
+    }, []);
+
     React.useEffect(() => {
         const fetchProviders = async () => {
             setLoading(true);
-            logger.log('SEARCH', `Fetching providers for ${type}`);
-            const table = type === "hosting" ? "hosting_providers" : "vpn_providers";
+            logger.log('SEARCH', `Fetching providers for ${type} from DB`);
 
-            const { data, error } = await supabase
-                .from(table)
-                .select("*")
-                .order("provider_name", { ascending: true });
+            try {
+                const table = type === "hosting" ? "hosting_providers" : "vpn_providers";
 
-            if (error) {
-                console.error("Error fetching providers (Detailed):", error);
-                logger.error('Error fetching providers', error);
-                // ... existing console logs ...
-            } else {
-                logger.log('SEARCH', `Fetched ${data?.length || 0} providers for ${type}`);
-                setProviders(data || []);
+                const { data, error } = await supabase
+                    .from(table)
+                    .select("*")
+                    .order("provider_name", { ascending: true });
+
+                if (error) {
+                    logger.error('Supabase Error Trace', error);
+                } else {
+                    logger.log('SEARCH', `Supabase Response Success`, {
+                        count: data?.length,
+                        sample: data?.[0] ? { name: data[0].provider_name, id: data[0].id } : 'Empty'
+                    });
+                    setProviders(data || []);
+                }
+            } catch (err) {
+                logger.error('CRITICAL SEARCH CRASH', err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         fetchProviders();
