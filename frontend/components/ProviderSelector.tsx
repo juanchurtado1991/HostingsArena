@@ -34,15 +34,15 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
     const [loading, setLoading] = React.useState(false);
     const supabase = createClient();
 
-    // Debug: Check if Env Vars are present
+    // Debug: Check if Env Vars are present (Detailed)
     React.useEffect(() => {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+        logger.log('SYSTEM', `Supabase URL Check: ${url.substring(0, 15)}...`);
+
         if (!url || !key) {
-            logger.error('CRITICAL: Missing Supabase Env Vars', {
-                hasUrl: !!url,
-                hasKey: !!key
-            });
+            logger.error('CRITICAL: Missing Supabase Env Vars');
         }
     }, []);
 
@@ -54,10 +54,18 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
             try {
                 const table = type === "hosting" ? "hosting_providers" : "vpn_providers";
 
-                const { data, error } = await supabase
+                // Create a promise that rejects after 5 seconds
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('TIMEOUT_5S: Supabase did not respond in 5s')), 5000)
+                );
+
+                const dataPromise = supabase
                     .from(table)
                     .select("*")
                     .order("provider_name", { ascending: true });
+
+                // Race the data fetch against the timeout
+                const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any;
 
                 if (error) {
                     logger.error('Supabase Error Trace', error);
