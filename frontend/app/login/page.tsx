@@ -10,25 +10,35 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
 
-    // Attempt Login
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // Attempt Login
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      alert("Error: " + error.message);
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        router.push("/"); // Redirect to Home
+        router.refresh();
+      }
+    } catch (err) {
+      setErrorMsg("An unexpected error occurred.");
+      console.error(err);
+    } finally {
+      // Always stop loading unless we redirected (though standard practice is to stop loading on error)
+      // If success, we redirect, but setting loading false doesn't hurt as component unmounts
       setLoading(false);
-    } else {
-      router.push("/"); // Redirect to Home
-      router.refresh();
     }
   };
 
@@ -40,6 +50,11 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
+            {errorMsg && (
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md border border-red-200">
+                {errorMsg}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
               <input
