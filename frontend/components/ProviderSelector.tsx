@@ -32,7 +32,8 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
     const [value, setValue] = React.useState(selectedProviderName || "");
     const [providers, setProviders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(false);
-    const supabase = createClient();
+    // Removed direct Supabase client initialization to use Proxy API instead
+    // const supabase = createClient();
 
     // Debug: Check if Env Vars are present (Detailed)
     React.useEffect(() => {
