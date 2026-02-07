@@ -52,7 +52,21 @@ class DebugLogger {
 
     exportLogs() {
         return this.logs
-            .map(l => `[${l.timestamp}] [${l.category}] ${l.message} ${l.data ? JSON.stringify(l.data) : ''}`)
+            .map(l => {
+                let dataStr = '';
+                if (l.data) {
+                    if (l.data instanceof Error) {
+                        dataStr = ` ${l.data.name}: ${l.data.message}`;
+                    } else {
+                        try {
+                            dataStr = ` ${JSON.stringify(l.data)}`;
+                        } catch (e) {
+                            dataStr = ' [Circular/Unserializable]';
+                        }
+                    }
+                }
+                return `[${l.timestamp}] [${l.category}] ${l.message}${dataStr}`;
+            })
             .join('\n');
     }
 

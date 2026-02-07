@@ -54,9 +54,9 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
             try {
                 const table = type === "hosting" ? "hosting_providers" : "vpn_providers";
 
-                // Create a promise that rejects after 5 seconds
+                // Create a promise that rejects after 15 seconds
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('TIMEOUT_5S: Supabase did not respond in 5s')), 5000)
+                    setTimeout(() => reject(new Error('TIMEOUT_15S: Supabase did not respond in 15s')), 15000)
                 );
 
                 const dataPromise = supabase
