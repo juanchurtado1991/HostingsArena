@@ -25,26 +25,37 @@ export function Navbar() {
   const supabase = createClient();
 
   useEffect(() => {
-    const checkUserRole = async (uid: string) => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', uid)
-        .single();
+    let mounted = true;
 
-      if (profile?.role === 'admin') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
+    const checkUserRole = async (uid: string) => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', uid)
+          .single();
+
+        if (error) {
+          console.warn("Error checking user role:", error);
+          return;
+        }
+
+        if (mounted && profile?.role === 'admin') {
+          setIsAdmin(true);
+        }
+      } catch (err) {
+        console.error("Failed to check user role:", err);
       }
     };
 
     // Check active session
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkUserRole(session.user.id);
+      if (mounted) {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkUserRole(session.user.id);
+        }
       }
     };
 
@@ -52,22 +63,32 @@ export function Navbar() {
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkUserRole(session.user.id);
-      } else {
-        setIsAdmin(false);
+      if (mounted) {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkUserRole(session.user.id);
+        } else {
+          setIsAdmin(false);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [supabase]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    // 🚀 Optimistic UI: Reset state immediately before waiting for network
     setUser(null);
     setIsAdmin(false);
     router.push("/login");
+
+    // Background execution
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Error signing out:", error);
+
     router.refresh();
   };
 
