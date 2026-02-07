@@ -7,8 +7,8 @@ import Link from "next/link";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      
+    <section className="relative pt-28 pb-12 flex flex-col items-center justify-start overflow-hidden">
+
       {/* Background Gradients */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-[128px] animate-pulse" />
@@ -16,9 +16,9 @@ export function HeroSection() {
       </div>
 
       <div className="container mx-auto px-6 relative z-10 text-center">
-        
+
         {/* Badge */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -32,7 +32,7 @@ export function HeroSection() {
         </motion.div>
 
         {/* Title */}
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -42,7 +42,7 @@ export function HeroSection() {
         </motion.h1>
 
         {/* Subtitle */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -54,11 +54,11 @@ export function HeroSection() {
         </motion.p>
 
         {/* CTA Buttons */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
         >
           <Link href="/compare" className="h-12 px-8 rounded-full bg-foreground text-background font-semibold flex items-center gap-2 hover:scale-105 transition-transform">
             Start Comparing <ArrowRight className="w-4 h-4" />
@@ -67,13 +67,6 @@ export function HeroSection() {
             Browse Providers
           </Link>
         </motion.div>
-
-        {/* Features Grid (Floating Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <MotionGlassCard delay={0.4} icon={RefreshCw} title="Real Renewal Prices" desc="We expose the 200%+ price hikes hidden in the fine print." />
-          <MotionGlassCard delay={0.5} icon={Zap} title="True Performance" desc="Verified TTFB, NVMe storage types, and LVE RAM limits." />
-          <MotionGlassCard delay={0.6} icon={Shield} title="Privacy Audits" desc="We track which VPNs actually have 'No-Logs' audits." />
-        </div>
 
       </div>
     </section>

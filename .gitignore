@@ -66,3 +66,9 @@ htmlcov/
 .cache/
 .env
 data/*.json
+
+# Pipeline Logs (Save Tokens)
+pipeline_*.txt
+*.bak
+*.swp
+

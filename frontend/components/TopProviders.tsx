@@ -43,57 +43,85 @@ const TOP_PROVIDERS = [
 
 export function TopProviders() {
     return (
-        <section className="container mx-auto px-6 -mt-20 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {TOP_PROVIDERS.map((provider) => (
+        <section className="container mx-auto px-4 md:px-6 relative z-20 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
+                {/* Re-order array to put Rank 1 in the middle for visual symmetry if desired, 
+            but for a standard grid 1-2-3 is often better. 
+            User asked for symmetry. A 1-2-3 grid is symmetrical in alignment. 
+            Let's keep the array order but make them identical in size.
+        */}
+                {TOP_PROVIDERS.sort((a, b) => a.rank - b.rank).map((provider) => (
                     <GlassCard
                         key={provider.name}
-                        className={`relative overflow-hidden border-2 hover:scale-105 transition-transform duration-300 ${provider.rank === 1 ? 'border-primary/50 shadow-2xl shadow-primary/10' : 'border-white/5'}`}
+                        className={`
+              relative overflow-hidden border-2 transition-all duration-300 flex flex-col h-full
+              ${provider.rank === 1
+                                ? 'border-primary shadow-2xl shadow-primary/20 z-10 ring-1 ring-primary/50'
+                                : 'border-white/5 hover:border-white/20'
+                            }
+            `}
                     >
                         {/* Background Gradient */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${provider.color} opacity-30`} />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${provider.color} opacity-10`} />
 
-                        {/* Badge */}
-                        <div className="absolute top-0 right-0 bg-primary/20 text-primary text-xs font-bold px-3 py-1 rounded-bl-xl border-l border-b border-primary/20 backdrop-blur-md">
-                            {provider.badge}
-                        </div>
+                        {/* Badge (Only for Rank 1 & 2 to balance? Or just Rank 1) */}
+                        {provider.badge && (
+                            <div className={`absolute top-0 right-0 text-xs font-bold px-3 py-1 rounded-bl-xl border-l border-b backdrop-blur-md
+                 ${provider.rank === 1 ? 'bg-primary text-primary-foreground border-primary' : 'bg-white/10 text-muted-foreground border-white/10'}
+               `}>
+                                {provider.badge}
+                            </div>
+                        )}
 
-                        <div className="relative z-10 flex flex-col h-full">
+                        <div className="relative z-10 flex flex-col h-full p-6">
                             {/* Header */}
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-background/50 font-bold border border-white/10">
-                                    {provider.rank === 1 ? <Trophy className="w-4 h-4 text-yellow-500" /> : <span className="text-muted-foreground">#{provider.rank}</span>}
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className={`flex items-center justify-center w-12 h-12 rounded-2xl font-bold border shadow-inner text-lg
+                    ${provider.rank === 1 ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-background/50 border-white/10 text-muted-foreground'}
+                `}>
+                                    {provider.rank === 1 ? <Trophy className="w-6 h-6" /> : <span>#{provider.rank}</span>}
                                 </div>
-                                <h3 className="text-xl font-bold">{provider.name}</h3>
+                                <div>
+                                    <h3 className="text-2xl font-bold">{provider.name}</h3>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Hosting</p>
+                                </div>
                             </div>
 
                             {/* Price */}
-                            <div className="mb-6">
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl font-black tracking-tighter">${provider.price}</span>
-                                    <span className="text-sm text-muted-foreground">/mo</span>
+                            <div className="mb-8 p-4 rounded-2xl bg-background/40 border border-white/5 text-center">
+                                <div className="flex items-center justify-center gap-1 mb-1">
+                                    <span className="text-sm text-muted-foreground line-through opacity-70">$10.99</span>
+                                    <span className="text-green-400 text-xs font-bold bg-green-400/10 px-2 py-0.5 rounded-full">-{provider.discount}</span>
                                 </div>
-                                <div className="text-green-400 text-sm font-bold flex items-center gap-1 mt-1">
-                                    Save {provider.discount} <ArrowRight className="w-3 h-3" />
+                                <div className="flex items-baseline justify-center gap-1">
+                                    <span className="text-5xl font-black tracking-tighter text-foreground">${provider.price}</span>
+                                    <span className="text-sm text-muted-foreground font-medium">/mo</span>
                                 </div>
                             </div>
 
                             {/* Features */}
-                            <ul className="space-y-2 mb-8 flex-grow">
+                            <ul className="space-y-4 mb-8 flex-grow">
                                 {provider.features.map(f => (
-                                    <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Check className="w-4 h-4 text-primary" /> {f}
+                                    <li key={f} className="flex items-start gap-3 text-sm text-muted-foreground">
+                                        <div className="mt-0.5 min-w-[16px]">
+                                            <Check className={`w-4 h-4 ${provider.rank === 1 ? 'text-primary' : 'text-green-500/70'}`} />
+                                        </div>
+                                        {f}
                                     </li>
                                 ))}
                             </ul>
 
                             {/* CTAs */}
-                            <div className="space-y-3">
-                                <Button className="w-full font-bold text-md rounded-full shadow-lg hover:shadow-primary/25 transition-all" size="lg">
-                                    Ver Oferta Exclusiva ⚡️
+                            <div className="space-y-3 mt-auto">
+                                <Button
+                                    className={`w-full font-bold text-lg h-12 rounded-xl shadow-lg transition-all
+                        ${provider.rank === 1 ? 'bg-primary hover:bg-primary/90 hover:shadow-primary/25' : 'bg-white/5 hover:bg-white/10 text-foreground border border-white/10'}
+                    `}
+                                >
+                                    Ver Oferta {provider.rank === 1 && '⚡️'}
                                 </Button>
-                                <Link href={`/hosting/${provider.slug}`} className="block text-center text-xs text-muted-foreground hover:text-white underline decoration-dotted">
-                                    Leer análisis completo
+                                <Link href={`/hosting/${provider.slug}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+                                    Ver análisis detallado
                                 </Link>
                             </div>
                         </div>
