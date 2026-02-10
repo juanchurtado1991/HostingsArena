@@ -18,7 +18,7 @@ interface Provider {
     raw_data: any;
 }
 
-export default function HostingList({ initialProviders }: { initialProviders: Provider[] }) {
+export default function HostingList({ initialProviders, affiliateUrls = {} }: { initialProviders: Provider[]; affiliateUrls?: Record<string, string> }) {
     const [search, setSearch] = useState("");
 
     const filtered = initialProviders.filter(p =>
@@ -103,7 +103,7 @@ export default function HostingList({ initialProviders }: { initialProviders: Pr
                                     Analysis
                                 </a>
                                 <a
-                                    href={p.website_url}
+                                    href={affiliateUrls[p.provider_name] || p.website_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="rounded-full h-10 px-6 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 inline-flex items-center justify-center font-medium transition-colors"

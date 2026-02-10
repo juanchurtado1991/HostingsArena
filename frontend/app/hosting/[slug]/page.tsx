@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Check, X, Shield, Globe, Zap, Server, ChevronRight, AlertTriangle, Info, ArrowRight, CheckCircle2, HardDrive, Clock, ShieldCheck, Lock } from "lucide-react";
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
+import { getAffiliateUrl } from "@/lib/affiliates";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -41,13 +42,16 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
 
     const isBadProvider = (provider.performance_grade === 'C' || provider.performance_grade === 'D' || provider.performance_grade === 'F' || provider.support_score < 70);
 
+    // Fetch affiliate link from DB (falls back to website_url)
+    const affiliateUrl = await getAffiliateUrl(provider.provider_name, provider.website_url);
+
     return (
         <main className="min-h-screen bg-background pb-20">
             <StickyBuyBar
                 providerName={provider.provider_name}
                 price={provider.pricing_monthly}
                 rating={provider.support_score ? `${provider.support_score / 10}` : undefined}
-                visitUrl={provider.website_url}
+                visitUrl={affiliateUrl}
                 discount={renewalHikePercent > 0 ? "Save BIG" : undefined}
             />
 
@@ -100,7 +104,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                     <div className="mt-12 flex justify-center">
                         <Button size="lg" className="rounded-full h-16 px-12 text-xl font-bold shadow-2xl hover:scale-105 transition-transform" asChild>
                             <a
-                                href={provider.website_url}
+                                href={affiliateUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
@@ -324,7 +328,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
 
                                         <Button className="w-full rounded-full text-lg font-bold shadow-md" size="lg" asChild>
                                             <a
-                                                href={provider.website_url}
+                                                href={affiliateUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >

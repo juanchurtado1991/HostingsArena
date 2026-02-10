@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
+import { getAffiliateUrl } from "@/lib/affiliates";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -41,13 +42,16 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
 
     const isBadProvider = (provider.support_quality_score < 70 || provider.avg_speed_mbps < 50);
 
+    // Fetch affiliate link from DB (falls back to website_url)
+    const affiliateUrl = await getAffiliateUrl(provider.provider_name, provider.website_url);
+
     return (
         <main className="min-h-screen bg-background pb-20">
             <StickyBuyBar
                 providerName={provider.provider_name}
                 price={provider.pricing_monthly}
                 rating={provider.support_quality_score ? `${provider.support_quality_score / 10}` : undefined}
-                visitUrl={provider.website_url}
+                visitUrl={affiliateUrl}
                 discount={renewalHikePercent > 0 ? "Save BIG" : undefined}
             />
 
@@ -98,7 +102,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                     <div className="mt-12 flex justify-center">
                         <Button size="lg" className="rounded-full h-16 px-12 text-xl font-bold shadow-2xl hover:scale-105 transition-transform" asChild>
                             <a
-                                href={provider.website_url}
+                                href={affiliateUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
@@ -224,7 +228,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             </div>
                             <Button className="w-full mt-8 h-12 rounded-full text-lg shadow-md font-bold" size="lg" asChild>
                                 <a
-                                    href={provider.website_url}
+                                    href={affiliateUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >

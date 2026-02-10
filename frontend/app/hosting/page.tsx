@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getAffiliateUrlBatch } from "@/lib/affiliates";
 
 export const metadata = {
   title: "Top Hosting Providers - Verified Benchmarks | HostingArena",
@@ -38,6 +39,11 @@ export default async function HostingPage({
 
   const { data: providers, count } = await dbQuery;
   const totalPages = count ? Math.ceil(count / itemsPerPage) : 0;
+
+  // Fetch affiliate links for all providers on this page
+  const affiliateUrls = providers ? await getAffiliateUrlBatch(
+    providers.map(p => ({ provider_name: p.provider_name, website_url: p.website_url }))
+  ) : new Map<string, string>();
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6">
@@ -129,7 +135,7 @@ export default async function HostingPage({
 
               {/* CTA - Money First */}
               <div className="mt-auto space-y-3">
-                <Link href={`https://www.google.com/search?q=${provider.provider_name}+hosting+deal`} target="_blank" className="w-full block">
+                <Link href={affiliateUrls.get(provider.provider_name) || provider.website_url} target="_blank" className="w-full block">
                   <Button className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform" size="lg">
                     Ver Oferta Exclusiva ⚡️
                   </Button>
