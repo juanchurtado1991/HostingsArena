@@ -3,6 +3,7 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
+import { useTrackPageView } from "@/hooks/useTrackPageView";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ export default function CalculatorPage() {
     const [years, setYears] = useState(3); // Money First: Default to 3 years (The Trap)
     const [provider1, setProvider1] = useState({ name: "Bluehost", initial: 2.95, renewal: 10.99, promo: 12 });
     const [provider2, setProvider2] = useState({ name: "FastComet", initial: 2.95, renewal: 2.95, promo: 12 });
+    useTrackPageView();
 
     // Generate projection data based on selected years
     const data = [];

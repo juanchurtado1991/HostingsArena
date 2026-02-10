@@ -28,8 +28,13 @@ export function Navbar() {
   useEffect(() => {
     let mounted = true;
 
+    // Check localStorage for cached admin status to avoid flicker
+    if (typeof window !== 'undefined') {
+      const cachedAdmin = localStorage.getItem('isAdmin') === 'true';
+      if (cachedAdmin) setIsAdmin(true);
+    }
+
     const checkUserRole = async (uid: string) => {
-      logger.log('ADMIN', `Checking role for user ${uid}`);
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -39,16 +44,18 @@ export function Navbar() {
 
         if (error) {
           console.warn("Error checking user role:", error);
-          logger.error('Error checking user role', error);
           return;
         }
 
-        if (profile?.role === 'admin' && mounted) {
-          logger.log('ADMIN', 'User is admin', { uid });
-          setIsAdmin(true);
-        } else {
-          logger.log('ADMIN', 'User is NOT admin', { role: profile?.role });
-          setIsAdmin(false);
+        if (mounted) {
+          const isUserAdmin = profile?.role === 'admin';
+          setIsAdmin(isUserAdmin);
+          // Cache the result
+          if (isUserAdmin) {
+            localStorage.setItem('isAdmin', 'true');
+          } else {
+            localStorage.removeItem('isAdmin');
+          }
         }
       } catch (err) {
         console.error("Failed to check user role:", err);
@@ -62,6 +69,10 @@ export function Navbar() {
         setUser(session?.user ?? null);
         if (session?.user) {
           await checkUserRole(session.user.id);
+        } else {
+          // Clear admin state if no user
+          setIsAdmin(false);
+          localStorage.removeItem('isAdmin');
         }
       }
     };
@@ -76,6 +87,7 @@ export function Navbar() {
           await checkUserRole(session.user.id);
         } else {
           setIsAdmin(false);
+          localStorage.removeItem('isAdmin');
         }
       }
     });
@@ -87,10 +99,10 @@ export function Navbar() {
   }, [supabase]);
 
   const handleSignOut = async () => {
-    logger.log('AUTH', 'Sign Out clicked');
     // 🚀 Optimistic UI: Reset state immediately before waiting for network
     setUser(null);
     setIsAdmin(false);
+    localStorage.removeItem('isAdmin');
     router.push("/login");
 
     // Background execution

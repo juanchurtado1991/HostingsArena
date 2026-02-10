@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 import { getAffiliateUrl } from "@/lib/affiliates";
+import { PageTracker } from "@/components/tracking/PageTracker";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -47,6 +48,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
 
     return (
         <main className="min-h-screen bg-background pb-20">
+            <PageTracker />
             <StickyBuyBar
                 providerName={provider.provider_name}
                 price={provider.pricing_monthly}

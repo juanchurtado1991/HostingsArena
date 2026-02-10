@@ -5,6 +5,7 @@ export type TaskType =
     | 'affiliate_audit'   // Missing/Broken affiliate links
     | 'scraper_fix'       // Scraper failures
     | 'content_review'    // AI-generated news drafts
+    | 'content_update'    // Posts needing affiliate link updates
     | 'system_alert'      // General system warnings
     | 'seo_opportunity'   // Backlink opportunities
     | 'social_post'       // Social media queue

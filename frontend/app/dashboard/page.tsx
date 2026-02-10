@@ -2,11 +2,12 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
-import { TaskCard, AffiliateResolveModal, AffiliateManager } from "@/components/dashboard";
+import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor } from "@/components/dashboard";
+import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import type { AdminTask, TaskType, TaskPriority } from "@/lib/tasks/types";
 
 const TASKS_PER_PAGE = 15;
@@ -153,12 +154,12 @@ export default function DashboardPage() {
             const activeAffiliates = affData.stats?.active || 0;
 
             // Fetch published posts count
-            const { data: posts } = await supabase
+            const { count: postCount } = await supabase
                 .from('posts')
-                .select('id', { count: 'exact', head: true })
+                .select('*', { count: 'exact', head: true })
                 .eq('status', 'published');
 
-            const totalPosts = posts?.length ?? 0;
+            const totalPosts = postCount ?? 0;
 
             // Conservative Revenue Model:
             // Each post generates ~15 clicks/month (conservative)
@@ -220,8 +221,9 @@ export default function DashboardPage() {
                     <div className="flex gap-4">
                         <button
                             onClick={() => setActiveTab("overview")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === "overview" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "overview" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
+                            <LayoutDashboard className="w-4 h-4" />
                             Overview
                         </button>
                         <button
@@ -236,14 +238,23 @@ export default function DashboardPage() {
                         </button>
                         <button
                             onClick={() => setActiveTab("affiliates")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === "affiliates" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "affiliates" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
+                            <Handshake className="w-4 h-4" />
                             Affiliate Manager
                         </button>
                         <button
-                            onClick={() => setActiveTab("workflows")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === "workflows" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            onClick={() => setActiveTab("newsroom")}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "newsroom" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
+                            <Newspaper className="w-4 h-4" />
+                            AI Newsroom
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("workflows")}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "workflows" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                        >
+                            <GitBranch className="w-4 h-4" />
                             Scraper Workflows
                         </button>
                     </div>
@@ -304,6 +315,9 @@ export default function DashboardPage() {
                                 </div>
                             </GlassCard>
                         </div>
+
+                        {/* Analytics Card */}
+                        <AnalyticsCard />
 
                         {/* Status Table */}
                         <GlassCard className="p-8">
@@ -608,6 +622,10 @@ export default function DashboardPage() {
 
                 {activeTab === "affiliates" && (
                     <AffiliateManager />
+                )}
+
+                {activeTab === "newsroom" && (
+                    <PostEditor />
                 )}
 
                 {activeTab === "workflows" && (

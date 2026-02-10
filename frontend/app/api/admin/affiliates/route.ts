@@ -219,6 +219,49 @@ export async function PATCH(request: NextRequest) {
 
         if (error) throw error;
 
+        // If status changed to paused or expired, create tasks for posts using this provider
+        if (data && (data.status === 'paused' || data.status === 'expired')) {
+            try {
+                const { data: affectedPosts } = await supabase
+                    .from('posts')
+                    .select('id, title')
+                    .ilike('related_provider_name', data.provider_name)
+                    .eq('status', 'published');
+
+                if (affectedPosts && affectedPosts.length > 0) {
+                    for (const post of affectedPosts) {
+                        // Check if task already exists
+                        const { data: existing } = await supabase
+                            .from('admin_tasks')
+                            .select('id')
+                            .eq('task_type', 'content_update')
+                            .eq('status', 'pending')
+                            .contains('metadata', { post_id: post.id })
+                            .maybeSingle();
+
+                        if (!existing) {
+                            await supabase.from('admin_tasks').insert({
+                                task_type: 'content_update',
+                                priority: 'high',
+                                status: 'pending',
+                                title: `Update post: affiliate link ${data.status} for ${data.provider_name}`,
+                                description: `The affiliate link for ${data.provider_name} is now "${data.status}". Post "${post.title}" contains this provider's link and needs updating.`,
+                                metadata: {
+                                    post_id: post.id,
+                                    post_title: post.title,
+                                    provider_name: data.provider_name,
+                                    affiliate_status: data.status,
+                                    reason: 'affiliate_link_deactivated',
+                                },
+                            });
+                        }
+                    }
+                }
+            } catch (taskErr) {
+                console.error('[Affiliates API] Failed to create post update tasks:', taskErr);
+            }
+        }
+
         return NextResponse.json({ affiliate: data, message: 'Affiliate updated successfully' });
     } catch (error) {
         console.error('[Affiliates API] PATCH error:', error);

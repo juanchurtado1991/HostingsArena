@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getAffiliateUrlBatch } from "@/lib/affiliates";
+import { PageTracker } from "@/components/tracking/PageTracker";
 
 export const metadata = {
   title: "Top Hosting Providers - Verified Benchmarks | HostingArena",
@@ -47,6 +48,7 @@ export default async function HostingPage({
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6">
+      <PageTracker />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

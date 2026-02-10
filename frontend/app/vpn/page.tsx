@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
 import { Button } from "@/components/ui/button";
 import { getAffiliateUrlBatch } from "@/lib/affiliates";
+import { PageTracker } from "@/components/tracking/PageTracker";
 
 export const metadata = {
   title: "Top VPNs - Verified Privacy Audits | HostingArena",
@@ -47,6 +48,7 @@ export default async function VPNPage({
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6">
+      <PageTracker />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

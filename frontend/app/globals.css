@@ -128,3 +128,56 @@
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* TipTap Editor Styles */
+.tiptap {
+  outline: none;
+}
+
+.tiptap h1 {
+  @apply text-2xl font-bold mb-3;
+}
+
+.tiptap h2 {
+  @apply text-xl font-bold mb-2;
+}
+
+.tiptap h3 {
+  @apply text-lg font-semibold mb-2;
+}
+
+.tiptap p {
+  @apply mb-3 leading-relaxed;
+}
+
+.tiptap ul {
+  @apply list-disc pl-5 mb-3;
+}
+
+.tiptap ol {
+  @apply list-decimal pl-5 mb-3;
+}
+
+.tiptap li {
+  @apply mb-1;
+}
+
+.tiptap blockquote {
+  @apply border-l-4 border-primary/30 pl-4 italic text-muted-foreground my-3;
+}
+
+.tiptap a {
+  @apply text-primary underline;
+}
+
+.tiptap mark {
+  @apply rounded px-0.5;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-muted-foreground/40;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

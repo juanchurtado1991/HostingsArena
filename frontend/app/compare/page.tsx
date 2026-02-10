@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Check, X, AlertTriangle, ArrowRight, Shield, Database, Server, Zap, Globe, Coins, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useTrackPageView } from "@/hooks/useTrackPageView";
 import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export default function ComparePage() {
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
     const [p1, setP1] = useState<any>(null);
     const [p2, setP2] = useState<any>(null);
+    useTrackPageView();
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6">

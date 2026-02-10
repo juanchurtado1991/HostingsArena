@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Check, X, Shield, Globe, Zap, Server, ChevronRight, AlertTriangle, Info, ArrowRight, CheckCircle2, HardDrive, Clock, ShieldCheck, Lock } from "lucide-react";
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 import { getAffiliateUrl } from "@/lib/affiliates";
+import { PageTracker } from "@/components/tracking/PageTracker";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -47,6 +48,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
 
     return (
         <main className="min-h-screen bg-background pb-20">
+            <PageTracker />
             <StickyBuyBar
                 providerName={provider.provider_name}
                 price={provider.pricing_monthly}

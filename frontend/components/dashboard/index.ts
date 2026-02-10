@@ -3,3 +3,4 @@ export { AffiliateResolveModal } from "./AffiliateResolveModal";
 export { AffiliateFormModal, EMPTY_AFFILIATE_FORM } from "./AffiliateFormModal";
 export type { AffiliateFormData, ProviderOption } from "./AffiliateFormModal";
 export { AffiliateManager } from "./AffiliateManager";
+export { PostEditor } from "./PostEditor";
