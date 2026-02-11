@@ -21,7 +21,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         const body = await request.json();
         const supabase = createAdminClient();
 
-        // Get the task first
         const { data: task, error: taskError } = await supabase
             .from('admin_tasks')
             .select('*')
@@ -33,7 +32,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             return NextResponse.json({ error: 'Task not found' }, { status: 404 });
         }
 
-        // Handle based on task type
         let actionResult: Record<string, unknown> = {};
 
         switch (task.task_type) {
@@ -46,7 +44,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                     );
                 }
 
-                // Validate URL format
                 try {
                     new URL(link);
                 } catch {
@@ -58,7 +55,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
                 const providerName = (task.metadata as Record<string, unknown>)?.provider_name as string;
 
-                // Upsert affiliate link with all fields
                 const { error: affError } = await supabase
                     .from('affiliate_partners')
                     .upsert({
@@ -85,7 +81,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             }
 
             case 'scraper_fix': {
-                // Just acknowledge - actual fix is done manually
                 actionResult = {
                     action: 'acknowledged',
                     provider: (task.metadata as Record<string, unknown>)?.provider_name
@@ -98,7 +93,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 const postId = (task.metadata as Record<string, unknown>)?.post_id as string;
 
                 if (postId && approved) {
-                    // Update post status to published
                     await supabase
                         .from('posts')
                         .update({
@@ -119,7 +113,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                 actionResult = { action: 'completed' };
         }
 
-        // Mark task as completed
         const { error: updateError } = await supabase
             .from('admin_tasks')
             .update({

@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import CommentSection from "@/components/comments/CommentSection";
 import { Button } from "@/components/ui/button";
@@ -36,14 +36,12 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
     const features = provider.features || {};
     const raw = provider.raw_data || {};
 
-    // Money First Logic
     const renewalHikePercent = provider.renewal_price && provider.pricing_monthly
         ? Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.pricing_monthly) * 100)
         : 0;
 
     const isBadProvider = (provider.performance_grade === 'C' || provider.performance_grade === 'D' || provider.performance_grade === 'F' || provider.support_score < 70);
 
-    // Fetch affiliate link from DB (falls back to website_url)
     const affiliateUrl = await getAffiliateUrl(provider.provider_name, provider.website_url);
 
     return (

@@ -1,7 +1,7 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Clock, Tag, ExternalLink, Sparkles, ImageIcon, Calendar } from "lucide-react";
 import { getAffiliateUrl } from "@/lib/affiliates";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/tracking/PageTracker";
 import Link from "next/link";
 

@@ -1,5 +1,5 @@
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { PageTracker } from "@/components/tracking/PageTracker";
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -50,6 +50,35 @@ export async function generateMetadata({ params }: PageProps) {
     };
 }
 
+import { Suspense } from "react";
+
+async function AffiliateCTA({ providerName }: { providerName: string }) {
+    try {
+        const affiliateLink = await getAffiliateUrl(
+            providerName,
+            `https://www.google.com/search?q=${providerName}`
+        );
+
+        if (!affiliateLink) return null;
+
+        return (
+            <div className="flex justify-center mt-12">
+                <a
+                    href={affiliateLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
+                >
+                    Visit {providerName} <ExternalLink className="w-5 h-5" />
+                </a>
+            </div>
+        );
+    } catch (error) {
+        console.error("Error loading Affiliate CTA:", error);
+        return null;
+    }
+}
+
 export default async function NewsPostPage({ params }: PageProps) {
     const { slug } = await params;
     const post = await getPost(slug);
@@ -57,10 +86,6 @@ export default async function NewsPostPage({ params }: PageProps) {
     if (!post) {
         notFound();
     }
-
-    const affiliateLink = post.related_provider_name
-        ? await getAffiliateUrl(post.related_provider_name, `https://www.google.com/search?q=${post.related_provider_name}`)
-        : null;
 
     return (
         <div className="min-h-screen pt-24 pb-20 px-6">
@@ -122,23 +147,16 @@ export default async function NewsPostPage({ params }: PageProps) {
                 {/* Content */}
                 <GlassCard className="p-8 md:p-12 mb-12">
                     <div
-                        className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg text-muted-foreground leading-relaxed"
+                        className="article-body max-w-none text-foreground leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: post.content || "" }}
                     />
                 </GlassCard>
 
-                {/* CTA */}
-                {affiliateLink && (
-                    <div className="flex justify-center">
-                        <a
-                            href={affiliateLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
-                        >
-                            Visit {post.related_provider_name} <ExternalLink className="w-5 h-5" />
-                        </a>
-                    </div>
+                {/* CTA with Suspense to prevent stream abortion issues */}
+                {post.related_provider_name && (
+                    <Suspense fallback={<div className="h-20 animate-pulse bg-muted/20" />}>
+                        <AffiliateCTA providerName={post.related_provider_name} />
+                    </Suspense>
                 )}
             </article>
         </div>

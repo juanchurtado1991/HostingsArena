@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'title is required' }, { status: 400 });
         }
 
-        // Auto-generate slug if not provided
         const finalSlug = slug || title
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
@@ -124,12 +123,10 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'id is required' }, { status: 400 });
         }
 
-        // Auto-set published_at when status changes to published
         if (updates.status === 'published') {
             updates.published_at = new Date().toISOString();
         }
 
-        // Track human review
         if (!updates.is_ai_generated) {
             updates.last_human_review_at = new Date().toISOString();
         }

@@ -3,6 +3,7 @@ import {
     TaskGeneratorFactory,
     AffiliateLinkAudit,
     ScraperHealthCheck,
+    PostReviewAudit,
     createAdminClient
 } from '@/lib/tasks';
 
@@ -16,27 +17,21 @@ import {
  */
 export async function POST(request: NextRequest) {
     try {
-        // Verify authorization (cron secret or admin)
         const authHeader = request.headers.get('authorization');
         const cronSecret = process.env.CRON_SECRET;
 
-        // Allow cron jobs with secret
         if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-            // Authorized via cron secret
         } else {
-            // TODO: Add admin auth check here
-            // For now, allow all requests in development
             if (process.env.NODE_ENV === 'production') {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
         }
 
-        // Initialize task factory with all generators
         const factory = new TaskGeneratorFactory();
         factory.register(new AffiliateLinkAudit());
         factory.register(new ScraperHealthCheck());
+        factory.register(new PostReviewAudit());
 
-        // Run all generators with detailed logging
         const { tasks, results } = await factory.runAllDetailed();
 
         console.log('[TaskGenerate] Results:', JSON.stringify(results, null, 2));
@@ -50,7 +45,6 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Insert tasks into database
         const supabase = createAdminClient();
         const { error } = await supabase
             .from('admin_tasks')

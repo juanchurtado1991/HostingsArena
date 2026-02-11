@@ -9,8 +9,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-// import { createClient } from "@/utils/supabase/client"; // Removed
-import { logger } from "@/utils/logger";
+import { logger } from "@/lib/logger";
 
 interface ProviderSelectorProps {
     type: "hosting" | "vpn";
@@ -24,10 +23,7 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
     const [searchTerm, setSearchTerm] = React.useState("");
     const [providers, setProviders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(false);
-    // Removed direct Supabase client initialization to use Proxy API instead
-    // const supabase = createClient();
 
-    // Debug: Check if Env Vars are present (Detailed)
     React.useEffect(() => {
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
         const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -45,7 +41,6 @@ export function ProviderSelector({ type, onSelect, selectedProviderName, classNa
             logger.log('SEARCH', `Fetching providers for ${type} via PROXY API`);
 
             try {
-                // Call our internal API Proxy
                 const response = await fetch(`/api/providers?type=${type}`);
 
                 if (!response.ok) {

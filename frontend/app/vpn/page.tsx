@@ -3,7 +3,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Check, Shield, Globe, Lock, Activity, Search, ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { getAffiliateUrlBatch } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
@@ -35,13 +35,11 @@ export default async function VPNPage({
     dbQuery = dbQuery.ilike("provider_name", `%${query}%`);
   }
 
-  // Sort by name
   dbQuery = dbQuery.order("provider_name", { ascending: true }).range(start, end);
 
   const { data: providers, count } = await dbQuery;
   const totalPages = count ? Math.ceil(count / itemsPerPage) : 0;
 
-  // Fetch affiliate links for all providers on this page
   const affiliateUrls = providers ? await getAffiliateUrlBatch(
     providers.map(p => ({ provider_name: p.provider_name, website_url: p.website_url }))
   ) : new Map<string, string>();

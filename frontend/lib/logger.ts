@@ -10,7 +10,6 @@ interface LogEntry {
 class DebugLogger {
     private logs: LogEntry[] = [];
     private maxLogs = 200; // Keep last 200 logs
-    // Default to true unless explicitly disabled
     private isEnabled = process.env.NEXT_PUBLIC_SHOW_LOGGER !== 'false';
 
     constructor() {
@@ -33,8 +32,6 @@ class DebugLogger {
             this.logs.pop();
         }
 
-        // Mirror to console for immediate devtools visibility
-        // use a distinctive distinct color or format if possible, but standard log is fine for now
         if (category === 'ERROR') {
             console.error(`[${category}] ${message}`, data || '');
         } else {
@@ -78,7 +75,6 @@ class DebugLogger {
 
 export const logger = new DebugLogger();
 
-// Expose to window for manual access in console
 if (typeof window !== 'undefined') {
     (window as any).__debugLogger = logger;
 }

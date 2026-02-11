@@ -9,22 +9,26 @@ import { useEffect } from "react";
  */
 export function useTrackPageView(postSlug?: string) {
     useEffect(() => {
-        const track = async () => {
-            try {
-                await fetch("/api/track", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        path: window.location.pathname,
-                        referrer: document.referrer || null,
-                        post_slug: postSlug || null,
-                    }),
-                    keepalive: true,
-                });
-            } catch {
-                // Silent fail — tracking should never break the page
-            }
-        };
-        track();
+        const url = "/api/track";
+        const data = JSON.stringify({
+            path: window.location.pathname,
+            referrer: document.referrer || null,
+            post_slug: postSlug || null,
+        });
+
+        // Use sendBeacon for reliable tracking that doesn't abort
+        if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+            navigator.sendBeacon(url, data);
+        } else {
+            // Fallback to fetch but carefully catch errors
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: data,
+                keepalive: true,
+            }).catch(() => {
+                // Ignore tracking errors to prevent crashes
+            });
+        }
     }, [postSlug]);
 }

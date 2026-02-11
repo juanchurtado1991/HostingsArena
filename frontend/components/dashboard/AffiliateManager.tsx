@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import {
     Search, Plus, Link as LinkIcon, ExternalLink, Edit3, Trash2,
     CheckCircle, XCircle, Pause, RefreshCw, Loader2, Globe,
-    TrendingUp, Clock, BarChart3, Copy, Check, BookOpen, ChevronDown
+    TrendingUp, Clock, BarChart3, Copy, Check, BookOpen, ChevronDown,
+    ShieldCheck
 } from "lucide-react";
 import { AffiliateFormModal, EMPTY_AFFILIATE_FORM } from "./AffiliateFormModal";
 import type { AffiliateFormData, ProviderOption } from "./AffiliateFormModal";
@@ -22,6 +23,8 @@ interface AffiliatePartner {
     expires_at: string | null;
     status: string;
     last_verified_at: string | null;
+    account_email?: string;
+    account_password?: string;
 }
 
 interface AffiliateStats {
@@ -53,7 +56,6 @@ export function AffiliateManager() {
     const [showGuide, setShowGuide] = useState(false);
     const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([]);
 
-    // Fetch real providers for dropdown
     useEffect(() => {
         const fetchProviders = async () => {
             try {
@@ -114,6 +116,8 @@ export function AffiliateManager() {
             cookie_days: aff.cookie_days ? String(aff.cookie_days) : "",
             link_duration_days: aff.link_duration_days ? String(aff.link_duration_days) : "",
             status: aff.status || "active",
+            account_email: aff.account_email || "",
+            account_password: aff.account_password || "",
         });
         setShowModal(true);
     };
@@ -436,10 +440,15 @@ export function AffiliateManager() {
                                                 <CheckCircle className="w-3 h-3" /> Verified
                                             </span>
                                         )}
+                                        {(aff.account_email || aff.account_password) && (
+                                            <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/10">
+                                                <ShieldCheck className="w-3 h-3" /> Credentials Saved
+                                            </span>
+                                        )}
                                         {aff.expires_at && (
                                             <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg border ${new Date(aff.expires_at) < new Date()
-                                                    ? "bg-red-500/10 text-red-400 border-red-500/10"
-                                                    : "bg-indigo-500/10 text-indigo-400 border-indigo-500/10"
+                                                ? "bg-red-500/10 text-red-400 border-red-500/10"
+                                                : "bg-indigo-500/10 text-indigo-400 border-indigo-500/10"
                                                 }`}>
                                                 <Clock className="w-3 h-3" />
                                                 {new Date(aff.expires_at) < new Date()

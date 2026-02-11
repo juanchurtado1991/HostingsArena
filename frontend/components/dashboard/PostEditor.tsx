@@ -20,10 +20,9 @@ import {
     Heading1, Heading2, Heading3, List, ListOrdered, Quote,
     Link as LinkIcon, Palette, Highlighter, Sparkles, Upload,
     FileText, CheckCircle, Clock, Tag, Settings, X,
-    ChevronDown, ExternalLink, ImageIcon, Type, Undo2, Redo2,
+    ChevronDown, ExternalLink, ImageIcon, Type, Undo2, Redo2, AlertTriangle,
 } from "lucide-react";
 
-// ─── Types ──────────────────────────────────────────
 
 interface Post {
     id: string;
@@ -52,7 +51,6 @@ interface AffiliateLink {
     status: string;
 }
 
-// ─── Toolbar Components ─────────────────────────────
 
 function ToolbarBtn({
     onClick, active, title, children, className = ""
@@ -304,7 +302,6 @@ function EditorToolbar({
     );
 }
 
-// ─── Post Editor Modal (Premium Near-Fullscreen) ─────
 
 function PostEditorModal({
     post,
@@ -333,6 +330,7 @@ function PostEditorModal({
     const [coverImageUrl, setCoverImageUrl] = useState(post?.cover_image_url || "");
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
+    const [tick, setTick] = useState(0); // Used to force re-render on editor updates
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -352,23 +350,23 @@ function PostEditorModal({
             Image.configure({
                 inline: true,
                 allowBase64: true,
-                HTMLAttributes: {
-                    class: "rounded-xl border border-border/50 my-6 max-h-[500px] w-full object-cover shadow-lg",
-                },
             }),
             Placeholder.configure({
                 placeholder: "Start writing your article here... Use the toolbar above to format text, add headings, or insert affiliate links.",
             }),
         ],
         content: post?.content || "",
+        onTransaction: () => {
+            // Force re-render so toolbar active states update
+            setTick(t => t + 1);
+        },
         editorProps: {
             attributes: {
-                class: "prose prose-invert prose-base max-w-none focus:outline-none min-h-[500px] px-8 py-6",
+                class: "tiptap focus:outline-none min-h-[500px] px-8 py-6",
             },
         },
     });
 
-    // Word count
     const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
     const charCount = editor?.getText()?.length || 0;
 
@@ -420,7 +418,6 @@ function PostEditorModal({
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Upload failed");
 
-            // Insert image into editor
             editor?.chain().focus().setImage({ src: data.url, alt: file.name }).run();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Image upload failed");
@@ -781,9 +778,8 @@ function PostEditorModal({
     );
 }
 
-// ─── Main PostEditor Component ───────────────────────
 
-export function PostEditor() {
+export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?: () => void }) {
     const [posts, setPosts] = useState<Post[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -795,7 +791,11 @@ export function PostEditor() {
     const [affiliateLinks, setAffiliateLinks] = useState<AffiliateLink[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    // Settings
+    // Generation Progress State
+    const [generationProgress, setGenerationProgress] = useState(0);
+    const [generationStatus, setGenerationStatus] = useState("");
+    const [showProgressOverlay, setShowProgressOverlay] = useState(false);
+
     const [showSettings, setShowSettings] = useState(false);
     const [postsPerDay, setPostsPerDay] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -872,29 +872,68 @@ export function PostEditor() {
     };
 
     const handleGenerate = async () => {
+        if (affiliateLinks.length === 0) {
+            alert("No hay afiliados configurados. Por favor, agrega un afiliado activo primero para poder generar posts.");
+            return;
+        }
         setGenerating(true);
+        setGenerationProgress(0);
+        setGenerationStatus("Connecting to AI Newsroom...");
+        setShowProgressOverlay(true);
+
         try {
-            const res = await fetch("/api/admin/posts/generate", {
+            const response = await fetch("/api/admin/posts/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ count: postsPerDay }),
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Generation failed");
 
-            if (data.generated === 0 && data.errors?.length > 0) {
-                const errorMsg = data.errors.map((e: any) => `${e.provider}: ${e.error}`).join('\n');
-                alert(`⚠️ Generated 0 posts. Errors:\n${errorMsg}`);
-            } else if (data.generated > 0) {
-                const warning = data.errors?.length > 0 ? `\n\n(${data.errors.length} failed)` : '';
-                alert(`✅ Generated ${data.generated} posts as drafts!${warning}`);
-            } else {
-                alert(`⚠️ Generated 0 posts (No errors returned, but no output).`);
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Connection failed");
             }
 
-            fetchPosts();
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error("No reader available");
+
+            const decoder = new TextDecoder();
+            let partialBuffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                partialBuffer += chunk;
+
+                const lines = partialBuffer.split("\n\n");
+                partialBuffer = lines.pop() || "";
+
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.error) throw new Error(data.error);
+
+                            if (data.progress !== undefined) setGenerationProgress(data.progress);
+                            if (data.status) setGenerationStatus(data.status);
+
+                            if (data.success) {
+                                // Final refresh
+                                setTimeout(() => {
+                                    setShowProgressOverlay(false);
+                                    fetchPosts();
+                                }, 1000);
+                            }
+                        } catch (e) {
+                            console.error("Error parsing progress chunk", e);
+                        }
+                    }
+                }
+            }
         } catch (e: any) {
             alert(`❌ ${e.message}`);
+            setShowProgressOverlay(false);
         } finally {
             setGenerating(false);
         }
@@ -910,6 +949,30 @@ export function PostEditor() {
 
     return (
         <div className="space-y-6">
+            {/* Warning Banner for No Affiliates */}
+            {affiliateLinks.length === 0 && !loading && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                            <AlertTriangle className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-amber-500">AI Generation Locked</h3>
+                            <p className="text-xs text-muted-foreground">You need at least one active affiliate partner to generate content.</p>
+                        </div>
+                    </div>
+                    {onNavigateToAffiliates && (
+                        <Button
+                            size="sm"
+                            onClick={onNavigateToAffiliates}
+                            className="whitespace-nowrap bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/20"
+                        >
+                            Configure Affiliates
+                        </Button>
+                    )}
+                </div>
+            )}
+
             {/* Controls */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex gap-2 items-center">
@@ -947,8 +1010,12 @@ export function PostEditor() {
                     <Button
                         size="sm"
                         onClick={handleGenerate}
-                        disabled={generating}
-                        className="rounded-xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 gap-1"
+                        disabled={generating || affiliateLinks.length === 0}
+                        title={affiliateLinks.length === 0 ? "Add affiliates to enable generation" : "Generate posts"}
+                        className={`rounded-xl shadow-lg gap-1 transition-all ${affiliateLinks.length === 0
+                            ? "bg-muted text-muted-foreground shadow-none cursor-not-allowed"
+                            : "bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-primary/25"
+                            }`}
                     >
                         {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         Generate {postsPerDay} Posts
@@ -956,7 +1023,12 @@ export function PostEditor() {
                     <Button
                         size="sm"
                         onClick={() => setEditingPost("new")}
-                        className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/25 gap-1"
+                        disabled={affiliateLinks.length === 0}
+                        title={affiliateLinks.length === 0 ? "Add affiliates to enable creation" : "New Post"}
+                        className={`rounded-xl shadow-lg gap-1 transition-all ${affiliateLinks.length === 0
+                            ? "bg-muted text-muted-foreground shadow-none cursor-not-allowed"
+                            : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-500/25"
+                            }`}
                     >
                         <Plus className="w-4 h-4" />
                         New Post
@@ -1011,7 +1083,14 @@ export function PostEditor() {
                     <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
                     <p className="text-lg font-semibold mb-2">No posts yet</p>
                     <p className="text-sm text-muted-foreground mb-6">Generate AI articles or create one manually.</p>
-                    <Button onClick={handleGenerate} disabled={generating} className="rounded-xl bg-gradient-to-r from-primary to-sky-600 gap-1">
+                    <Button
+                        onClick={handleGenerate}
+                        disabled={generating || affiliateLinks.length === 0}
+                        className={`rounded-xl gap-1 transition-all ${affiliateLinks.length === 0
+                            ? "bg-muted text-muted-foreground cursor-not-allowed"
+                            : "bg-gradient-to-r from-primary to-sky-600"
+                            }`}
+                    >
                         <Sparkles className="w-4 h-4" /> Generate {postsPerDay} Posts
                     </Button>
                 </GlassCard>
@@ -1113,6 +1192,45 @@ export function PostEditor() {
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Progress Overlay */}
+            {showProgressOverlay && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+                    <GlassCard className="w-full max-w-md p-8 shadow-2xl border-primary/20 bg-card/80">
+                        <div className="flex flex-col items-center text-center space-y-6">
+                            <div className="relative">
+                                <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                                <div className="relative p-4 rounded-full bg-primary/10 border border-primary/20">
+                                    <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold tracking-tight">AI Newsroom Working</h3>
+                                <p className="text-sm text-muted-foreground min-h-[40px] px-4">
+                                    {generationStatus}
+                                </p>
+                            </div>
+
+                            <div className="w-full space-y-3">
+                                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                                    <span className="animate-pulse">Generating Mega-Guides</span>
+                                    <span>{generationProgress}%</span>
+                                </div>
+                                <div className="h-3 w-full bg-muted/50 rounded-full overflow-hidden border border-border/50">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-primary via-sky-500 to-blue-600 transition-all duration-500 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                                        style={{ width: `${generationProgress}%` }}
+                                    />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground/40 italic">
+                                    This takes ~3 minutes per post for deep research.
+                                </p>
+                            </div>
+                        </div>
+                    </GlassCard>
+                </div>
             )}
 
             {/* Editor Modal */}

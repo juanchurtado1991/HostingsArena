@@ -2,7 +2,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
 import { Check, Server, Database, TrendingUp, Search, ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getAffiliateUrlBatch } from "@/lib/affiliates";
@@ -35,13 +35,11 @@ export default async function HostingPage({
     dbQuery = dbQuery.ilike("provider_name", `%${query}%`);
   }
 
-  // Apply Sort (Default by Rating if available, else by name for now as we don't have a rating col yet in all rows)
   dbQuery = dbQuery.order("provider_name", { ascending: true }).range(start, end);
 
   const { data: providers, count } = await dbQuery;
   const totalPages = count ? Math.ceil(count / itemsPerPage) : 0;
 
-  // Fetch affiliate links for all providers on this page
   const affiliateUrls = providers ? await getAffiliateUrlBatch(
     providers.map(p => ({ provider_name: p.provider_name, website_url: p.website_url }))
   ) : new Map<string, string>();

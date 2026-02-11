@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from 'react';
-import { logger } from '@/utils/logger';
+import { logger } from '@/lib/logger';
 import { Bug, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function DebugFloatingButton() {
     const [copied, setCopied] = useState(false);
 
-    // Always show unless explicitly disabled
     const isEnabled = process.env.NEXT_PUBLIC_SHOW_LOGGER !== 'false';
 
-    // Global Error Listeners
     useState(() => {
         if (typeof window !== 'undefined' && isEnabled) {
             const handleError = (event: ErrorEvent) => {
@@ -26,7 +24,6 @@ export function DebugFloatingButton() {
 
             logger.log('SYSTEM', 'Global error listeners attached');
 
-            // Cleanup not strictly necessary for a persistent button, but good practice if it unmounts
             return () => {
                 window.removeEventListener('error', handleError);
                 window.removeEventListener('unhandledrejection', handleRejection);

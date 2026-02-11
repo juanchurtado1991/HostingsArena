@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Fetches the affiliate link for a provider from the database.
@@ -24,7 +24,6 @@ export async function getAffiliateUrl(
             return data.affiliate_link;
         }
     } catch {
-        // Silently fall back to website URL
     }
 
     return fallbackUrl;
@@ -40,7 +39,6 @@ export async function getAffiliateUrlBatch(
 ): Promise<Map<string, string>> {
     const urlMap = new Map<string, string>();
 
-    // Default: all providers use their website_url
     for (const p of providers) {
         urlMap.set(p.provider_name, p.website_url);
     }
@@ -55,7 +53,6 @@ export async function getAffiliateUrlBatch(
         if (affiliates) {
             for (const aff of affiliates) {
                 if (aff.affiliate_link) {
-                    // Match case-insensitively, store with original casing
                     const match = providers.find(
                         p => p.provider_name.toLowerCase() === aff.provider_name.toLowerCase()
                     );
@@ -66,7 +63,6 @@ export async function getAffiliateUrlBatch(
             }
         }
     } catch {
-        // Silently fall back to website URLs
     }
 
     return urlMap;

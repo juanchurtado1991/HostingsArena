@@ -22,7 +22,6 @@ export async function GET() {
 
     try {
         const start = Date.now();
-        // Try to fetch 1 row from hosting_providers
         const { data, error } = await supabase
             .from('hosting_providers')
             .select('id, provider_name')

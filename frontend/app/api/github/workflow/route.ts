@@ -5,7 +5,6 @@ const REPO_OWNER = 'juanchurtado1991';
 const REPO_NAME = 'HostingsArena';
 const WORKFLOW_FILE = 'daily_update.yml';
 
-// Helper to make GitHub requests
 async function githubRequest(endpoint: string, options: RequestInit = {}) {
     if (!GITHUB_PAT) {
         throw new Error('GITHUB_PAT is not set in environment variables');
@@ -32,8 +31,6 @@ async function githubRequest(endpoint: string, options: RequestInit = {}) {
 
 export async function GET() {
     try {
-        // List workflow runs
-        // https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-workflow
         const response = await githubRequest(`actions/workflows/${WORKFLOW_FILE}/runs?per_page=5`);
         const data = await response.json();
 
@@ -56,8 +53,6 @@ export async function GET() {
 
 export async function POST() {
     try {
-        // Trigger workflow dispatch
-        // https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
         await githubRequest(`actions/workflows/${WORKFLOW_FILE}/dispatches`, {
             method: 'POST',
             body: JSON.stringify({

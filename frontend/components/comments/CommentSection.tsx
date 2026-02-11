@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { Comment } from "@/types";
@@ -34,16 +34,13 @@ export default function CommentSection({ providerType, providerSlug }: CommentSe
   };
 
   useEffect(() => {
-    // Check Auth
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
 
-    // Fetch Comments
     fetchComments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [providerSlug]);
 
   const handleSubmit = async (e: React.FormEvent) => {

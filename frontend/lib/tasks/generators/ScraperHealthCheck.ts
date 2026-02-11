@@ -23,14 +23,12 @@ export class ScraperHealthCheck implements TaskGenerator {
         const supabase = createAdminClient();
         const tasks: AdminTask[] = [];
 
-        // Get all scraper statuses
         const { data: scrapers, error } = await supabase
             .from('scraper_status')
             .select('*');
 
         if (error) throw error;
 
-        // Check for existing pending tasks to avoid duplicates
         const { data: existingTasks } = await supabase
             .from('admin_tasks')
             .select('metadata')
@@ -47,7 +45,6 @@ export class ScraperHealthCheck implements TaskGenerator {
         const staleThreshold = new Date(now.getTime() - this.STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000);
 
         for (const scraper of (scrapers || []) as ScraperStatus[]) {
-            // Skip if task already exists for this provider
             if (existingProviderNames.has(scraper.provider_name)) continue;
 
             const lastRun = scraper.last_run ? new Date(scraper.last_run) : null;
@@ -55,10 +52,8 @@ export class ScraperHealthCheck implements TaskGenerator {
             const isWarning = scraper.status === 'warning';
             const isStale = lastRun && lastRun < staleThreshold;
 
-            // Skip if everything is OK
             if (!isError && !isWarning && !isStale) continue;
 
-            // Determine priority and message
             const isHighPriority = isError || isWarning;
 
             const task: AdminTask = {

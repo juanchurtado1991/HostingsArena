@@ -19,26 +19,20 @@ export async function GET(request: NextRequest) {
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-        // Total views by period
         const [todayViews, weekViews, monthViews] = await Promise.all([
             supabase.from("page_views").select("id", { count: "exact", head: true }).gte("created_at", today),
             supabase.from("page_views").select("id", { count: "exact", head: true }).gte("created_at", sevenDaysAgo),
             supabase.from("page_views").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgo),
         ]);
 
-        // Top pages (last 30 days) — using RPC or raw query
         const { data: topPages } = await supabase.rpc("get_top_pages", { days_back: 30 });
 
-        // Top posts (last 30 days)
         const { data: topPosts } = await supabase.rpc("get_top_posts", { days_back: 30 });
 
-        // Daily traffic (last 30 days)
         const { data: dailyTraffic } = await supabase.rpc("get_daily_traffic", { days_back: 30 });
 
-        // Top referrers
         const { data: topReferrers } = await supabase.rpc("get_top_referrers", { days_back: 30 });
 
-        // Top countries
         const { data: topCountries } = await supabase.rpc("get_top_countries", { days_back: 30 });
 
         return NextResponse.json({

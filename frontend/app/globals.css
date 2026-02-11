@@ -134,49 +134,142 @@
   outline: none;
 }
 
-.tiptap h1 {
-  @apply text-2xl font-bold mb-3;
+/* 📝 WYSIWYG Editor & Article Body Styles (Scoped) */
+.tiptap,
+.article-body {
+  @apply text-lg leading-relaxed text-foreground/90 font-normal;
+  box-sizing: border-box;
 }
 
-.tiptap h2 {
-  @apply text-xl font-bold mb-2;
+/* Headings - Matches Editor Exactly */
+.tiptap h1,
+.article-body h1 {
+  @apply text-4xl font-extrabold mb-6 mt-10 tracking-tight text-foreground leading-tight;
 }
 
-.tiptap h3 {
-  @apply text-lg font-semibold mb-2;
+.tiptap h2,
+.article-body h2 {
+  @apply text-3xl font-bold mb-4 mt-8 tracking-tight text-foreground leading-snug;
 }
 
-.tiptap p {
-  @apply mb-3 leading-relaxed;
+.tiptap h3,
+.article-body h3 {
+  @apply text-2xl font-bold mb-3 mt-6 text-foreground leading-snug;
 }
 
-.tiptap ul {
-  @apply list-disc pl-5 mb-3;
+/* Paragraphs & Text */
+.tiptap p,
+.article-body p {
+  @apply mb-5 leading-8;
 }
 
-.tiptap ol {
-  @apply list-decimal pl-5 mb-3;
+.tiptap strong,
+.article-body strong,
+.tiptap b,
+.article-body b {
+  @apply font-extrabold text-foreground;
 }
 
-.tiptap li {
-  @apply mb-1;
+.tiptap em,
+.article-body em,
+.tiptap i,
+.article-body i {
+  @apply italic text-foreground/80;
 }
 
-.tiptap blockquote {
-  @apply border-l-4 border-primary/30 pl-4 italic text-muted-foreground my-3;
+/* Lists */
+.tiptap ul,
+.article-body ul {
+  @apply list-disc pl-6 mb-6 space-y-2 marker:text-primary;
 }
 
-.tiptap a {
-  @apply text-primary underline;
+.tiptap ol,
+.article-body ol {
+  @apply list-decimal pl-6 mb-6 space-y-2 marker:text-primary font-medium;
 }
 
-.tiptap mark {
-  @apply rounded px-0.5;
+.tiptap li,
+.article-body li {
+  @apply pl-1 leading-7 text-foreground/90;
 }
 
+/* Blockquotes */
+.tiptap blockquote,
+.article-body blockquote {
+  @apply border-l-4 border-primary/40 pl-6 py-2 italic text-lg text-muted-foreground my-8 bg-muted/10 rounded-r-xl;
+}
+
+/* Images */
+/* Images */
+.tiptap img,
+.article-body img {
+  @apply rounded-2xl shadow-lg border border-border/50 my-8 w-full max-h-[600px] object-cover hover:scale-[1.01] transition-transform duration-300;
+}
+
+/* Code Blocks */
+.tiptap pre,
+.article-body pre {
+  @apply bg-slate-900 border border-slate-800 p-6 rounded-2xl overflow-x-auto font-mono text-sm text-slate-100 my-8 shadow-inner;
+}
+
+.tiptap code,
+.article-body code {
+  @apply bg-muted px-1.5 py-0.5 rounded-md font-mono text-sm text-primary font-bold border border-border/50;
+}
+
+/* Links (Standard) */
+.tiptap a,
+.article-body a {
+  @apply text-primary font-bold underline decoration-primary/30 underline-offset-4 hover:decoration-primary transition-all cursor-pointer;
+}
+
+/* 🚀 Dynamic Affiliate Link Styling (CSS Only) */
+/* Targets links with 'affiliate', 'go.to', or '?ref=' in href */
+.tiptap a[href*="affiliate"],
+.article-body a[href*="affiliate"],
+.tiptap a[href*="go.to"],
+.article-body a[href*="go.to"],
+.tiptap a[href*="?ref="],
+.article-body a[href*="?ref="] {
+  @apply inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold no-underline border border-primary/20 hover:bg-primary hover:text-white hover:scale-105 transition-all duration-300 mx-1 shadow-sm;
+}
+
+.tiptap a[href*="affiliate"]::after,
+.article-body a[href*="affiliate"]::after,
+.tiptap a[href*="go.to"]::after,
+.article-body a[href*="go.to"]::after,
+.tiptap a[href*="?ref="]::after,
+.article-body a[href*="?ref="]::after {
+  content: "↗";
+  @apply text-xs opacity-70 ml-0.5;
+}
+
+/* Highlight */
+.tiptap mark,
+.article-body mark {
+  @apply rounded px-1.5 py-0.5 bg-yellow-200 dark:bg-yellow-900/60 text-foreground font-medium;
+}
+
+/* Text Alignment Logic */
+.tiptap [style*="text-align: center"],
+.article-body [style*="text-align: center"] {
+  text-align: center;
+}
+
+.tiptap [style*="text-align: right"],
+.article-body [style*="text-align: right"] {
+  text-align: right;
+}
+
+.tiptap [style*="text-align: justify"],
+.article-body [style*="text-align: justify"] {
+  text-align: justify;
+}
+
+/* Editor Specific: Placeholder */
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  @apply text-muted-foreground/40;
+  @apply text-muted-foreground/40 text-lg;
   float: left;
   height: 0;
   pointer-events: none;

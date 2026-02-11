@@ -9,7 +9,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export function GlobalSearch() {
@@ -29,7 +29,6 @@ export function GlobalSearch() {
             setLoading(true);
 
             try {
-                // Fetch Hosting via Proxy
                 let hostingUrl = `/api/providers?type=hosting`;
                 if (searchTerm) hostingUrl += `&search=${encodeURIComponent(searchTerm)}`;
 
@@ -43,7 +42,6 @@ export function GlobalSearch() {
                     }
                 }
 
-                // Fetch VPNs via Proxy
                 let vpnUrl = `/api/providers?type=vpn`;
                 if (searchTerm) vpnUrl += `&search=${encodeURIComponent(searchTerm)}`;
 
@@ -57,8 +55,6 @@ export function GlobalSearch() {
                     }
                 }
 
-                // Handle potential errors (empty array fallback)
-                // Proxy returns { error: ... } on failure, so check for Array.isArray
                 setHostingResults(Array.isArray(hostingData) ? hostingData.slice(0, 5) : []);
                 setVpnResults(Array.isArray(vpnData) ? vpnData.slice(0, 5) : []);
 
@@ -71,7 +67,6 @@ export function GlobalSearch() {
             }
         };
 
-        // Debounce fetching
         const timeoutId = setTimeout(() => {
             fetchAll();
         }, 300);

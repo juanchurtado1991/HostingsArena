@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status') || '';
 
-        // --- Auto-expire logic ---
-        // Find links that should be expired
         const { data: expiredLinks } = await supabase
             .from('affiliate_partners')
             .select('id, provider_name')
@@ -23,14 +21,12 @@ export async function GET(request: NextRequest) {
             .lt('expires_at', new Date().toISOString());
 
         if (expiredLinks && expiredLinks.length > 0) {
-            // Batch-update status to expired
             const expiredIds = expiredLinks.map(l => l.id);
             await supabase
                 .from('affiliate_partners')
                 .update({ status: 'expired' })
                 .in('id', expiredIds);
 
-            // Create renewal tasks for each expired link
             const renewalTasks = expiredLinks.map(link => ({
                 task_type: 'affiliate_audit',
                 priority: 'high' as const,
@@ -44,7 +40,6 @@ export async function GET(request: NextRequest) {
                 },
             }));
 
-            // Only create tasks if they don't already exist as pending
             for (const task of renewalTasks) {
                 const { data: existing } = await supabase
                     .from('admin_tasks')
@@ -60,7 +55,6 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // --- Main query ---
         let query = supabase
             .from('affiliate_partners')
             .select('*')
@@ -78,7 +72,6 @@ export async function GET(request: NextRequest) {
 
         if (error) throw error;
 
-        // Get counts by status
         const { data: allData } = await supabase
             .from('affiliate_partners')
             .select('status');
@@ -109,7 +102,17 @@ export async function POST(request: NextRequest) {
         const supabase = createAdminClient();
         const body = await request.json();
 
-        const { provider_name, affiliate_link, network, commission_rate, cookie_days, link_duration_days, status } = body;
+        const {
+            provider_name,
+            affiliate_link,
+            network,
+            commission_rate,
+            cookie_days,
+            link_duration_days,
+            status,
+            account_email,
+            account_password
+        } = body;
 
         if (!provider_name || !affiliate_link) {
             return NextResponse.json(
@@ -118,7 +121,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate URL
         try {
             new URL(affiliate_link);
         } catch {
@@ -128,7 +130,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Compute expires_at from link_duration_days
         const durationDays = link_duration_days ? parseInt(link_duration_days) : null;
         let expiresAt: string | null = null;
         if (durationDays && durationDays > 0) {
@@ -148,6 +149,8 @@ export async function POST(request: NextRequest) {
                 link_duration_days: durationDays,
                 expires_at: expiresAt,
                 status: status || 'active',
+                account_email: account_email || null,
+                account_password: account_password || null,
                 last_verified_at: new Date().toISOString(),
             }, { onConflict: 'provider_name' })
             .select()
@@ -195,7 +198,6 @@ export async function PATCH(request: NextRequest) {
             updates.cookie_days = parseInt(updates.cookie_days);
         }
 
-        // Handle link_duration_days → compute expires_at
         if (updates.link_duration_days !== undefined) {
             const durationDays = updates.link_duration_days ? parseInt(updates.link_duration_days) : null;
             updates.link_duration_days = durationDays;
@@ -219,7 +221,6 @@ export async function PATCH(request: NextRequest) {
 
         if (error) throw error;
 
-        // If status changed to paused or expired, create tasks for posts using this provider
         if (data && (data.status === 'paused' || data.status === 'expired')) {
             try {
                 const { data: affectedPosts } = await supabase
@@ -230,7 +231,6 @@ export async function PATCH(request: NextRequest) {
 
                 if (affectedPosts && affectedPosts.length > 0) {
                     for (const post of affectedPosts) {
-                        // Check if task already exists
                         const { data: existing } = await supabase
                             .from('admin_tasks')
                             .select('id')

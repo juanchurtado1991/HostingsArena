@@ -18,7 +18,6 @@ export class AffiliateLinkAudit implements TaskGenerator {
         const supabase = createAdminClient();
         const tasks: AdminTask[] = [];
 
-        // Get all providers from both tables
         const [hostingRes, vpnRes] = await Promise.all([
             supabase.from('hosting_providers').select('id, provider_name'),
             supabase.from('vpn_providers').select('id, provider_name'),
@@ -32,19 +31,16 @@ export class AffiliateLinkAudit implements TaskGenerator {
             ...(vpnRes.data || []).map(p => ({ ...p, type: 'vpn' as const })),
         ];
 
-        // Get all configured affiliate links
         const { data: affiliates, error: affError } = await supabase
             .from('affiliate_partners')
             .select('provider_name, status');
 
         if (affError) throw affError;
 
-        // Create a Set for O(1) lookup
         const affiliateMap = new Map(
             (affiliates || []).map(a => [a.provider_name.toLowerCase(), a.status])
         );
 
-        // Check for existing pending tasks to avoid duplicates
         const { data: existingTasks } = await supabase
             .from('admin_tasks')
             .select('metadata')
@@ -57,19 +53,15 @@ export class AffiliateLinkAudit implements TaskGenerator {
                 .filter(Boolean)
         );
 
-        // Find providers without affiliate links
         for (const provider of allProviders) {
             const providerNameLower = provider.provider_name.toLowerCase();
             const hasAffiliate = affiliateMap.has(providerNameLower);
             const affiliateStatus = affiliateMap.get(providerNameLower);
 
-            // Skip if already has active affiliate link
             if (hasAffiliate && affiliateStatus === 'active') continue;
 
-            // Skip if task already exists for this provider
             if (existingProviderIds.has(provider.id)) continue;
 
-            // Create task for missing/inactive affiliate link
             const isExpired = affiliateStatus === 'expired';
             const isPaused = affiliateStatus === 'paused';
 

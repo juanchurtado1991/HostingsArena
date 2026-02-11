@@ -5,7 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor } from "@/components/dashboard";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import type { AdminTask, TaskType, TaskPriority } from "@/lib/tasks/types";
@@ -21,7 +21,6 @@ export default function DashboardPage() {
     const [triggering, setTriggering] = useState(false);
     const supabase = createClient();
 
-    // Task management state
     const [tasks, setTasks] = useState<AdminTask[]>([]);
     const [loadingTasks, setLoadingTasks] = useState(false);
     const [generatingTasks, setGeneratingTasks] = useState(false);
@@ -29,7 +28,6 @@ export default function DashboardPage() {
     const [taskFilter, setTaskFilter] = useState<'all' | TaskType | TaskPriority>('all');
     const [taskPage, setTaskPage] = useState(1);
 
-    // Revenue projection state
     const [revenueData, setRevenueData] = useState<{
         activeAffiliates: number;
         totalPosts: number;
@@ -120,7 +118,6 @@ export default function DashboardPage() {
             if (data.runs) setWorkflowRuns(data.runs);
         } catch (e) {
             console.error("Failed to fetch workflows:", e);
-            // Don't crash the UI, just show empty or previous state
             if (!workflowRuns.length) setWorkflowRuns([]);
         } finally {
             setLoadingWorkflows(false);
@@ -145,15 +142,12 @@ export default function DashboardPage() {
         }
     };
 
-    // --- Dynamic Revenue Calculation ---
     const fetchRevenueData = async () => {
         try {
-            // Fetch active affiliate count
             const affRes = await fetch('/api/admin/affiliates?status=active');
             const affData = await affRes.json();
             const activeAffiliates = affData.stats?.active || 0;
 
-            // Fetch published posts count
             const { count: postCount } = await supabase
                 .from('posts')
                 .select('*', { count: 'exact', head: true })
@@ -161,18 +155,12 @@ export default function DashboardPage() {
 
             const totalPosts = postCount ?? 0;
 
-            // Conservative Revenue Model:
-            // Each post generates ~15 clicks/month (conservative)
-            // Conversion rate: 0.8% (super conservative, industry 1-3%)
-            // Avg commission per sale: $65 (hosting/VPN industry average)
-            // Only active affiliates can earn
             const clicksPerPost = 15;
             const conversionRate = 0.008;
             const avgCommission = 65;
 
             const monthlyClicks = totalPosts * clicksPerPost;
             const conversions = monthlyClicks * conversionRate;
-            // Cap by active affiliates (can't earn from providers without links)
             const effectiveConversions = Math.min(conversions, activeAffiliates * 3);
             const projectedRevenue = Math.round(effectiveConversions * avgCommission);
 
@@ -182,7 +170,6 @@ export default function DashboardPage() {
         }
     };
 
-    // Calculate Summary Metrics
     const activeProviders = scraperStatuses.length;
     const successCount = scraperStatuses.filter(s => s.status === 'success').length;
     const errorCount = scraperStatuses.filter(s => s.status === 'error').length;
@@ -191,12 +178,10 @@ export default function DashboardPage() {
         ? scraperStatuses.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0) / activeProviders
         : 0;
 
-    // Group tasks by priority
     const criticalTasks = tasks.filter(t => t.priority === 'critical');
     const highTasks = tasks.filter(t => t.priority === 'high');
     const normalTasks = tasks.filter(t => t.priority === 'normal' || t.priority === 'low');
 
-    // Filter and paginate tasks
     const filteredTasks = tasks.filter(task => {
         if (taskFilter === 'all') return true;
         if (taskFilter === 'critical' || taskFilter === 'high' || taskFilter === 'normal' || taskFilter === 'low') {
@@ -625,7 +610,7 @@ export default function DashboardPage() {
                 )}
 
                 {activeTab === "newsroom" && (
-                    <PostEditor />
+                    <PostEditor onNavigateToAffiliates={() => setActiveTab("affiliates")} />
                 )}
 
                 {activeTab === "workflows" && (

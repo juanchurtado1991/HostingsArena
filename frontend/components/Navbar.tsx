@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Menu, X, LayoutDashboard, LogOut, User } from "lucide-react";
-import { logger } from "@/utils/logger";
+import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 import { GlobalSearch } from "./GlobalSearch";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 const NAV_LINKS = [
   { name: "Hosting", href: "/hosting" },
@@ -28,7 +28,6 @@ export function Navbar() {
   useEffect(() => {
     let mounted = true;
 
-    // Check localStorage for cached admin status to avoid flicker
     if (typeof window !== 'undefined') {
       const cachedAdmin = localStorage.getItem('isAdmin') === 'true';
       if (cachedAdmin) setIsAdmin(true);
@@ -50,7 +49,6 @@ export function Navbar() {
         if (mounted) {
           const isUserAdmin = profile?.role === 'admin';
           setIsAdmin(isUserAdmin);
-          // Cache the result
           if (isUserAdmin) {
             localStorage.setItem('isAdmin', 'true');
           } else {
@@ -62,7 +60,6 @@ export function Navbar() {
       }
     };
 
-    // Check active session
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (mounted) {
@@ -70,7 +67,6 @@ export function Navbar() {
         if (session?.user) {
           await checkUserRole(session.user.id);
         } else {
-          // Clear admin state if no user
           setIsAdmin(false);
           localStorage.removeItem('isAdmin');
         }
@@ -79,7 +75,6 @@ export function Navbar() {
 
     getUser();
 
-    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
         setUser(session?.user ?? null);
@@ -99,13 +94,11 @@ export function Navbar() {
   }, [supabase]);
 
   const handleSignOut = async () => {
-    // 🚀 Optimistic UI: Reset state immediately before waiting for network
     setUser(null);
     setIsAdmin(false);
     localStorage.removeItem('isAdmin');
     router.push("/login");
 
-    // Background execution
     const { error } = await supabase.auth.signOut();
     if (error) console.error("Error signing out:", error);
 

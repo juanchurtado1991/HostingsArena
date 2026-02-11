@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        // Validate file type
         const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
         if (!allowedTypes.includes(file.type)) {
             return NextResponse.json(
@@ -25,7 +24,6 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Validate file size (max 5MB)
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
             return NextResponse.json(
@@ -36,15 +34,12 @@ export async function POST(req: NextRequest) {
 
         const supabase = createAdminClient();
 
-        // Generate unique filename
         const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
         const filename = `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-        // Convert File to ArrayBuffer then to Buffer
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        // Upload to Supabase Storage
         const { data, error: uploadError } = await supabase.storage
             .from("images")
             .upload(filename, buffer, {
@@ -60,7 +55,6 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Get public URL
         const { data: urlData } = supabase.storage
             .from("images")
             .getPublicUrl(data.path);

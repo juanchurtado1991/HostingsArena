@@ -19,7 +19,6 @@ export function ComparisonTable({ data, title = "Hosting Comparison" }: Comparis
   const [sortField, setSortField] = useState<SortField>("pricing_monthly");
   const [sortAsc, setSortAsc] = useState(true);
 
-  // Helper to determine winner
   const getWinner = (field: SortField) => {
     if (!data || data.length < 2) return null;
     let winner = data[0];
@@ -28,10 +27,8 @@ export function ComparisonTable({ data, title = "Hosting Comparison" }: Comparis
       const valB = data[i][field];
 
       if (field === "pricing_monthly" || field === "renewal_price") {
-        // Lower is better
         if (Number(valB) < Number(valA)) winner = data[i];
       } else {
-        // Higher is better (Score, Grades, Storage if needed)
         if (Number(valB) > Number(valA)) winner = data[i];
       }
     }
@@ -47,9 +44,7 @@ export function ComparisonTable({ data, title = "Hosting Comparison" }: Comparis
     const valA = a[sortField] || 0;
     const valB = b[sortField] || 0;
 
-    // Custom sort for grades
     if (sortField === "performance_grade") {
-      // Logic for grades A, B, C... (Assuming simple string compare for now, logic can be complex)
       return sortAsc ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
     }
 

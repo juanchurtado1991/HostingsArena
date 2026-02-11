@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,6 @@ export default function SignUpPage() {
     e.preventDefault();
     setLoading(true);
     
-    // Attempt Sign Up
     const { error } = await supabase.auth.signUp({
       email,
       password,

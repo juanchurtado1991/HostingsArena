@@ -1,11 +1,11 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { logger } from "@/utils/logger";
+import { logger } from "@/lib/logger";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,7 +22,6 @@ export default function LoginPage() {
 
     try {
       logger.log('AUTH', `Attempting login for ${email}`);
-      // Attempt Login
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -41,8 +40,6 @@ export default function LoginPage() {
       setErrorMsg("An unexpected error occurred.");
       console.error(err);
     } finally {
-      // Always stop loading unless we redirected (though standard practice is to stop loading on error)
-      // If success, we redirect, but setting loading false doesn't hurt as component unmounts
       setLoading(false);
     }
   };

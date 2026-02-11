@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
 
         if (error) throw error;
 
-        // Group by priority for dashboard display
         const grouped = {
             critical: data?.filter(t => t.priority === 'critical') || [],
             high: data?.filter(t => t.priority === 'high') || [],

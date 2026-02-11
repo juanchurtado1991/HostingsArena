@@ -89,7 +89,6 @@ export function AnalyticsCard() {
 
     const maxDailyViews = Math.max(...(data.dailyTraffic.map(d => d.views) || [0]), 1);
 
-    // Calculate week-over-week trend
     const thisWeek = data.summary.week;
     const prevWeek = data.summary.month - data.summary.week;
     const prevWeekNormalized = Math.round(prevWeek * (7 / 23)); // normalize ~23 remaining days to 7

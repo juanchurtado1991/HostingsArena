@@ -18,22 +18,18 @@ export default function CalculatorPage() {
     const [provider2, setProvider2] = useState({ name: "FastComet", initial: 2.95, renewal: 2.95, promo: 12 });
     useTrackPageView();
 
-    // Generate projection data based on selected years
     const data = [];
     let p1Total = 0;
     let p2Total = 0;
     const totalMonths = years * 12;
 
     for (let i = 1; i <= totalMonths; i++) {
-        // Provider 1 Cost
         const p1Monthly = i <= provider1.promo ? provider1.initial : provider1.renewal;
         p1Total += p1Monthly;
 
-        // Provider 2 Cost
         const p2Monthly = i <= provider2.promo ? provider2.initial : provider2.renewal;
         p2Total += p2Monthly;
 
-        // Add data point every (totalMonths / 10) or at least every month for short periods
         const step = Math.max(1, Math.floor(totalMonths / 10));
 
         if (i % step === 0 || i === totalMonths) {
