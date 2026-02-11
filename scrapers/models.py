@@ -186,7 +186,7 @@ class HostingProvider(BaseModel):
     pricing_yearly: Optional[float] = Field(default=None, ge=0)
     pricing_3year: Optional[float] = Field(default=None, ge=0)
     setup_fee: float = Field(default=0.0, ge=0)
-    money_back_days: int = Field(ge=0)
+    money_back_days: Optional[int] = Field(default=None, ge=0)
     
     # 🔥 CRITICAL: Hidden costs & renewal
     renewal_price: Optional[float] = Field(default=None, ge=0)
