@@ -5,6 +5,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "HostingArena | Real Data Comparisons",
   description: "Stop relying on fake reviews. We verified 120+ providers with deep data extraction.",
+  icons: {
+    icon: "/swords-icon.svg",
+  },
 };
 
 export default function RootLayout({

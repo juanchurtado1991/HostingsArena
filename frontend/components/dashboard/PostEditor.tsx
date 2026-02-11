@@ -19,7 +19,7 @@ import {
     AlignLeft, AlignCenter, AlignRight,
     Heading1, Heading2, Heading3, List, ListOrdered, Quote,
     Link as LinkIcon, Palette, Highlighter, Sparkles, Upload,
-    FileText, CheckCircle, Clock, Tag, Settings, X,
+    FileText, CheckCircle, Clock, Tag, X,
     ChevronDown, ExternalLink, ImageIcon, Type, Undo2, Redo2, AlertTriangle,
 } from "lucide-react";
 
@@ -778,6 +778,147 @@ function PostEditorModal({
     );
 }
 
+function GenerationConfigModal({
+    affiliateLinks,
+    onGenerate,
+    onClose,
+    loading
+}: {
+    affiliateLinks: AffiliateLink[];
+    onGenerate: (config: any) => void;
+    onClose: () => void;
+    loading: boolean;
+}) {
+    const [category, setCategory] = useState("Hosting Reviews");
+    const [customCategory, setCustomCategory] = useState("");
+    const [provider, setProvider] = useState("random");
+    const [customProvider, setCustomProvider] = useState("");
+    const [scenario, setScenario] = useState("random");
+    const [customScenario, setCustomScenario] = useState("");
+    const [instructions, setInstructions] = useState("");
+
+    const INPUT_CLASS = "w-full px-4 py-3 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-200";
+
+    const handleRun = () => {
+        onGenerate({
+            category: category === "custom" ? customCategory : category,
+            provider_name: provider === "custom" ? customProvider : (provider === "random" ? undefined : provider),
+            scenario: scenario === "custom" ? customScenario : (scenario === "random" ? undefined : scenario),
+            extra_instructions: instructions
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60 backdrop-blur-md flex items-center justify-center p-4" onClick={onClose}>
+            <div
+                className="w-full max-w-lg rounded-3xl border border-[color:var(--glass-border)] bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                            <Sparkles className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-bold text-lg">AI Command Center</h3>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors"><X className="w-5 h-5" /></button>
+                </div>
+
+                <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+                    {/* Category */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Category</label>
+                        <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLASS}>
+                            <option value="Hosting Reviews">Hosting Reviews</option>
+                            <option value="VPN Reviews">VPN Reviews</option>
+                            <option value="comparisons">Comparisons</option>
+                            <option value="guides">Guides</option>
+                            <option value="custom">✨ Custom Category</option>
+                        </select>
+                        {category === "custom" && (
+                            <input
+                                type="text"
+                                placeholder="e.g. Cloud Gaming, DevOps Tools"
+                                value={customCategory}
+                                onChange={(e) => setCustomCategory(e.target.value)}
+                                className={`mt-2 ${INPUT_CLASS}`}
+                            />
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Provider */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Provider</label>
+                            <select value={provider} onChange={(e) => setProvider(e.target.value)} className={INPUT_CLASS}>
+                                <option value="random">🎲 Random Affiliate</option>
+                                {affiliateLinks.map(a => (
+                                    <option key={a.id} value={a.provider_name}>{a.provider_name}</option>
+                                ))}
+                                <option value="custom">✍️ Custom Name</option>
+                            </select>
+                            {provider === "custom" && (
+                                <input
+                                    type="text"
+                                    placeholder="e.g. AWS, Vultr"
+                                    value={customProvider}
+                                    onChange={(e) => setCustomProvider(e.target.value)}
+                                    className={`mt-2 ${INPUT_CLASS}`}
+                                />
+                            )}
+                        </div>
+
+                        {/* Scenario */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Target Persona</label>
+                            <select value={scenario} onChange={(e) => setScenario(e.target.value)} className={INPUT_CLASS}>
+                                <option value="random">🎲 Random Persona</option>
+                                <option value="High-Traffic E-commerce Business">🛍️ E-commerce</option>
+                                <option value="Privacy-First Journalist">🕵️ Privacy Journalist</option>
+                                <option value="Budget-Conscious Startup">💸 Budget Startup</option>
+                                <option value="Full-Stack Developer">👨‍💻 Developer</option>
+                                <option value="custom">✨ Custom Persona</option>
+                            </select>
+                            {scenario === "custom" && (
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Minecraft Server Admin"
+                                    value={customScenario}
+                                    onChange={(e) => setCustomScenario(e.target.value)}
+                                    className={`mt-2 ${INPUT_CLASS}`}
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Extra Instructions */}
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Extra Instructions (Optional)</label>
+                        <textarea
+                            value={instructions}
+                            onChange={(e) => setInstructions(e.target.value)}
+                            placeholder="e.g. 'Focus heavily on the lack of backups' or 'Write in a very sarcastic tone'"
+                            className={`${INPUT_CLASS} h-24 resize-none`}
+                        />
+                    </div>
+                </div>
+
+                <div className="p-6 border-t border-border/50 bg-muted/20 flex justify-end gap-3">
+                    <Button variant="outline" onClick={onClose} className="rounded-xl">Cancel</Button>
+                    <Button
+                        onClick={handleRun}
+                        disabled={loading}
+                        className="rounded-xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/20"
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                        Generate Post
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?: () => void }) {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -795,14 +936,7 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
     const [generationProgress, setGenerationProgress] = useState(0);
     const [generationStatus, setGenerationStatus] = useState("");
     const [showProgressOverlay, setShowProgressOverlay] = useState(false);
-
-    const [showSettings, setShowSettings] = useState(false);
-    const [postsPerDay, setPostsPerDay] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return parseInt(localStorage.getItem('ai_posts_per_day') || '2');
-        }
-        return 2;
-    });
+    const [showGenModal, setShowGenModal] = useState(false);
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
@@ -871,78 +1005,87 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         }
     };
 
-    const handleGenerate = async () => {
-        if (affiliateLinks.length === 0) {
-            alert("No hay afiliados configurados. Por favor, agrega un afiliado activo primero para poder generar posts.");
-            return;
-        }
+    const handleGenerate = async (config: any) => {
+        setShowGenModal(false);
         setGenerating(true);
         setGenerationProgress(0);
-        setGenerationStatus("Connecting to AI Newsroom...");
         setShowProgressOverlay(true);
 
-        try {
-            const response = await fetch("/api/admin/posts/generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ count: postsPerDay }),
-            });
+        const totalToGenerate = 1;
+        let successCount = 0;
 
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || "Connection failed");
-            }
+        for (let i = 0; i < totalToGenerate; i++) {
+            setGenerationStatus(`Initializing AI Agent...`);
 
-            const reader = response.body?.getReader();
-            if (!reader) throw new Error("No reader available");
+            try {
+                const response = await fetch("/api/admin/posts/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        count: 1,
+                        provider_name: config.provider_name,
+                        scenario: config.scenario,
+                        custom_category: config.category,
+                        extra_instructions: config.extra_instructions
+                    }),
+                });
 
-            const decoder = new TextDecoder();
-            let partialBuffer = "";
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || "Connection failed");
+                }
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+                const reader = response.body?.getReader();
+                if (!reader) throw new Error("No reader available");
 
-                const chunk = decoder.decode(value, { stream: true });
-                partialBuffer += chunk;
+                const decoder = new TextDecoder();
+                let partialBuffer = "";
 
-                const lines = partialBuffer.split("\n\n");
-                partialBuffer = lines.pop() || "";
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                for (const line of lines) {
-                    if (line.startsWith("data: ")) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.error) throw new Error(data.error);
+                    const chunk = decoder.decode(value, { stream: true });
+                    partialBuffer += chunk;
 
-                            if (data.progress !== undefined) setGenerationProgress(data.progress);
-                            if (data.status) setGenerationStatus(data.status);
+                    const lines = partialBuffer.split("\n\n");
+                    partialBuffer = lines.pop() || "";
 
-                            if (data.success) {
-                                // Final refresh
-                                setTimeout(() => {
-                                    setShowProgressOverlay(false);
-                                    fetchPosts();
-                                }, 1000);
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.error) throw new Error(data.error);
+
+                                if (data.status) {
+                                    setGenerationStatus(data.status);
+                                }
+
+                                const currentPostProgress = (data.progress || 0) / 100;
+                                const globalProgress = Math.round(((i + currentPostProgress) / totalToGenerate) * 100);
+                                setGenerationProgress(globalProgress);
+
+                            } catch (e) {
+                                console.error("Error parsing progress chunk", e);
                             }
-                        } catch (e) {
-                            console.error("Error parsing progress chunk", e);
                         }
                     }
                 }
+                successCount++;
+            } catch (e: any) {
+                console.error(`Post ${i + 1} failed:`, e);
+                setGenerationStatus(`Error: ${e.message}`);
+                await new Promise(r => setTimeout(r, 2000));
             }
-        } catch (e: any) {
-            alert(`❌ ${e.message}`);
-            setShowProgressOverlay(false);
-        } finally {
-            setGenerating(false);
         }
-    };
 
-    const handlePostsPerDayChange = (val: number) => {
-        const clamped = Math.max(1, Math.min(10, val));
-        setPostsPerDay(clamped);
-        localStorage.setItem('ai_posts_per_day', String(clamped));
+        setShowProgressOverlay(false);
+        setGenerating(false);
+        fetchPosts();
+
+        if (successCount < totalToGenerate) {
+            // Optional: alert(`Completed ${successCount} of ${totalToGenerate} posts.`);
+        }
     };
 
     const totalPages = Math.ceil(total / 12);
@@ -997,28 +1140,19 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                     </select>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center">
                     <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => setShowSettings(!showSettings)}
-                        className="rounded-xl gap-1"
-                    >
-                        <Settings className="w-4 h-4" />
-                        Config
-                    </Button>
-                    <Button
-                        size="sm"
-                        onClick={handleGenerate}
+                        onClick={() => setShowGenModal(true)}
                         disabled={generating || affiliateLinks.length === 0}
-                        title={affiliateLinks.length === 0 ? "Add affiliates to enable generation" : "Generate posts"}
+                        title={affiliateLinks.length === 0 ? "Add affiliates to enable generation" : "Open AI Command Center"}
                         className={`rounded-xl shadow-lg gap-1 transition-all ${affiliateLinks.length === 0
                             ? "bg-muted text-muted-foreground shadow-none cursor-not-allowed"
                             : "bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-primary/25"
                             }`}
                     >
                         {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                        Generate {postsPerDay} Posts
+                        Generate Post
                     </Button>
                     <Button
                         size="sm"
@@ -1035,31 +1169,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                     </Button>
                 </div>
             </div>
-
-            {/* Settings Panel */}
-            {showSettings && (
-                <GlassCard className="p-5">
-                    <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
-                        <Settings className="w-4 h-4 text-primary" />
-                        AI Generation Settings
-                    </h4>
-                    <div className="flex items-center gap-4">
-                        <label className="text-xs text-muted-foreground">Posts per generation:</label>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => handlePostsPerDayChange(postsPerDay - 1)}
-                                className="w-8 h-8 rounded-lg bg-muted/50 border border-border text-sm font-bold hover:bg-muted"
-                            >-</button>
-                            <span className="w-8 text-center font-bold text-lg">{postsPerDay}</span>
-                            <button
-                                onClick={() => handlePostsPerDayChange(postsPerDay + 1)}
-                                className="w-8 h-8 rounded-lg bg-muted/50 border border-border text-sm font-bold hover:bg-muted"
-                            >+</button>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">(1-10, saved locally)</span>
-                    </div>
-                </GlassCard>
-            )}
 
             {/* Stats Bar */}
             <div className="flex gap-3 text-xs">
@@ -1084,14 +1193,14 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                     <p className="text-lg font-semibold mb-2">No posts yet</p>
                     <p className="text-sm text-muted-foreground mb-6">Generate AI articles or create one manually.</p>
                     <Button
-                        onClick={handleGenerate}
+                        onClick={() => setShowGenModal(true)}
                         disabled={generating || affiliateLinks.length === 0}
                         className={`rounded-xl gap-1 transition-all ${affiliateLinks.length === 0
                             ? "bg-muted text-muted-foreground cursor-not-allowed"
                             : "bg-gradient-to-r from-primary to-sky-600"
                             }`}
                     >
-                        <Sparkles className="w-4 h-4" /> Generate {postsPerDay} Posts
+                        <Sparkles className="w-4 h-4" /> Generate Post
                     </Button>
                 </GlassCard>
             ) : (
@@ -1231,6 +1340,16 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                         </div>
                     </GlassCard>
                 </div>
+            )}
+
+            {/* Generation Config Modal */}
+            {showGenModal && (
+                <GenerationConfigModal
+                    affiliateLinks={affiliateLinks}
+                    onGenerate={handleGenerate}
+                    onClose={() => setShowGenModal(false)}
+                    loading={generating}
+                />
             )}
 
             {/* Editor Modal */}
