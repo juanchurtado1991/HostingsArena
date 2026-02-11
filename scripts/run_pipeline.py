@@ -88,11 +88,17 @@ def run_scraper(scraper_class):
     start_time = time.time()
     scraper_name = scraper_class.__name__
     # Try to guess provider name from class name if instantiation fails
-    provider_name = scraper_name.replace("Scraper", "")
+    guessed_name = scraper_name.replace("Scraper", "")
     
     try:
         scraper = scraper_class()
         provider_name = scraper.provider_name
+        
+        # Fix for scrapers that don't override __init__ (inherit "Unknown")
+        if provider_name == "Unknown":
+            provider_name = guessed_name
+            scraper.provider_name = guessed_name
+            
         provider_type = getattr(scraper, 'provider_type', 'vpn') # Default to VPN if not set
         
         # print(f"🚀 Running {scraper.provider_name}...")

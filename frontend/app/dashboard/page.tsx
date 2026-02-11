@@ -20,7 +20,9 @@ export default function DashboardPage() {
     const [loadingWorkflows, setLoadingWorkflows] = useState(false);
     const [loadingScrapers, setLoadingScrapers] = useState(false);
     const [triggering, setTriggering] = useState(false);
-    const supabase = createClient();
+
+    // Create client once on mount
+    const [supabase] = useState(() => createClient());
 
     const [tasks, setTasks] = useState<AdminTask[]>([]);
     const [loadingTasks, setLoadingTasks] = useState(false);
@@ -55,7 +57,7 @@ export default function DashboardPage() {
             const data = await res.json();
             if (data.tasks) setTasks(data.tasks);
         } catch (error) {
-            console.error("Failed to fetch tasks:", error);
+            logger.error("Failed to fetch tasks", error);
         } finally {
             setLoadingTasks(false);
         }
@@ -71,7 +73,7 @@ export default function DashboardPage() {
             }
             alert(data.message);
         } catch (error) {
-            console.error("Failed to generate tasks:", error);
+            logger.error("Failed to generate tasks", error);
             alert("Error generating tasks");
         } finally {
             setGeneratingTasks(false);
@@ -87,18 +89,30 @@ export default function DashboardPage() {
             });
             setTasks(prev => prev.filter(t => t.id !== taskId));
         } catch (error) {
-            console.error("Failed to dismiss task:", error);
+            logger.error("Failed to dismiss task", error);
         }
     };
 
     const fetchScraperStatus = async () => {
         setLoadingScrapers(true);
-        logger.log('SYSTEM', "Fetching scraper statuses...");
+        logger.log('SYSTEM', "Fetching scraper statuses...", {
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+            keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 5)
+        });
         try {
-            const { data, error } = await supabase
+            // Create a timeout promise to detect hangs
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Request timed out start checking connection')), 5000)
+            );
+
+            const fetchPromise = supabase
                 .from('scraper_status')
                 .select('*')
                 .order('last_run', { ascending: false });
+
+            // @ts-ignore
+            const result = await Promise.race([fetchPromise, timeoutPromise]);
+            const { data, error } = result as any;
 
             if (error) {
                 logger.error("Supabase Error fetching scrapers", error);
@@ -111,8 +125,35 @@ export default function DashboardPage() {
             if (data?.length === 0) {
                 logger.log('SYSTEM', "Received 0 rows. Check RLS or Table content.");
             }
-        } catch (error) {
+        } catch (error: any) {
             logger.error("Exception fetching scrapers", error);
+
+            // FALLBACK: Try direct fetch if timeout
+            if (error.message && error.message.includes('timed out')) {
+                logger.log('SYSTEM', "⚠️ Trying direct FETCH fallback...");
+                try {
+                    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scraper_status?select=*&order=last_run.desc`;
+                    const res = await fetch(url, {
+                        headers: {
+                            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        logger.log('SYSTEM', `✅ Fallback fetch success: ${data.length} rows`);
+                        setScraperStatuses(data);
+                        return; // Success!
+                    } else {
+                        const text = await res.text();
+                        logger.error("Fallback fetch failed", { status: res.status, body: text });
+                    }
+                } catch (fallbackError) {
+                    logger.error("Fallback fetch exception", fallbackError);
+                }
+            }
+
+            alert(`Error fetching scrapers: ${error.message || 'Unknown error'}`);
         } finally {
             setLoadingScrapers(false);
         }
@@ -125,7 +166,7 @@ export default function DashboardPage() {
             const data = await res.json();
             if (data.runs) setWorkflowRuns(data.runs);
         } catch (e) {
-            console.error("Failed to fetch workflows:", e);
+            logger.error("Failed to fetch workflows", e);
             if (!workflowRuns.length) setWorkflowRuns([]);
         } finally {
             setLoadingWorkflows(false);
@@ -174,7 +215,7 @@ export default function DashboardPage() {
 
             setRevenueData({ activeAffiliates, totalPosts, projectedRevenue });
         } catch (e) {
-            console.error('Failed to calculate revenue:', e);
+            logger.error('Failed to calculate revenue', e);
         }
     };
 
