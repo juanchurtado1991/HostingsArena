@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { Comment } from "@/types";
+interface Comment {
+  id: string;
+  user_id: string;
+  provider_type: string;
+  provider_slug: string;
+  content: string;
+  created_at: string;
+}
 
 interface CommentSectionProps {
   providerType: 'vpn' | 'hosting';
@@ -58,7 +65,7 @@ export default function CommentSection({ providerType, providerSlug }: CommentSe
       setNewComment("");
       fetchComments(); // Refresh list
     } else {
-        alert("Error posting comment");
+      alert("Error posting comment");
     }
   };
 
@@ -94,23 +101,23 @@ export default function CommentSection({ providerType, providerSlug }: CommentSe
       {/* Comments List */}
       <div className="space-y-6">
         {loading ? (
-            <p className="text-muted-foreground">Loading comments...</p>
+          <p className="text-muted-foreground">Loading comments...</p>
         ) : comments.length === 0 ? (
-            <p className="text-muted-foreground italic">No comments yet. Be the first!</p>
+          <p className="text-muted-foreground italic">No comments yet. Be the first!</p>
         ) : (
-            comments.map((comment) => (
+          comments.map((comment) => (
             <div key={comment.id} className="p-4 bg-background rounded-lg border border-border">
-                <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-2">
                 <div className="font-semibold text-sm text-foreground/80">
-                    User ({comment.user_id.slice(0, 6)}...)
+                  User ({comment.user_id.slice(0, 6)}...)
                 </div>
                 <div className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                 </div>
-                </div>
-                <p className="text-foreground/90 leading-relaxed">{comment.content}</p>
+              </div>
+              <p className="text-foreground/90 leading-relaxed">{comment.content}</p>
             </div>
-            ))
+          ))
         )}
       </div>
     </div>

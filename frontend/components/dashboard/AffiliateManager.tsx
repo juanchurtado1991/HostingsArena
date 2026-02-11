@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +54,7 @@ export function AffiliateManager() {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [showGuide, setShowGuide] = useState(false);
-    const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([]);
+    const [allProviders, setAllProviders] = useState<ProviderOption[]>([]);
 
     useEffect(() => {
         const fetchProviders = async () => {
@@ -65,17 +65,41 @@ export function AffiliateManager() {
                 ]);
                 const hosting = await hostingRes.json();
                 const vpn = await vpnRes.json();
-                const options: ProviderOption[] = [
-                    ...(Array.isArray(hosting) ? hosting.map((p: any) => ({ name: p.provider_name, type: "hosting" as const })) : []),
-                    ...(Array.isArray(vpn) ? vpn.map((p: any) => ({ name: p.provider_name, type: "vpn" as const })) : []),
-                ];
-                setProviderOptions(options);
+
+                // Deduplicate by name using a Map
+                const uniqueMap = new Map<string, ProviderOption>();
+
+                if (Array.isArray(hosting)) {
+                    hosting.forEach((p: any) => {
+                        if (!uniqueMap.has(p.provider_name)) {
+                            uniqueMap.set(p.provider_name, { name: p.provider_name, type: "hosting" });
+                        }
+                    });
+                }
+
+                if (Array.isArray(vpn)) {
+                    vpn.forEach((p: any) => {
+                        if (!uniqueMap.has(p.provider_name)) {
+                            uniqueMap.set(p.provider_name, { name: p.provider_name, type: "vpn" });
+                        }
+                    });
+                }
+
+                setAllProviders(Array.from(uniqueMap.values()));
             } catch (e) {
                 console.error("Failed to fetch providers:", e);
             }
         };
         fetchProviders();
     }, []);
+
+    const availableProviders = useMemo(() => {
+        // Filter out providers that already have an affiliate entry
+        // NOTE: If editing, we strictly don't use this list (it's locked), 
+        // but for adding new ones, we want to hide existing ones.
+        const usedNames = new Set(affiliates.map(a => a.provider_name));
+        return allProviders.filter(p => !usedNames.has(p.name));
+    }, [allProviders, affiliates]);
 
     const fetchAffiliates = useCallback(async () => {
         setLoading(true);
@@ -501,7 +525,7 @@ export function AffiliateManager() {
                     subtitle={editingAffiliate ? `Editing ${editingAffiliate.provider_name}` : "Configure a new affiliate link"}
                     initialData={modalInitialData}
                     providerLocked={!!editingAffiliate}
-                    providerOptions={providerOptions}
+                    providerOptions={availableProviders}
                     showStatus
                     submitLabel={editingAffiliate ? "Save Changes" : "Add Partner"}
                     onSubmit={handleSave}

@@ -27,18 +27,39 @@ export default async function HostingPage({
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage - 1;
 
+  // Fetch ALL matching rows (no range limit yet) to allow proper grouping
   let dbQuery = supabase
     .from("hosting_providers")
-    .select("*", { count: "exact" });
+    .select("*");
 
   if (query) {
     dbQuery = dbQuery.ilike("provider_name", `%${query}%`);
   }
 
-  dbQuery = dbQuery.order("provider_name", { ascending: true }).range(start, end);
+  // Order by price to ensure we get the cheapest plan easily if we used distinct (but we'll do JS grouping)
+  const { data: allRows } = await dbQuery.order("pricing_monthly", { ascending: true });
 
-  const { data: providers, count } = await dbQuery;
-  const totalPages = count ? Math.ceil(count / itemsPerPage) : 0;
+  // Group by provider_name and pick the first one (cheapest, since we ordered by price)
+  const uniqueProvidersMap = new Map();
+
+  if (allRows) {
+    for (const row of allRows) {
+      if (!uniqueProvidersMap.has(row.provider_name)) {
+        uniqueProvidersMap.set(row.provider_name, row);
+      }
+    }
+  }
+
+  const uniqueProviders = Array.from(uniqueProvidersMap.values());
+
+  // Sort alphabetically by provider name (or keep price order if preferred, but usually lists are alphabetical or by rank)
+  // Let's stick to the previous behavior: alphabetical
+  uniqueProviders.sort((a, b) => a.provider_name.localeCompare(b.provider_name));
+
+  // Client-side pagination
+  const totalItems = uniqueProviders.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const providers = uniqueProviders.slice(start, end + 1);
 
   const affiliateUrls = providers ? await getAffiliateUrlBatch(
     providers.map(p => ({ provider_name: p.provider_name, website_url: p.website_url }))

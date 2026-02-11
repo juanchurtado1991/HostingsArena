@@ -1,34 +1,88 @@
 {
   "hosting": [
     {
-      "name": "Bluehost",
-      "url": "https://www.bluehost.com",
+      "name": "Hostinger",
+      "url": "https://www.hostinger.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 2.95,
+          "name": "Premium",
+          "price": 1.99,
           "renewal": 10.99,
-          "storage": "10 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 200000,
-          "ram_limit": "1GB"
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 100,
+          "billing_period": "48 months",
+          "inode_limit": 600000,
+          "ram_limit": "1GB",
+          "free_domain": true
+        },
+        {
+          "name": "Business",
+          "price": 2.99,
+          "renewal": 16.99,
+          "storage": "200 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 100,
+          "billing_period": "48 months",
+          "inode_limit": 600000,
+          "ram_limit": "1GB",
+          "free_domain": true
+        },
+        {
+          "name": "Cloud Startup",
+          "price": 6.99,
+          "renewal": 25.99,
+          "storage": "300 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 300,
+          "billing_period": "48 months",
+          "inode_limit": 600000,
+          "ram_limit": "3GB",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "HostGator",
-      "url": "https://www.hostgator.com",
+      "name": "Bluehost",
+      "url": "https://www.bluehost.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 2.75,
-          "renewal": 11.95,
-          "storage": "Unlimited HDD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 250000,
-          "ram_limit": "1GB"
+          "name": "Starter",
+          "price": 2.95,
+          "renewal": 10.99,
+          "storage": "10 GB SSD",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 200000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Business",
+          "price": 5.45,
+          "renewal": 16.99,
+          "storage": "40 GB SSD",
+          "bandwidth": "Unlimited",
+          "websites": 3,
+          "billing_period": "36 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "eCommerce Essentials",
+          "price": 9.95,
+          "renewal": 23.99,
+          "storage": "100 GB SSD",
+          "bandwidth": "Unlimited",
+          "websites": 10,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
@@ -39,64 +93,40 @@
       "url": "https://www.siteground.com",
       "plans": [
         {
-          "name": "Basic",
+          "name": "StartUp",
           "price": 2.99,
           "renewal": 17.99,
           "storage": "10 GB SSD",
           "bandwidth": "Unmetered",
-          "inode_limit": 400000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "DreamHost",
-      "url": "https://www.dreamhost.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 2.59,
-          "renewal": 5.99,
-          "storage": "Unlimited SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": "Unlimited",
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "A2 Hosting",
-      "url": "https://www.a2hosting.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 2.99,
-          "renewal": 12.99,
-          "storage": "100 GB SSD",
-          "bandwidth": "Unmetered",
+          "websites": 1,
+          "billing_period": "12 months",
           "inode_limit": 300000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "InMotion Hosting",
-      "url": "https://www.inmotionhosting.com",
-      "plans": [
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
         {
-          "name": "Basic",
-          "price": 2.29,
-          "renewal": 8.99,
-          "storage": "100 GB NVMe",
+          "name": "GrowBig",
+          "price": 4.99,
+          "renewal": 27.99,
+          "storage": "20 GB SSD",
           "bandwidth": "Unmetered",
-          "inode_limit": 200000,
-          "ram_limit": "1GB"
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "GoGeek",
+          "price": 7.99,
+          "renewal": 44.99,
+          "storage": "40 GB SSD",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 700000,
+          "ram_limit": "Shared",
+          "free_domain": false
         }
       ],
       "money_back": "30 Days",
@@ -107,33 +137,75 @@
       "url": "https://www.godaddy.com",
       "plans": [
         {
-          "name": "Basic",
+          "name": "Economy",
           "price": 5.99,
-          "renewal": 21.99,
+          "renewal": 12.99,
           "storage": "25 GB SSD",
           "bandwidth": "Unmetered",
+          "websites": 1,
+          "billing_period": "36 months",
           "inode_limit": 250000,
-          "ram_limit": "1GB"
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Deluxe",
+          "price": 7.99,
+          "renewal": 15.99,
+          "storage": "50 GB SSD",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Ultimate",
+          "price": 12.99,
+          "renewal": 22.99,
+          "storage": "Unlimited",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "Hostinger",
-      "url": "https://www.hostinger.com",
+      "name": "DreamHost",
+      "url": "https://www.dreamhost.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 2.99,
-          "renewal": 11.99,
-          "storage": "100 GB NVMe",
-          "bandwidth": "Unmetered",
-          "inode_limit": 600000,
-          "ram_limit": "1GB"
+          "name": "Starter Shared",
+          "price": 2.59,
+          "renewal": 5.99,
+          "storage": "50 GB SSD",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Unlimited Shared",
+          "price": 3.95,
+          "renewal": 7.99,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 1000000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
-      "money_back": "30 Days",
+      "money_back": "97 Days",
       "free_ssl": true
     },
     {
@@ -141,16 +213,131 @@
       "url": "https://www.namecheap.com",
       "plans": [
         {
-          "name": "Basic",
+          "name": "Stellar",
           "price": 1.98,
           "renewal": 4.48,
-          "storage": "20 GB SSD",
+          "storage": "20 GB NVMe",
           "bandwidth": "Unmetered",
-          "inode_limit": 300000,
-          "ram_limit": "1GB"
+          "websites": 3,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Stellar Plus",
+          "price": 2.98,
+          "renewal": 6.48,
+          "storage": "Unlimited NVMe",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Stellar Business",
+          "price": 5.48,
+          "renewal": 11.98,
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "HostGator",
+      "url": "https://www.hostgator.com",
+      "plans": [
+        {
+          "name": "Hatchling",
+          "price": 2.75,
+          "renewal": 7.95,
+          "storage": "Unlimited",
+          "bandwidth": "Unmetered",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Baby",
+          "price": 3.50,
+          "renewal": 9.95,
+          "storage": "Unlimited",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Business",
+          "price": 5.25,
+          "renewal": 13.95,
+          "storage": "Unlimited",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        }
+      ],
+      "money_back": "30 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "InMotion Hosting",
+      "url": "https://www.inmotionhosting.com",
+      "plans": [
+        {
+          "name": "Core",
+          "price": 2.99,
+          "renewal": 11.99,
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 2,
+          "billing_period": "36 months",
+          "inode_limit": 350000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Launch",
+          "price": 5.99,
+          "renewal": 14.99,
+          "storage": "Unlimited NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 50,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Power",
+          "price": 5.99,
+          "renewal": 19.99,
+          "storage": "Unlimited NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 700000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        }
+      ],
+      "money_back": "90 Days",
       "free_ssl": true
     },
     {
@@ -158,353 +345,140 @@
       "url": "https://www.greengeeks.com",
       "plans": [
         {
-          "name": "Basic",
+          "name": "Lite",
           "price": 2.95,
-          "renewal": 10.95,
+          "renewal": 11.95,
+          "storage": "50 GB SSD",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 300000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Pro",
+          "price": 4.95,
+          "renewal": 19.95,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Premium",
+          "price": 8.95,
+          "renewal": 24.95,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 800000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        }
+      ],
+      "money_back": "30 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "BanaHosting",
+      "url": "https://www.banahosting.com",
+      "plans": [
+        {
+          "name": "Bana Starter",
+          "price": 4.95,
+          "renewal": 4.95,
           "storage": "50 GB SSD",
           "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "Bana Professional",
+          "price": 6.95,
+          "renewal": 6.95,
+          "storage": "100 GB SSD",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "Bana Corporate",
+          "price": 9.95,
+          "renewal": 9.95,
+          "storage": "150 GB SSD",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 600000,
+          "ram_limit": "Shared",
+          "free_domain": false
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "iPage",
-      "url": "https://www.ipage.com",
+      "name": "A2 Hosting",
+      "url": "https://www.a2hosting.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Liquid Web",
-      "url": "https://www.liquidweb.com",
-      "plans": [
+          "name": "Startup",
+          "price": 1.99,
+          "renewal": 11.99,
+          "storage": "15 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "2GB",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "WP Engine",
-      "url": "https://www.wpengine.com",
-      "plans": [
+          "name": "Drive",
+          "price": 1.99,
+          "renewal": 14.99,
+          "storage": "30 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 2,
+          "billing_period": "12 months",
+          "inode_limit": 250000,
+          "ram_limit": "3GB",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Kinsta",
-      "url": "https://www.kinsta.com",
-      "plans": [
+          "name": "Turbo Boost",
+          "price": 6.99,
+          "renewal": 22.99,
+          "storage": "50 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 10,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "6GB",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Flywheel",
-      "url": "https://www.flywheel.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Cloudways",
-      "url": "https://www.cloudways.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "DigitalOcean",
-      "url": "https://www.digitalocean.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Linode",
-      "url": "https://www.linode.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Vultr",
-      "url": "https://www.vultr.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "FatCow",
-      "url": "https://www.fatcow.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "JustHost",
-      "url": "https://www.justhost.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "HostMonster",
-      "url": "https://www.hostmonster.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "ScalaHosting",
-      "url": "https://www.scalahosting.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "TMDHosting",
-      "url": "https://www.tmdhosting.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "AccuWebHosting",
-      "url": "https://www.accuwebhosting.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "InterServer",
-      "url": "https://www.interserver.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "HostPapa",
-      "url": "https://www.hostpapa.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "MilesWeb",
-      "url": "https://www.milesweb.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "BigRock",
-      "url": "https://www.bigrock.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "ResellerClub",
-      "url": "https://www.resellerclub.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "name": "Turbo Max",
+          "price": 8.99,
+          "renewal": 27.99,
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 100,
+          "billing_period": "12 months",
+          "inode_limit": 600000,
+          "ram_limit": "8GB",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
@@ -515,16 +489,43 @@
       "url": "https://www.hostarmada.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
+          "name": "Start Dock",
+          "price": 1.99,
+          "renewal": 9.95,
+          "storage": "15 GB NVMe",
           "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 200000,
+          "ram_limit": "2GB",
+          "free_domain": true
+        },
+        {
+          "name": "Web Warp",
+          "price": 3.29,
+          "renewal": 16.45,
+          "storage": "30 GB NVMe",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 400000,
+          "ram_limit": "4GB",
+          "free_domain": true
+        },
+        {
+          "name": "Speed Reaper",
+          "price": 3.95,
+          "renewal": 19.75,
+          "storage": "40 GB NVMe",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 600000,
+          "ram_limit": "6GB",
+          "free_domain": true
         }
       ],
-      "money_back": "30 Days",
+      "money_back": "45 Days",
       "free_ssl": true
     },
     {
@@ -532,387 +533,148 @@
       "url": "https://www.fastcomet.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
+          "name": "FastCloud Starter",
+          "price": 1.79,
+          "renewal": 8.95,
+          "storage": "10 GB NVMe",
+          "bandwidth": "20 GB",
+          "websites": 1,
+          "billing_period": "36 months",
           "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "FastCloud Essential",
+          "price": 2.39,
+          "renewal": 11.95,
+          "storage": "20 GB NVMe",
+          "bandwidth": "35 GB",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "FastCloud Plus",
+          "price": 3.59,
+          "renewal": 17.95,
+          "storage": "30 GB NVMe",
+          "bandwidth": "65 GB",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 350000,
+          "ram_limit": "Shared",
+          "free_domain": false
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "ChemiCloud",
-      "url": "https://www.chemicloud.com",
+      "name": "ScalaHosting",
+      "url": "https://www.scalahosting.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
+          "name": "Mini",
+          "price": 2.95,
+          "renewal": 11.95,
+          "storage": "10 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "36 months",
           "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "Start",
+          "price": 5.95,
+          "renewal": 14.95,
+          "storage": "50 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 300000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Advanced",
+          "price": 9.95,
+          "renewal": 19.95,
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        }
+      ],
+      "money_back": "Anytime",
+      "free_ssl": true
+    },
+    {
+      "name": "InterServer",
+      "url": "https://www.interserver.net",
+      "plans": [
+        {
+          "name": "Standard",
+          "price": 2.50,
+          "renewal": 2.50,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": false
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "Mochahost",
-      "url": "https://www.mochahost.com",
+      "name": "HostPapa",
+      "url": "https://www.hostpapa.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
+          "name": "Starter",
+          "price": 2.95,
+          "renewal": 9.99,
+          "storage": "100 GB SSD",
           "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "StableHost",
-      "url": "https://www.stablehost.com",
-      "plans": [
+          "websites": 2,
+          "billing_period": "36 months",
+          "inode_limit": 200000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
+          "name": "Business",
+          "price": 3.95,
+          "renewal": 14.99,
+          "storage": "Unlimited SSD",
           "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "RoseHosting",
-      "url": "https://www.rosehosting.com",
-      "plans": [
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 350000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
+          "name": "Business Pro",
+          "price": 12.95,
+          "renewal": 23.99,
+          "storage": "Unlimited SSD",
           "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "KnownHost",
-      "url": "https://www.knownhost.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "HawkHost",
-      "url": "https://www.hawkhost.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "GlowHost",
-      "url": "https://www.glowhost.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "TurnKey Internet",
-      "url": "https://www.turnkeyinternet.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "NameHero",
-      "url": "https://www.namehero.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Verpex",
-      "url": "https://www.verpex.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "HostWinds",
-      "url": "https://www.hostwinds.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "WebHostingPad",
-      "url": "https://www.webhostingpad.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "PowWeb",
-      "url": "https://www.powweb.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Netfirms",
-      "url": "https://www.netfirms.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Domain.com",
-      "url": "https://www.domaincom.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Network Solutions",
-      "url": "https://www.networksolutions.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Register.com",
-      "url": "https://www.registercom.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "CrazyDomains",
-      "url": "https://www.crazydomains.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "One.com",
-      "url": "https://www.onecom.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "OVHcloud",
-      "url": "https://www.ovhcloud.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Hetzner",
-      "url": "https://www.hetzner.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Contabo",
-      "url": "https://www.contabo.com",
-      "plans": [
-        {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
@@ -923,1394 +685,761 @@
       "url": "https://www.ionos.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "name": "Essential",
+          "price": 4.00,
+          "renewal": 8.00,
+          "storage": "10 GB SSD",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Plus",
+          "price": 1.00,
+          "renewal": 14.00,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Ultimate",
+          "price": 10.00,
+          "renewal": 18.00,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 600000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "Strato",
-      "url": "https://www.strato.com",
+      "name": "Hostwinds",
+      "url": "https://www.hostwinds.com",
       "plans": [
         {
           "name": "Basic",
-          "price": 3.99,
+          "price": 5.24,
+          "renewal": 6.99,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 300000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "Advanced",
+          "price": 6.74,
+          "renewal": 8.99,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 4,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        },
+        {
+          "name": "Ultimate",
+          "price": 8.24,
           "renewal": 10.99,
-          "storage": "20 GB SSD",
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": false
+        }
+      ],
+      "money_back": "60 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "ChemiCloud",
+      "url": "https://www.chemicloud.com",
+      "plans": [
+        {
+          "name": "Starter",
+          "price": 3.95,
+          "renewal": 9.95,
+          "storage": "20 GB NVMe",
           "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 250000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Pro",
+          "price": 5.95,
+          "renewal": 14.95,
+          "storage": "30 GB NVMe",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 350000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Turbo",
+          "price": 8.95,
+          "renewal": 19.95,
+          "storage": "40 GB NVMe",
+          "bandwidth": "Unmetered",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        }
+      ],
+      "money_back": "45 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "WP Engine",
+      "url": "https://wpengine.com",
+      "plans": [
+        {
+          "name": "Startup",
+          "price": 25.00,
+          "renewal": 30.00,
+          "storage": "10 GB SSD",
+          "bandwidth": "50 GB",
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 100000,
+          "ram_limit": "Managed",
+          "free_domain": false
+        },
+        {
+          "name": "Professional",
+          "price": 49.00,
+          "renewal": 50.00,
+          "storage": "15 GB SSD",
+          "bandwidth": "125 GB",
+          "websites": 3,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "Managed",
+          "free_domain": false
+        },
+        {
+          "name": "Growth",
+          "price": 96.00,
+          "renewal": 109.00,
+          "storage": "20 GB SSD",
+          "bandwidth": "200 GB",
+          "websites": 10,
+          "billing_period": "12 months",
+          "inode_limit": 300000,
+          "ram_limit": "Managed",
+          "free_domain": false
+        }
+      ],
+      "money_back": "60 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "Kinsta",
+      "url": "https://kinsta.com",
+      "plans": [
+        {
+          "name": "Starter",
+          "price": 30.00,
+          "renewal": 35.00,
+          "storage": "10 GB SSD",
+          "bandwidth": "250 GB CDN",
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 100000,
+          "ram_limit": "Managed",
+          "free_domain": false
+        },
+        {
+          "name": "Pro",
+          "price": 60.00,
+          "renewal": 70.00,
+          "storage": "20 GB SSD",
+          "bandwidth": "500 GB CDN",
+          "websites": 2,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "Managed",
+          "free_domain": false
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "Loopia",
-      "url": "https://www.loopia.com",
+      "name": "Cloudways",
+      "url": "https://www.cloudways.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "name": "DO Standard 1GB",
+          "price": 11.00,
+          "renewal": 11.00,
+          "storage": "25 GB SSD",
+          "bandwidth": "1 TB",
+          "websites": 999,
+          "billing_period": "1 month",
+          "inode_limit": 0,
+          "ram_limit": "1GB",
+          "free_domain": false
+        },
+        {
+          "name": "DO Standard 2GB",
+          "price": 24.00,
+          "renewal": 24.00,
+          "storage": "50 GB SSD",
+          "bandwidth": "2 TB",
+          "websites": 999,
+          "billing_period": "1 month",
+          "inode_limit": 0,
+          "ram_limit": "2GB",
+          "free_domain": false
+        },
+        {
+          "name": "DO Premium 1GB",
+          "price": 14.00,
+          "renewal": 14.00,
+          "storage": "25 GB NVMe",
+          "bandwidth": "1 TB",
+          "websites": 999,
+          "billing_period": "1 month",
+          "inode_limit": 0,
+          "ram_limit": "1GB",
+          "free_domain": false
+        }
+      ],
+      "money_back": "3 Days Trial",
+      "free_ssl": true
+    },
+    {
+      "name": "TMDHosting",
+      "url": "https://www.tmdhosting.com",
+      "plans": [
+        {
+          "name": "Starter",
+          "price": 2.95,
+          "renewal": 4.95,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 300000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Business",
+          "price": 5.95,
+          "renewal": 7.95,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
+        {
+          "name": "Enterprise",
+          "price": 12.95,
+          "renewal": 16.85,
+          "storage": "Unlimited SSD",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 700000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        }
+      ],
+      "money_back": "60 Days",
+      "free_ssl": true
+    },
+    {
+      "name": "NameHero",
+      "url": "https://www.namehero.com",
+      "plans": [
+        {
+          "name": "Starter Cloud",
+          "price": 4.16,
+          "renewal": 10.95,
+          "storage": "25 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "12 months",
+          "inode_limit": 200000,
+          "ram_limit": "1GB",
+          "free_domain": false
+        },
+        {
+          "name": "Turbo Cloud",
+          "price": 5.99,
+          "renewal": 24.95,
+          "storage": "75 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 400000,
+          "ram_limit": "3GB",
+          "free_domain": true
+        },
+        {
+          "name": "Business Cloud",
+          "price": 8.99,
+          "renewal": 34.95,
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "12 months",
+          "inode_limit": 500000,
+          "ram_limit": "4GB",
+          "free_domain": true
         }
       ],
       "money_back": "30 Days",
       "free_ssl": true
     },
     {
-      "name": "Aruba",
-      "url": "https://www.aruba.com",
+      "name": "Verpex",
+      "url": "https://www.verpex.com",
       "plans": [
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Hostnet",
-      "url": "https://www.hostnet.com",
-      "plans": [
+          "name": "Bronze",
+          "price": 2.99,
+          "renewal": 6.00,
+          "storage": "30 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 1,
+          "billing_period": "36 months",
+          "inode_limit": 200000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
-        }
-      ],
-      "money_back": "30 Days",
-      "free_ssl": true
-    },
-    {
-      "name": "Leaseweb",
-      "url": "https://www.leaseweb.com",
-      "plans": [
+          "name": "Silver",
+          "price": 4.99,
+          "renewal": 10.00,
+          "storage": "50 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 100,
+          "billing_period": "36 months",
+          "inode_limit": 350000,
+          "ram_limit": "Shared",
+          "free_domain": true
+        },
         {
-          "name": "Basic",
-          "price": 3.99,
-          "renewal": 10.99,
-          "storage": "20 GB SSD",
-          "bandwidth": "Unmetered",
-          "inode_limit": 150000,
-          "ram_limit": "1GB"
+          "name": "Gold",
+          "price": 8.99,
+          "renewal": 15.00,
+          "storage": "100 GB NVMe",
+          "bandwidth": "Unlimited",
+          "websites": 999,
+          "billing_period": "36 months",
+          "inode_limit": 500000,
+          "ram_limit": "Shared",
+          "free_domain": true
         }
       ],
-      "money_back": "30 Days",
+      "money_back": "45 Days",
       "free_ssl": true
     }
   ],
   "vpn": [
     {
-      "name": "NordVPN",
-      "url": "https://www.nordvpn.com",
-      "server_count": 6300,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 3.09,
-          "renewal": 8.29
-        }
-      ],
-      "ram_only_servers": true,
-      "audit_history": [
-        {
-          "year": 2024,
-          "firm": "Deloitte",
-          "result": "Passed"
-        }
-      ],
-      "jurisdiction": "Panama"
+      "provider_name": "NordVPN",
+      "monthly_price": 12.99,
+      "yearly_price": 4.59,
+      "two_year_price": 3.09,
+      "jurisdiction": "Panama",
+      "servers": 6400,
+      "countries": 111,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "ExpressVPN",
-      "url": "https://www.expressvpn.com",
-      "server_count": 3000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 6.67,
-          "renewal": 12.95
-        }
-      ],
-      "ram_only_servers": true,
-      "audit_history": [
-        {
-          "year": 2024,
-          "firm": "Deloitte",
-          "result": "Passed"
-        }
-      ],
-      "jurisdiction": "BVI"
+      "provider_name": "ExpressVPN",
+      "monthly_price": 12.95,
+      "yearly_price": 8.32,
+      "two_year_price": 8.32,
+      "jurisdiction": "British Virgin Islands",
+      "servers": 3000,
+      "countries": 105,
+      "simultaneous_connections": 8,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Surfshark",
-      "url": "https://www.surfshark.com",
-      "server_count": 3200,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.19,
-          "renewal": 4.98
-        }
-      ],
-      "ram_only_servers": true,
-      "audit_history": [
-        {
-          "year": 2024,
-          "firm": "Deloitte",
-          "result": "Passed"
-        }
-      ],
-      "jurisdiction": "Netherlands"
+      "provider_name": "Surfshark",
+      "monthly_price": 15.45,
+      "yearly_price": 2.79,
+      "two_year_price": 2.19,
+      "jurisdiction": "Netherlands",
+      "servers": 3200,
+      "countries": 100,
+      "simultaneous_connections": 999,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "CyberGhost",
-      "url": "https://www.cyberghost.com",
-      "server_count": 11000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.19,
-          "renewal": 6.99
-        }
-      ],
-      "ram_only_servers": true,
-      "audit_history": [
-        {
-          "year": 2024,
-          "firm": "Deloitte",
-          "result": "Passed"
-        }
-      ],
-      "jurisdiction": "Romania"
+      "provider_name": "CyberGhost",
+      "monthly_price": 12.99,
+      "yearly_price": 4.29,
+      "two_year_price": 2.19,
+      "jurisdiction": "Romania",
+      "servers": 11700,
+      "countries": 100,
+      "simultaneous_connections": 7,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "45 Days"
     },
     {
-      "name": "PIA",
-      "url": "https://www.pia.com",
-      "server_count": 35000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.03,
-          "renewal": 4.5
-        }
-      ],
-      "ram_only_servers": true,
-      "audit_history": [
-        {
-          "year": 2024,
-          "firm": "Deloitte",
-          "result": "Passed"
-        }
-      ],
-      "jurisdiction": "USA"
+      "provider_name": "Private Internet Access",
+      "monthly_price": 11.95,
+      "yearly_price": 3.33,
+      "two_year_price": 2.03,
+      "jurisdiction": "USA",
+      "servers": 35000,
+      "countries": 91,
+      "simultaneous_connections": 999,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "ProtonVPN",
-      "url": "https://www.protonvpn.com",
-      "server_count": 3000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 4.99,
-          "renewal": 9.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Switzerland"
+      "provider_name": "ProtonVPN",
+      "monthly_price": 9.99,
+      "yearly_price": 4.49,
+      "two_year_price": 3.59,
+      "jurisdiction": "Switzerland",
+      "servers": 9000,
+      "countries": 112,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Windscribe",
-      "url": "https://www.windscribe.com",
-      "server_count": 500,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 5.75,
-          "renewal": 9.0
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Canada"
+      "provider_name": "IPVanish",
+      "monthly_price": 12.99,
+      "yearly_price": 3.33,
+      "two_year_price": 2.19,
+      "jurisdiction": "USA",
+      "servers": 2400,
+      "countries": 108,
+      "simultaneous_connections": 999,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "TunnelBear",
-      "url": "https://www.tunnelbear.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Mullvad",
+      "monthly_price": 5.50,
+      "yearly_price": 5.50,
+      "two_year_price": 5.50,
+      "jurisdiction": "Sweden",
+      "servers": 690,
+      "countries": 49,
+      "simultaneous_connections": 5,
+      "has_kill_switch": true,
+      "supports_streaming": false,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "14 Days"
     },
     {
-      "name": "VyprVPN",
-      "url": "https://www.vyprvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Windscribe",
+      "monthly_price": 9.00,
+      "yearly_price": 5.75,
+      "two_year_price": 5.75,
+      "jurisdiction": "Canada",
+      "servers": 600,
+      "countries": 69,
+      "simultaneous_connections": 999,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "3 Days"
     },
     {
-      "name": "IPVanish",
-      "url": "https://www.ipvanish.com",
-      "server_count": 2000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.99,
-          "renewal": 10.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "USA"
+      "provider_name": "TunnelBear",
+      "monthly_price": 9.99,
+      "yearly_price": 3.33,
+      "two_year_price": 3.33,
+      "jurisdiction": "Canada",
+      "servers": 8000,
+      "countries": 47,
+      "simultaneous_connections": 999,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "None"
     },
     {
-      "name": "PrivateVPN",
-      "url": "https://www.privatevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "VyprVPN",
+      "monthly_price": 5.00,
+      "yearly_price": 3.75,
+      "two_year_price": 2.50,
+      "jurisdiction": "Switzerland",
+      "servers": 700,
+      "countries": 70,
+      "simultaneous_connections": 5,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Mullvad",
-      "url": "https://www.mullvad.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "PureVPN",
+      "monthly_price": 12.95,
+      "yearly_price": 3.99,
+      "two_year_price": 2.14,
+      "jurisdiction": "British Virgin Islands",
+      "servers": 6500,
+      "countries": 78,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "31 Days"
     },
     {
-      "name": "Hide.me",
-      "url": "https://www.hideme.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Hotspot Shield",
+      "monthly_price": 12.99,
+      "yearly_price": 7.99,
+      "two_year_price": 7.99,
+      "jurisdiction": "USA",
+      "servers": 1800,
+      "countries": 80,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "45 Days"
     },
     {
-      "name": "Hotspot Shield",
-      "url": "https://www.hotspotshield.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Hide.me",
+      "monthly_price": 11.99,
+      "yearly_price": 4.58,
+      "two_year_price": 2.69,
+      "jurisdiction": "Malaysia",
+      "servers": 2600,
+      "countries": 91,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "PureVPN",
-      "url": "https://www.purevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "PrivateVPN",
+      "monthly_price": 9.90,
+      "yearly_price": 2.50,
+      "two_year_price": 2.00,
+      "jurisdiction": "Sweden",
+      "servers": 200,
+      "countries": 63,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Ivacy",
-      "url": "https://www.ivacy.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Ivacy",
+      "monthly_price": 9.95,
+      "yearly_price": 3.99,
+      "two_year_price": 1.99,
+      "jurisdiction": "Singapore",
+      "servers": 5700,
+      "countries": 70,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "31 Days"
     },
     {
-      "name": "StrongVPN",
-      "url": "https://www.strongvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "TorGuard",
+      "monthly_price": 10.99,
+      "yearly_price": 5.50,
+      "two_year_price": 4.58,
+      "jurisdiction": "USA",
+      "servers": 3000,
+      "countries": 50,
+      "simultaneous_connections": 8,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "7 Days"
     },
     {
-      "name": "ZenMate",
-      "url": "https://www.zenmate.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "StrongVPN",
+      "monthly_price": 11.99,
+      "yearly_price": 3.97,
+      "two_year_price": 3.97,
+      "jurisdiction": "USA",
+      "servers": 950,
+      "countries": 42,
+      "simultaneous_connections": 12,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Atlas VPN",
-      "url": "https://www.atlasvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Mozilla VPN",
+      "monthly_price": 9.99,
+      "yearly_price": 4.99,
+      "two_year_price": 4.99,
+      "jurisdiction": "USA",
+      "servers": 500,
+      "countries": 30,
+      "simultaneous_connections": 5,
+      "has_kill_switch": true,
+      "supports_streaming": false,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Astrill",
-      "url": "https://www.astrill.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Astrill",
+      "monthly_price": 30.00,
+      "yearly_price": 15.00,
+      "two_year_price": 12.50,
+      "jurisdiction": "Seychelles",
+      "servers": 300,
+      "countries": 57,
+      "simultaneous_connections": 5,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "None"
     },
     {
-      "name": "TorGuard",
-      "url": "https://www.torguard.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "AirVPN",
+      "monthly_price": 7.00,
+      "yearly_price": 3.50,
+      "two_year_price": 2.75,
+      "jurisdiction": "Italy",
+      "servers": 260,
+      "countries": 23,
+      "simultaneous_connections": 5,
+      "has_kill_switch": true,
+      "supports_streaming": false,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "3 Days"
     },
     {
-      "name": "AirVPN",
-      "url": "https://www.airvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "OVPN",
+      "monthly_price": 11.00,
+      "yearly_price": 4.99,
+      "two_year_price": 4.99,
+      "jurisdiction": "Sweden",
+      "servers": 102,
+      "countries": 32,
+      "simultaneous_connections": 4,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "10 Days"
     },
     {
-      "name": "Perfect Privacy",
-      "url": "https://www.perfectprivacy.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "ZenMate",
+      "monthly_price": 10.99,
+      "yearly_price": 4.49,
+      "two_year_price": 1.99,
+      "jurisdiction": "Germany",
+      "servers": 4800,
+      "countries": 81,
+      "simultaneous_connections": 999,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "Trust.Zone",
-      "url": "https://www.trustzone.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Kaspersky VPN",
+      "monthly_price": 6.99,
+      "yearly_price": 3.99,
+      "two_year_price": 2.99,
+      "jurisdiction": "Russia",
+      "servers": 2000,
+      "countries": 100,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": true,
+      "no_logs_policy": true,
+      "money_back_guarantee": "30 Days"
     },
     {
-      "name": "CactusVPN",
-      "url": "https://www.cactusvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Goose VPN",
-      "url": "https://www.goosevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "FastestVPN",
-      "url": "https://www.fastestvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "VPNArea",
-      "url": "https://www.vpnarea.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "SaferVPN",
-      "url": "https://www.safervpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "HMA",
-      "url": "https://www.hma.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "AVG Secure VPN",
-      "url": "https://www.avgsecurevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Avast SecureLine",
-      "url": "https://www.avastsecureline.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Bitdefender VPN",
-      "url": "https://www.bitdefendervpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Norton Secure VPN",
-      "url": "https://www.nortonsecurevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "McAfee VPN",
-      "url": "https://www.mcafeevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Mozilla VPN",
-      "url": "https://www.mozillavpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Google One VPN",
-      "url": "https://www.googleonevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Opera VPN",
-      "url": "https://www.operavpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Urban VPN",
-      "url": "https://www.urbanvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Hola VPN",
-      "url": "https://www.holavpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Betternet",
-      "url": "https://www.betternet.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Psiphon",
-      "url": "https://www.psiphon.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Touch VPN",
-      "url": "https://www.touchvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Turbo VPN",
-      "url": "https://www.turbovpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "X-VPN",
-      "url": "https://www.xvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "UltraSurf",
-      "url": "https://www.ultrasurf.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Freegate",
-      "url": "https://www.freegate.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Lantern",
-      "url": "https://www.lantern.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "SoftEther",
-      "url": "https://www.softether.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "OpenVPN Cloud",
-      "url": "https://www.openvpncloud.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "WireGuard",
-      "url": "https://www.wireguard.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Algo VPN",
-      "url": "https://www.algovpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Streisand",
-      "url": "https://www.streisand.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Outline",
-      "url": "https://www.outline.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Sentinel dVPN",
-      "url": "https://www.sentineldvpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Orchid",
-      "url": "https://www.orchid.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "Mysterium",
-      "url": "https://www.mysterium.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "PrivadoVPN",
-      "url": "https://www.privadovpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "HideMyName",
-      "url": "https://www.hidemyname.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
-    },
-    {
-      "name": "AzireVPN",
-      "url": "https://www.azirevpn.com",
-      "server_count": 1000,
-      "country_count": 50,
-      "plans": [
-        {
-          "name": "Monthly",
-          "price": 12.99,
-          "renewal": 12.99
-        },
-        {
-          "name": "Yearly",
-          "price": 2.5,
-          "renewal": 7.99
-        }
-      ],
-      "ram_only_servers": false,
-      "audit_history": [],
-      "jurisdiction": "Unknown"
+      "provider_name": "Norton VPN",
+      "monthly_price": 7.99,
+      "yearly_price": 4.99,
+      "two_year_price": 3.99,
+      "jurisdiction": "USA",
+      "servers": 2000,
+      "countries": 30,
+      "simultaneous_connections": 10,
+      "has_kill_switch": true,
+      "supports_streaming": true,
+      "supports_torrenting": false,
+      "no_logs_policy": true,
+      "money_back_guarantee": "60 Days"
     }
   ]
 }

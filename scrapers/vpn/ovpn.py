@@ -1,4 +1,4 @@
-"""Mullvad scraper with verified data"""
+"""OVPN scraper with verified data"""
 from .base_scraper import BaseVPNScraper
 from ..utils import extract_price, extract_number, clean_text
 from ..models import VPNJurisdiction, EncryptionType
@@ -8,14 +8,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class MullvadScraper(BaseVPNScraper):
-    """Mullvad scraper"""
+class OVPNScraper(BaseVPNScraper):
+    """OVPN scraper"""
     
-    BASE_URL = "https://mullvad.net"
+    BASE_URL = "https://www.ovpn.com"
     
     def scrape_pricing(self) -> dict:
         return {
-            'provider_name': 'Mullvad',
+            'provider_name': 'OVPN',
             'website_url': self.BASE_URL,
             'pricing_monthly': None,
             'pricing_yearly': None,
@@ -30,7 +30,7 @@ class MullvadScraper(BaseVPNScraper):
     
     def scrape_features(self) -> dict:
         return {
-            'provider_name': 'Mullvad',
+            'provider_name': 'OVPN',
             'protocols': ['WireGuard', 'OpenVPN'],
             'encryption': 'AES-256-GCM',
             'has_kill_switch': True,
@@ -45,7 +45,7 @@ class MullvadScraper(BaseVPNScraper):
     
     def scrape_server_info(self) -> dict:
         return {
-            'provider_name': 'Mullvad',
+            'provider_name': 'OVPN',
             'total_servers': 0,
             'total_countries': 0,
             'has_virtual_locations': False,

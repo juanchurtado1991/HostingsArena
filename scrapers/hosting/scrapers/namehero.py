@@ -12,6 +12,8 @@ class NameHeroScraper(BaseHostingScraper):
         verified_plans = self.get_verified_field('plans', [])
         providers = []
         for p in verified_plans:
+            storage_str = str(p.get('storage', '0'))
+            storage_num = ''.join(filter(str.isdigit, storage_str.split()[0])) or '0'
             providers.append(HostingProvider(
                 provider_name="NameHero",
                 provider_type='shared',
@@ -19,9 +21,9 @@ class NameHeroScraper(BaseHostingScraper):
                 website_url="https://www.namehero.com",
                 pricing_monthly=p['price'],
                 renewal_price=p['renewal'],
-                storage_gb=int(str(p['storage']).split()[0]),
-                bandwidth="Unlimited",
-                free_domain=True,
+                storage_gb=int(storage_num) if storage_num != '0' else 999,
+                bandwidth=p.get('bandwidth', 'Unlimited'),
+                free_domain=p.get('free_domain', False),
                 free_ssl=True,
                 last_updated=datetime.now()
             ))

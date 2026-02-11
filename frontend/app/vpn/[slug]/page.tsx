@@ -212,12 +212,30 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                                     <span className="font-bold text-xl">${provider.pricing_monthly}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-4 rounded-xl bg-primary/5 border border-primary/20">
-                                    <span className="text-primary font-medium">Yearly Deal</span>
+                                    <span className="text-primary font-medium">1-Year Plan</span>
                                     <div className="text-right">
                                         <span className="block font-bold text-xl text-primary">${(provider.pricing_yearly / 12).toFixed(2)}/mo</span>
                                         <span className="text-xs text-muted-foreground">${provider.pricing_yearly} billed yearly</span>
                                     </div>
                                 </div>
+                                {provider.pricing_2year && (
+                                    <div className="flex justify-between items-center p-4 rounded-xl bg-secondary/30 border border-border/50">
+                                        <span className="text-foreground font-medium">2-Year Plan</span>
+                                        <div className="text-right">
+                                            <span className="block font-bold text-xl">${(provider.pricing_2year / 24).toFixed(2)}/mo</span>
+                                            <span className="text-xs text-muted-foreground">${provider.pricing_2year} billed every 2 years</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {provider.pricing_3year && (
+                                    <div className="flex justify-between items-center p-4 rounded-xl bg-secondary/30 border border-border/50">
+                                        <span className="text-foreground font-medium">3-Year Plan</span>
+                                        <div className="text-right">
+                                            <span className="block font-bold text-xl">${(provider.pricing_3year / 36).toFixed(2)}/mo</span>
+                                            <span className="text-xs text-muted-foreground">${provider.pricing_3year} billed every 3 years</span>
+                                        </div>
+                                    </div>
+                                )}
                                 {renewalHikePercent > 50 && (
                                     <div className="bg-destructive/5 p-4 rounded-xl border border-destructive/10 text-center animate-pulse">
                                         <p className="text-xs font-bold text-destructive">

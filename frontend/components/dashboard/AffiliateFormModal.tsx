@@ -18,6 +18,8 @@ export interface AffiliateFormData {
     status: string;
     account_email?: string;
     account_password?: string;
+    dashboard_url?: string;
+    account_phone?: string;
 }
 
 export const EMPTY_AFFILIATE_FORM: AffiliateFormData = {
@@ -30,6 +32,8 @@ export const EMPTY_AFFILIATE_FORM: AffiliateFormData = {
     status: "active",
     account_email: "",
     account_password: "",
+    dashboard_url: "",
+    account_phone: "",
 };
 
 export interface ProviderOption {
@@ -340,6 +344,21 @@ export function AffiliateFormModal({
                                 </div>
                             </div>
 
+                            {/* Dashboard URL (Optional) */}
+                            <div className="space-y-1.5">
+                                <label className={LABEL_CLASS}>Dashboard URL (Optional)</label>
+                                <div className="relative group">
+                                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                                    <input
+                                        type="url"
+                                        value={formData.dashboard_url || ""}
+                                        onChange={(e) => update("dashboard_url", e.target.value)}
+                                        placeholder="https://partner.dashboard.com/login"
+                                        className={`${INPUT_CLASS} pl-10 font-mono text-[13px]`}
+                                    />
+                                </div>
+                            </div>
+
                             {/* Account Credentials Section */}
                             <div className="pt-4">
                                 <div className="flex items-center gap-3 mb-4">
@@ -404,6 +423,16 @@ export function AffiliateFormModal({
                                                 </button>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div className="space-y-1.5 col-span-2">
+                                        <label className={LABEL_CLASS}>Phone (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={formData.account_phone || ""}
+                                            onChange={(e) => update("account_phone", e.target.value)}
+                                            placeholder="+1 234 567 8900"
+                                            className={`${INPUT_CLASS} text-xs`}
+                                        />
                                     </div>
                                 </div>
                             </div>

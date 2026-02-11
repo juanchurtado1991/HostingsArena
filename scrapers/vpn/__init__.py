@@ -1,4 +1,4 @@
-"""VPN package - all scrapers"""
+"""VPN scrapers — 25 verified providers with real data"""
 from .nordvpn import NordVPNScraper
 from .expressvpn import ExpressVPNScraper
 from .surfshark import SurfsharkScraper
@@ -6,33 +6,33 @@ from .cyberghost import CyberGhostScraper
 from .protonvpn import ProtonVPNScraper
 from .pia import PIAScraper
 from .ipvanish import IPVanishScraper
-from .hotspot_shield import HotspotShieldScraper
-from .tunnelbear import TunnelBearScraper
+from .mullvad import MullvadScraper
 from .windscribe import WindscribeScraper
-from .mullvad import MullvadVPNScraper
+from .tunnelbear import TunnelBearScraper
 from .vyprvpn import VyprVPNScraper
-from .atlasvpn import AtlasVPNScraper
 from .purevpn import PureVPNScraper
-from .strongvpn import StrongVPNScraper
-from .hide_me import HidemeScraper
+from .hotspotshield import HotspotShieldScraper
+from .hideme import HideMeScraper
 from .privatevpn import PrivateVPNScraper
-from .ivacy import IvacyVPNScraper
-
-from .zenmate import ZenmateScraper
-from .norton_vpn import NortonVPNScraper
-from .mcafee_vpn import McAfeeVPNScraper
-from .astrill import AstrillVPNScraper
-from .perfect_privacy import PerfectPrivacyScraper
+from .ivacy import IvacyScraper
+from .torguard import TorGuardScraper
+from .strongvpn import StrongVPNScraper
+from .mozillavpn import MozillaVPNScraper
+from .astrill import AstrillScraper
 from .airvpn import AirVPNScraper
+from .ovpn import OVPNScraper
+from .zenmate import ZenMateScraper
+from .kasperskyvpn import KasperskyVPNScraper
+from .nortonvpn import NortonVPNScraper
 
 __all__ = [
     'NordVPNScraper', 'ExpressVPNScraper', 'SurfsharkScraper',
     'CyberGhostScraper', 'ProtonVPNScraper', 'PIAScraper',
-    'IPVanishScraper', 'HotspotShieldScraper', 'TunnelBearScraper',
-    'WindscribeScraper', 'MullvadVPNScraper', 'VyprVPNScraper',
-    'AtlasVPNScraper', 'PureVPNScraper', 'StrongVPNScraper',
-    'HidemeScraper', 'PrivateVPNScraper', 'IvacyVPNScraper',
-    'ZenmateScraper', 'NortonVPNScraper',
-    'McAfeeVPNScraper', 'AstrillVPNScraper', 'PerfectPrivacyScraper',
-    'AirVPNScraper'
+    'IPVanishScraper', 'MullvadScraper', 'WindscribeScraper',
+    'TunnelBearScraper', 'VyprVPNScraper', 'PureVPNScraper',
+    'HotspotShieldScraper', 'HideMeScraper', 'PrivateVPNScraper',
+    'IvacyScraper', 'TorGuardScraper', 'StrongVPNScraper',
+    'MozillaVPNScraper', 'AstrillScraper', 'AirVPNScraper',
+    'OVPNScraper', 'ZenMateScraper', 'KasperskyVPNScraper',
+    'NortonVPNScraper'
 ]

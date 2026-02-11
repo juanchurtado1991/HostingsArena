@@ -1,67 +1,30 @@
-"""BanaHosting scraper"""
-from scrapers.hosting.base_scraper import BaseHostingScraper
-from scrapers.models import HostingProvider, StorageType, WebServer
+"""BanaHosting Scraper (Adaptive)"""
+from ..base_scraper import BaseHostingScraper
+from ...models import HostingProvider, StorageType
 from datetime import datetime
 from typing import List
 
 class BanaHostingScraper(BaseHostingScraper):
-    BASE_URL = "https://www.banahosting.com"
-    
+    def __init__(self):
+        super().__init__(provider_name="BanaHosting")
+
     def scrape_plans(self) -> List[HostingProvider]:
+        verified_plans = self.get_verified_field('plans', [])
         providers = []
-        
-        # Plan 1: Starter
-        p1 = HostingProvider(
-            provider_name='BanaHosting',
-            provider_type='shared',
-            plan_name='Bana Starter',
-            pricing_monthly=4.95,
-            renewal_price=4.95,
-            storage_gb=50,
-            storage_type=StorageType.SSD,
-            bandwidth='Unmetered',
-            website_url=self.BASE_URL,
-            free_ssl=True,
-            backup_included=True,
-            uptime_guarantee=99.9,
-            money_back_days=30
-        )
-        providers.append(p1)
-
-        # Plan 2: Professional
-        p2 = HostingProvider(
-            provider_name='BanaHosting',
-            provider_type='shared',
-            plan_name='Bana Professional',
-            pricing_monthly=6.95,
-            renewal_price=6.95,
-            storage_gb=100,
-            storage_type=StorageType.SSD,
-            bandwidth='Unmetered',
-            website_url=self.BASE_URL,
-            free_ssl=True,
-            backup_included=True,
-            uptime_guarantee=99.9,
-            money_back_days=30
-        )
-        providers.append(p2)
-
-        # Plan 3: Corporate
-        p3 = HostingProvider(
-            provider_name='BanaHosting',
-            provider_type='shared',
-            plan_name='Bana Corporate',
-            pricing_monthly=9.95,
-            renewal_price=9.95,
-            storage_gb=150,
-            storage_type=StorageType.SSD,
-            bandwidth='Unmetered',
-            website_url=self.BASE_URL,
-            free_ssl=True,
-            backup_included=True,
-            uptime_guarantee=99.9,
-            money_back_days=30
-        )
-        providers.append(p3)
-
+        for p in verified_plans:
+            storage_str = str(p.get('storage', '0'))
+            storage_num = ''.join(filter(str.isdigit, storage_str.split()[0])) or '0'
+            providers.append(HostingProvider(
+                provider_name="BanaHosting",
+                provider_type='shared',
+                plan_name=p['name'],
+                website_url="https://www.banahosting.com",
+                pricing_monthly=p['price'],
+                renewal_price=p['renewal'],
+                storage_gb=int(storage_num) if storage_num != '0' else 999,
+                bandwidth=p.get('bandwidth', 'Unlimited'),
+                free_domain=p.get('free_domain', False),
+                free_ssl=True,
+                last_updated=datetime.now()
+            ))
         return providers

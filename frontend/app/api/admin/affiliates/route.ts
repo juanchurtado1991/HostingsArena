@@ -111,7 +111,9 @@ export async function POST(request: NextRequest) {
             link_duration_days,
             status,
             account_email,
-            account_password
+            account_password,
+            dashboard_url,
+            account_phone
         } = body;
 
         if (!provider_name || !affiliate_link) {
@@ -151,6 +153,8 @@ export async function POST(request: NextRequest) {
                 status: status || 'active',
                 account_email: account_email || null,
                 account_password: account_password || null,
+                dashboard_url: dashboard_url || null,
+                account_phone: account_phone || null,
                 last_verified_at: new Date().toISOString(),
             }, { onConflict: 'provider_name' })
             .select()

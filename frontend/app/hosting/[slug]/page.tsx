@@ -33,6 +33,14 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
     }
 
     const provider = providers[0];
+
+    // Fetch ALL plans for this provider to show in comparison table
+    const { data: allPlans } = await supabase
+        .from("hosting_providers")
+        .select("*")
+        .eq("provider_name", provider.provider_name)
+        .order("pricing_monthly", { ascending: true });
+
     const features = provider.features || {};
     const raw = provider.raw_data || {};
 
@@ -184,8 +192,8 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                             </div>
                         </section>
 
-                        {/* PLANS COMPARISON TABLE (NEW) */}
-                        {raw.plans && raw.plans.length > 0 && (
+                        {/* PLANS COMPARISON TABLE (DYNAMIC FROM ALL PLANS) */}
+                        {allPlans && allPlans.length > 0 && (
                             <section className="mt-12">
                                 <h3 className="text-2xl font-bold mb-6 tracking-tight">Compare Plans</h3>
                                 <div className="overflow-x-auto rounded-3xl border border-border/50 shadow-sm">
@@ -200,15 +208,22 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border/30 bg-card">
-                                            {raw.plans.map((plan: any, idx: number) => (
-                                                <tr key={idx} className="hover:bg-secondary/10 transition-colors">
-                                                    <td className="p-4 font-bold text-lg">{plan.name}</td>
-                                                    <td className="p-4 text-green-600 font-bold">${plan.price_monthly}</td>
-                                                    <td className="p-4 text-muted-foreground">${plan.renewal_price_monthly}</td>
+                                            {allPlans.map((plan: any) => (
+                                                <tr key={plan.id} className={`hover:bg-secondary/10 transition-colors ${plan.id === provider.id ? "bg-primary/5" : ""}`}>
+                                                    <td className="p-4 font-bold text-lg">
+                                                        <div className="flex flex-col">
+                                                            {plan.plan_name}
+                                                            {plan.id === provider.id && <span className="text-[10px] text-primary font-bold uppercase tracking-wider">Current</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-green-600 font-bold">${plan.pricing_monthly}</td>
+                                                    <td className="p-4 text-muted-foreground">
+                                                        {plan.renewal_price ? `$${plan.renewal_price}` : '-'}
+                                                    </td>
                                                     <td className="p-4 font-medium">{plan.storage_gb} GB</td>
                                                     <td className="p-4 hidden sm:table-cell text-xs text-muted-foreground space-y-1">
-                                                        {plan.features?.slice(0, 3).map((f: string, i: number) => (
-                                                            <div key={i} className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> {f}</div>
+                                                        {Object.entries(plan.features || {}).slice(0, 3).map(([key, val]) => (
+                                                            val ? <div key={key} className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-green-500" /> {key.replace(/_/g, ' ')}</div> : null
                                                         ))}
                                                     </td>
                                                 </tr>
