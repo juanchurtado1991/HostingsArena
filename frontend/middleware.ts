@@ -37,6 +37,14 @@ export async function middleware(request: NextRequest) {
     // 🛡️ Protected Routes Validation
     const path = request.nextUrl.pathname
 
+    // 0. Cron Job Bypass
+    // Allow Vercel Cron to access detailed routes if the secret matches
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+        return response; // Allow access
+    }
+
     // 1. Admin Routes (Dashboard & API)
     if (path.startsWith('/dashboard') || path.startsWith('/api/admin')) {
         if (!user) {

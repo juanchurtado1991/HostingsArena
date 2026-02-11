@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
         const cronSecret = process.env.CRON_SECRET;
 
         if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+            // Authorized via Cron Secret
         } else {
-            if (process.env.NODE_ENV === 'production') {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
+            // Authorized via Middleware (Admin Session)
+            // We rely on middleware to block unauthorized requests to /api/admin
         }
 
         const factory = new TaskGeneratorFactory();
