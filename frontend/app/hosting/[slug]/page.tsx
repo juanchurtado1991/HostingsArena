@@ -275,16 +275,16 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                         <section className="mt-12">
                             <h3 className="text-2xl font-bold mb-6 tracking-tight">Technical Deep Dive</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {raw.web_server && (
+                                {provider.web_server && provider.web_server !== 'Unknown' && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Web Server</div>
-                                        <div className="font-bold">{raw.web_server}</div>
+                                        <div className="font-bold">{provider.web_server}</div>
                                     </div>
                                 )}
-                                {raw.control_panel && (
+                                {provider.control_panel && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Control Panel</div>
-                                        <div className="font-bold">{raw.control_panel}</div>
+                                        <div className="font-bold">{provider.control_panel}</div>
                                     </div>
                                 )}
                                 {provider.uptime_guarantee && (
@@ -319,18 +319,18 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                         </div>
                                     </div>
                                 )}
-                                {raw.php_versions && (
+                                {provider.php_versions && provider.php_versions.length > 0 && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">PHP Versions</div>
-                                        <div className="font-bold truncate" title={raw.php_versions.join(", ")}>{raw.php_versions.join(", ")}</div>
+                                        <div className="font-bold truncate" title={provider.php_versions.join(", ")}>{provider.php_versions.join(", ")}</div>
                                     </div>
                                 )}
-                                {raw.storage_type && (
+                                {provider.storage_type && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Storage Type</div>
                                         <div className="font-bold flex items-center gap-1.5">
-                                            {raw.storage_type.includes("NVMe") ? <HardDrive className="w-4 h-4 text-purple-500" /> : null}
-                                            {raw.storage_type && raw.storage_type !== "unknown" ? raw.storage_type : ""}
+                                            {provider.storage_type.includes("NVMe") ? <HardDrive className="w-4 h-4 text-purple-500" /> : null}
+                                            {provider.storage_type && provider.storage_type !== "unknown" ? provider.storage_type : ""}
                                         </div>
                                     </div>
                                 )}
