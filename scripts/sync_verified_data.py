@@ -73,6 +73,9 @@ def sync_hosting(data):
                 except (ValueError, IndexError):
                     storage_gb = 0
 
+            # Extract specs if available
+            specs = provider.get("specs", {})
+
             payload = {
                 "provider_name": provider["name"],
                 "plan_name": plan["name"],
@@ -94,9 +97,20 @@ def sync_hosting(data):
                     "money_back": provider.get("money_back"),
                     "storage_type": plan.get("storage", "")
                 },
+                # 🚀 DEEP DIVE SPECS INJECTION
+                "web_server": specs.get("web_server"),
+                "control_panel": specs.get("control_panel"),
+                "backup_frequency": specs.get("backup_frequency"),
+                "inodes": specs.get("inodes"),
+                "max_processes": specs.get("max_processes"),
+                "php_versions": specs.get("php_versions"),
+                "data_center_locations": specs.get("data_center_locations"),
+                "uptime_guarantee": specs.get("uptime_guarantee"),
+                
                 "raw_data": {
                     "source": "verified_data.json",
-                    "extracted_at": datetime.now().isoformat()
+                    "extracted_at": datetime.now().isoformat(),
+                    "specs": specs  # Store full specs in raw_data too
                 },
                 "last_updated": datetime.now().isoformat()
             }
@@ -154,6 +168,9 @@ def sync_vpn(data):
                 "supports_torrenting": provider.get("supports_torrenting", True),
                 "no_logs_policy": provider.get("no_logs_policy", True),
                 "two_year_price": provider.get("two_year_price"),
+                # 🚀 DEEP DIVE VPN SPECS
+                "protocols": provider.get("protocols", []),
+                "encryption_type": provider.get("encryption", "unknown"),
             },
             "raw_data": {
                 "source": "verified_data.json",

@@ -1213,6 +1213,12 @@
       "supports_streaming": true,
       "supports_torrenting": true,
       "no_logs_policy": true,
+      "protocols": [
+        "NordLynx",
+        "OpenVPN",
+        "IKEv2"
+      ],
+      "encryption": "AES-256-GCM",
       "money_back_guarantee": "30 Days"
     },
     {
@@ -1228,6 +1234,12 @@
       "supports_streaming": true,
       "supports_torrenting": true,
       "no_logs_policy": true,
+      "protocols": [
+        "Lightway",
+        "OpenVPN",
+        "IKEv2"
+      ],
+      "encryption": "AES-256-GCM",
       "money_back_guarantee": "30 Days"
     },
     {
@@ -1243,6 +1255,12 @@
       "supports_streaming": true,
       "supports_torrenting": true,
       "no_logs_policy": true,
+      "protocols": [
+        "WireGuard",
+        "OpenVPN",
+        "IKEv2"
+      ],
+      "encryption": "AES-256-GCM",
       "money_back_guarantee": "30 Days"
     },
     {
