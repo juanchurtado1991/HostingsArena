@@ -133,15 +133,17 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                         </div>
                     </div>
 
-                    <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
-                        <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 text-green-500">
-                            <Zap size={24} />
+                    {provider.avg_speed_mbps > 0 && (
+                        <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
+                            <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 text-green-500">
+                                <Zap size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-bold mb-1">{provider.avg_speed_mbps} Mbps</div>
+                                <div className="text-muted-foreground font-medium">Average Speed</div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-3xl font-bold mb-1">{provider.avg_speed_mbps} Mbps</div>
-                            <div className="text-muted-foreground font-medium">Average Speed</div>
-                        </div>
-                    </div>
+                    )}
 
                     {raw.encryption_type && raw.encryption_type !== 'unknown' && (
                         <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
