@@ -84,10 +84,12 @@ export default function VpnList({ initialProviders, affiliateUrls = {} }: { init
                         {/* Price & Action */}
                         <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-border/50 pt-4 md:pt-0">
                             <div className="text-right">
-                                <div className="text-2xl font-bold">${p.pricing_monthly}</div>
+                                <div className="text-2xl font-bold">
+                                    {p.pricing_monthly ? `$${p.pricing_monthly}` : <span className="text-lg">Check Price</span>}
+                                </div>
                                 <div className="text-xs text-muted-foreground space-y-0.5">
-                                    <div>per month</div>
-                                    {p.raw_data?.protocols && (
+                                    <div>{p.pricing_monthly ? "per month" : "variable"}</div>
+                                    {p.raw_data?.protocols && p.raw_data.protocols.length > 0 && (
                                         <div className="text-[10px] text-primary/80 font-medium">Supports {p.raw_data.protocols[0].split(' ')[0]}</div>
                                     )}
                                 </div>

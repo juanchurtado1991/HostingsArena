@@ -41,6 +41,30 @@
           "free_domain": true
         }
       ],
+      "specs": {
+        "web_server": "LiteSpeed",
+        "control_panel": "hPanel",
+        "backup_frequency": "Weekly (Daily on Business)",
+        "inodes": 600000,
+        "max_processes": 100,
+        "php_versions": [
+          "8.0",
+          "8.1",
+          "8.2",
+          "8.3"
+        ],
+        "data_center_locations": [
+          "USA",
+          "UK",
+          "Netherlands",
+          "Lithuania",
+          "Singapore",
+          "Brazil",
+          "India"
+        ],
+        "uptime_guarantee": 99.90,
+        "storage_type": "NVMe SSD"
+      },
       "money_back": "30 Days",
       "free_ssl": true
     },
@@ -129,6 +153,32 @@
           "free_domain": false
         }
       ],
+      "specs": {
+        "web_server": "Nginx",
+        "control_panel": "Site Tools",
+        "backup_frequency": "Daily",
+        "inodes": 500000,
+        "max_processes": 40,
+        "php_versions": [
+          "7.4",
+          "8.0",
+          "8.1",
+          "8.2",
+          "8.3"
+        ],
+        "data_center_locations": [
+          "USA",
+          "UK",
+          "Netherlands",
+          "Germany",
+          "Singapore",
+          "Australia",
+          "Spain",
+          "France"
+        ],
+        "uptime_guarantee": 99.99,
+        "storage_type": "SSD"
+      },
       "money_back": "30 Days",
       "free_ssl": true
     },
@@ -425,6 +475,26 @@
           "free_domain": false
         }
       ],
+      "specs": {
+        "web_server": "LiteSpeed",
+        "control_panel": "cPanel",
+        "backup_frequency": "Daily",
+        "inodes": 350000,
+        "max_processes": 100,
+        "php_versions": [
+          "7.4",
+          "8.0",
+          "8.1",
+          "8.2",
+          "8.3"
+        ],
+        "data_center_locations": [
+          "USA",
+          "Europe"
+        ],
+        "uptime_guarantee": 99.90,
+        "storage_type": "NVMe SSD"
+      },
       "money_back": "30 Days",
       "free_ssl": true
     },
@@ -481,6 +551,27 @@
           "free_domain": true
         }
       ],
+      "specs": {
+        "web_server": "LiteSpeed",
+        "control_panel": "cPanel",
+        "backup_frequency": "Daily",
+        "inodes": 600000,
+        "max_processes": 100,
+        "php_versions": [
+          "8.0",
+          "8.1",
+          "8.2",
+          "8.3"
+        ],
+        "data_center_locations": [
+          "Michigan, USA",
+          "Arizona, USA",
+          "Amsterdam, Netherlands",
+          "Singapore"
+        ],
+        "uptime_guarantee": 99.90,
+        "storage_type": "NVMe SSD"
+      },
       "money_back": "30 Days",
       "free_ssl": true
     },
@@ -929,6 +1020,25 @@
           "free_domain": false
         }
       ],
+      "specs": {
+        "web_server": "Nginx + Apache",
+        "control_panel": "Cloudways Portal",
+        "backup_frequency": "Daily (Customizable)",
+        "inodes": 1000000,
+        "max_processes": 1000,
+        "php_versions": [
+          "7.4",
+          "8.0",
+          "8.1",
+          "8.2",
+          "8.3"
+        ],
+        "data_center_locations": [
+          "60+ Locations (DigitalOcean, AWS, Google)"
+        ],
+        "uptime_guarantee": 99.99,
+        "storage_type": "NVMe SSD"
+      },
       "money_back": "3 Days Trial",
       "free_ssl": true
     },
@@ -973,6 +1083,30 @@
           "free_domain": true
         }
       ],
+      "specs": {
+        "web_server": "LiteSpeed",
+        "control_panel": "cPanel",
+        "backup_frequency": "Daily",
+        "inodes": 500000,
+        "max_processes": 100,
+        "php_versions": [
+          "7.4",
+          "8.0",
+          "8.1",
+          "8.2",
+          "8.3"
+        ],
+        "data_center_locations": [
+          "USA",
+          "UK",
+          "Netherlands",
+          "Singapore",
+          "Australia",
+          "Japan"
+        ],
+        "uptime_guarantee": 99.99,
+        "storage_type": "NVMe SSD"
+      },
       "money_back": "60 Days",
       "free_ssl": true
     },

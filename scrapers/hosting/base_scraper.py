@@ -62,6 +62,21 @@ class BaseHostingScraper(AdaptiveBaseScraper):
         """Main scraping method"""
         try:
             plans = self.scrape_plans()
+            
+            # 🚀 PHASE 9: INJECT VERIFIED DEEP DIVE SPECS
+            specs = self.get_verified_field('specs', {})
+            if specs and plans:
+                logger.info(f"💉 Injecting {len(specs)} Verified Specs into {len(plans)} plans for {self.provider_name}")
+                for plan in plans:
+                    for key, value in specs.items():
+                        # Only overwrite if value is valid and field exists
+                        if hasattr(plan, key) and value:
+                            # Verify if the field is empty or unknown in the plan before overwriting? 
+                            # Actually, Verified Data > Unknown Scraped Data.
+                            # But if Scraper found something specific, maybe keep it?
+                            # Decision: Verified Data is "Truth Source" for these static fields.
+                            setattr(plan, key, value)
+            
             logger.info(f"✅ Scraped {len(plans)} plans from {self.__class__.__name__}")
             return plans
         except Exception as e:

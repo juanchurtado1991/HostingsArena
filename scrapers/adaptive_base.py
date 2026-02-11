@@ -59,13 +59,18 @@ class AdaptiveBaseScraper(ABC):
             if path.exists():
                 with open(path, 'r') as f:
                     all_data = json.load(f)
+                    self.logger.info(f"Loaded {len(all_data.get('hosting', []))} hosting providers from {path}")
                     
                 # Find our specific provider in the list
                 category = self.provider_type  # 'hosting' or 'vpn'
                 if category in all_data:
                     for p in all_data[category]:
                         if p.get('name', '').lower() == self.provider_name.lower():
+                            self.logger.info(f"✅ Found Verified Data for {self.provider_name}")
                             return p
+                        # Debug close matches
+                        if 'tmd' in p.get('name', '').lower() and 'tmd' in self.provider_name.lower():
+                             self.logger.warning(f"⚠️ Mismatch: JSON '{p.get('name')}' vs Scraper '{self.provider_name}'")
             return {}
         except Exception as e:
             self.logger.warning(f"Failed to load verified data registry: {e}")
@@ -168,8 +173,8 @@ class AdaptiveBaseScraper(ABC):
         1. Try to get LIVE data for this field.
         2. If fails, fall back to Verified Registry data.
         """
-        verified = self.verified_data.get(self.provider_type, [])
-        provider_data = next((p for p in verified if p['name'] == self.provider_name), None)
+        # self.verified_data IS the specific provider data loaded in __init__
+        provider_data = self.verified_data
         
         registry_value = default
         url = ""

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import CommentSection from "@/components/comments/CommentSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight, AlertTriangle, X } from "lucide-react";
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 import { getAffiliateUrl } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
@@ -79,11 +79,13 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                         Privacy, Speed, and Security Analysis
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <div className="flex justify-center items-center gap-6">
                         <div className="flex flex-col items-center">
                             <div className="flex items-baseline gap-2">
-                                <span className="text-5xl font-bold tracking-tight text-foreground">${provider.pricing_monthly}</span>
-                                <span className="text-xl text-muted-foreground font-medium">/mo</span>
+                                <span className="text-5xl font-bold tracking-tight text-foreground">
+                                    {provider.pricing_monthly ? `$${provider.pricing_monthly}` : "Check Price"}
+                                </span>
+                                <span className="text-xl text-muted-foreground font-medium">{provider.pricing_monthly ? "/mo" : ""}</span>
                             </div>
                             {renewalHikePercent > 50 && (
                                 <div className="text-xs font-bold text-destructive mt-1 flex items-center gap-1">
@@ -92,11 +94,15 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                                 </div>
                             )}
                         </div>
-                        <div className="h-12 w-px bg-border/50 hidden sm:block"></div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl font-medium text-foreground">Support Score:</span>
-                            <span className="text-3xl font-bold text-blue-500">{provider.support_quality_score}/100</span>
-                        </div>
+                        {provider.support_quality_score && (
+                            <>
+                                <div className="h-12 w-px bg-border/50 hidden sm:block"></div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl font-medium text-foreground">Support Score:</span>
+                                    <span className="text-3xl font-bold text-blue-500">{provider.support_quality_score}/100</span>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="mt-12 flex justify-center">
@@ -122,7 +128,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             <Globe size={24} />
                         </div>
                         <div>
-                            <div className="text-3xl font-bold mb-1">{provider.server_count.toLocaleString()}</div>
+                            <div className="text-3xl font-bold mb-1">{provider.server_count ? provider.server_count.toLocaleString() : "N/A"}</div>
                             <div className="text-muted-foreground font-medium">Servers in {provider.country_count || '?'} Countries</div>
                         </div>
                     </div>
@@ -142,7 +148,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             <Shield size={24} />
                         </div>
                         <div>
-                            <div className="text-3xl font-bold mb-1">AES-256</div>
+                            <div className="text-3xl font-bold mb-1">{raw.encryption_type === 'unknown' ? 'AES-256' : raw.encryption_type}</div>
                             <div className="text-muted-foreground font-medium">Encryption Standard</div>
                         </div>
                     </div>
@@ -180,6 +186,62 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             </div>
                         </section>
 
+                        {/* TECHNICAL DEEP DIVE (NEW) */}
+                        <section className="mt-12">
+                            <h3 className="text-2xl font-bold mb-6 tracking-tight">Technical Deep Dive</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {raw.protocols && raw.protocols.length > 0 && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Protocols</div>
+                                        <div className="font-bold flex flex-wrap gap-2">
+                                            {raw.protocols.map((p: string) => (
+                                                <Badge key={p} variant="outline" className="bg-background">{p}</Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {provider.jurisdiction && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Jurisdiction</div>
+                                        <div className="font-bold flex items-center gap-1">
+                                            {provider.jurisdiction.includes("Panama") || provider.jurisdiction.includes("BVI") ? <Shield className="w-3 h-3 text-green-500" /> : <Globe className="w-3 h-3" />}
+                                            {provider.jurisdiction}
+                                        </div>
+                                    </div>
+                                )}
+                                {provider.simultaneous_connections && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Devices</div>
+                                        <div className="font-bold">{provider.simultaneous_connections === 999 ? "Unlimited" : provider.simultaneous_connections}</div>
+                                    </div>
+                                )}
+                                {raw.streaming_support !== undefined && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Streaming</div>
+                                        <div className="font-bold text-green-500 flex items-center gap-1">
+                                            {raw.streaming_support ? <CheckCircle2 className="w-4 h-4" /> : <X className="w-4 h-4 text-red-500" />}
+                                            {raw.streaming_support ? "Supported" : "Limited"}
+                                        </div>
+                                    </div>
+                                )}
+                                {raw.p2p_servers && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">P2P / Torrenting</div>
+                                        <div className="font-bold capitalize">{raw.p2p_servers}</div>
+                                    </div>
+                                )}
+                                {raw.audit_company && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Independent Audit</div>
+                                        <div className="font-bold flex items-center gap-2">
+                                            <Shield className="w-4 h-4 text-primary" />
+                                            Audited by {raw.audit_company} {raw.audit_year ? `(${raw.audit_year})` : ""}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
                         {/* ANALYSIS */}
                         <section className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
                             <h3 className="text-2xl font-bold mb-6 text-foreground tracking-tight">Expert Verdict</h3>
@@ -209,15 +271,17 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             <div className="space-y-6">
                                 <div className="flex justify-between items-center p-4 rounded-xl bg-secondary/30">
                                     <span className="text-foreground font-medium">Monthly</span>
-                                    <span className="font-bold text-xl">${provider.pricing_monthly}</span>
+                                    <span className="font-bold text-xl">{provider.pricing_monthly ? `$${provider.pricing_monthly}` : "Check Price"}</span>
                                 </div>
-                                <div className="flex justify-between items-center p-4 rounded-xl bg-primary/5 border border-primary/20">
-                                    <span className="text-primary font-medium">1-Year Plan</span>
-                                    <div className="text-right">
-                                        <span className="block font-bold text-xl text-primary">${(provider.pricing_yearly / 12).toFixed(2)}/mo</span>
-                                        <span className="text-xs text-muted-foreground">${provider.pricing_yearly} billed yearly</span>
+                                {provider.pricing_yearly && (
+                                    <div className="flex justify-between items-center p-4 rounded-xl bg-primary/5 border border-primary/20">
+                                        <span className="text-primary font-medium">1-Year Plan</span>
+                                        <div className="text-right">
+                                            <span className="block font-bold text-xl text-primary">${(provider.pricing_yearly / 12).toFixed(2)}/mo</span>
+                                            <span className="text-xs text-muted-foreground">${provider.pricing_yearly} billed yearly</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                                 {provider.pricing_2year && (
                                     <div className="flex justify-between items-center p-4 rounded-xl bg-secondary/30 border border-border/50">
                                         <span className="text-foreground font-medium">2-Year Plan</span>

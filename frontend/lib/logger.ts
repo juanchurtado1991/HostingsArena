@@ -9,7 +9,7 @@ interface LogEntry {
 
 class DebugLogger {
     private logs: LogEntry[] = [];
-    private maxLogs = 200; // Keep last 200 logs
+    private maxLogs = 200;
     private isEnabled = process.env.NEXT_PUBLIC_SHOW_LOGGER !== 'false';
 
     constructor() {

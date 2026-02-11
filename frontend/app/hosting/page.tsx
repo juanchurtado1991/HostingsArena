@@ -132,7 +132,9 @@ export default async function HostingPage({
                     <span className="text-muted-foreground flex items-center gap-2">
                       <Server className="w-4 h-4" /> Storage
                     </span>
-                    <span className="font-medium">{provider.storage_gb} GB {provider.storage_type}</span>
+                    <span className="font-medium">
+                      {provider.storage_gb && provider.storage_gb >= 999 ? "Unlimited" : `${provider.storage_gb} GB`} {provider.storage_type && provider.storage_type !== 'unknown' ? provider.storage_type : ''}
+                    </span>
                   </div>
                 )}
                 {provider.inodes && (

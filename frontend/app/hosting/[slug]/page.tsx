@@ -162,15 +162,17 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                         </div>
                     </div>
 
-                    <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
-                        <div className="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-4 text-pink-500">
-                            <Clock size={24} />
+                    {provider.support_score > 0 && (
+                        <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
+                            <div className="w-12 h-12 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-4 text-pink-500">
+                                <Clock size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-bold mb-1">{provider.support_score}%</div>
+                                <div className="text-muted-foreground font-medium">Support Score</div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-3xl font-bold mb-1">{provider.support_score}%</div>
-                            <div className="text-muted-foreground font-medium">Support Score</div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
 
@@ -279,6 +281,44 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                         <div className="font-bold">{raw.web_server}</div>
                                     </div>
                                 )}
+                                {raw.control_panel && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Control Panel</div>
+                                        <div className="font-bold">{raw.control_panel}</div>
+                                    </div>
+                                )}
+                                {provider.uptime_guarantee && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Uptime SLA</div>
+                                        <div className="font-bold">{provider.uptime_guarantee}%</div>
+                                    </div>
+                                )}
+                                {provider.backup_frequency && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Backup</div>
+                                        <div className="font-bold">{provider.backup_frequency}</div>
+                                    </div>
+                                )}
+                                {provider.inodes && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Inode Limit</div>
+                                        <div className="font-bold">{provider.inodes.toLocaleString()}</div>
+                                    </div>
+                                )}
+                                {provider.max_processes && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Max Processes</div>
+                                        <div className="font-bold">{provider.max_processes}</div>
+                                    </div>
+                                )}
+                                {provider.data_center_locations && provider.data_center_locations.length > 0 && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Data Centers</div>
+                                        <div className="font-bold truncate" title={provider.data_center_locations.join(", ")}>
+                                            {provider.data_center_locations.length} Locations ({provider.data_center_locations.slice(0, 3).join(", ")}{provider.data_center_locations.length > 3 ? "..." : ""})
+                                        </div>
+                                    </div>
+                                )}
                                 {raw.php_versions && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">PHP Versions</div>
@@ -290,7 +330,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Storage Type</div>
                                         <div className="font-bold flex items-center gap-1.5">
                                             {raw.storage_type.includes("NVMe") ? <HardDrive className="w-4 h-4 text-purple-500" /> : null}
-                                            {raw.storage_type}
+                                            {raw.storage_type && raw.storage_type !== "unknown" ? raw.storage_type : ""}
                                         </div>
                                     </div>
                                 )}
