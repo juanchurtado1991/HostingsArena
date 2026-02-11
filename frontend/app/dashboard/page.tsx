@@ -4,6 +4,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
 import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch } from "lucide-react";
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor } from "@/components/dashboard";
@@ -92,6 +93,7 @@ export default function DashboardPage() {
 
     const fetchScraperStatus = async () => {
         setLoadingScrapers(true);
+        logger.log('SYSTEM', "Fetching scraper statuses...");
         try {
             const { data, error } = await supabase
                 .from('scraper_status')
@@ -99,12 +101,18 @@ export default function DashboardPage() {
                 .order('last_run', { ascending: false });
 
             if (error) {
-                console.error("Supabase Error:", error);
+                logger.error("Supabase Error fetching scrapers", error);
+                alert(`Error fetching scrapers: ${error.message} (${error.code})`);
                 throw error;
             }
+
+            logger.log('SYSTEM', `Data received: ${data?.length} rows`, data);
             if (data) setScraperStatuses(data);
+            if (data?.length === 0) {
+                logger.log('SYSTEM', "Received 0 rows. Check RLS or Table content.");
+            }
         } catch (error) {
-            console.error("Failed to fetch scraper statuses", error);
+            logger.error("Exception fetching scrapers", error);
         } finally {
             setLoadingScrapers(false);
         }
