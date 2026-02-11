@@ -2,7 +2,16 @@
 -- Based on HostingProvider Pydantic model
 -- Using IF NOT EXISTS to avoid errors
 
+-- Core Fields (Just in case)
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS provider_type TEXT;
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS plan_name TEXT;
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS website_url TEXT;
+
 -- Pricing & Hidden Costs
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS pricing_yearly NUMERIC;
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS pricing_3year NUMERIC;
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS setup_fee NUMERIC DEFAULT 0;
+ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS money_back_days INTEGER;
 ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS renewal_price NUMERIC;
 ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS renewal_price_yearly NUMERIC;
 ALTER TABLE hosting_providers ADD COLUMN IF NOT EXISTS renewal_increase_percentage NUMERIC;
