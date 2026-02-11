@@ -143,25 +143,29 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                         </div>
                     </div>
 
-                    <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
-                        <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 text-purple-500">
-                            <Shield size={24} />
+                    {raw.encryption_type && raw.encryption_type !== 'unknown' && (
+                        <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
+                            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 text-purple-500">
+                                <Shield size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-bold mb-1">{raw.encryption_type}</div>
+                                <div className="text-muted-foreground font-medium">Encryption Standard</div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-3xl font-bold mb-1">{raw.encryption_type === 'unknown' ? 'AES-256' : raw.encryption_type}</div>
-                            <div className="text-muted-foreground font-medium">Encryption Standard</div>
-                        </div>
-                    </div>
+                    )}
 
-                    <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
-                        <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-4 text-orange-500">
-                            <Lock size={24} />
+                    {provider.money_back_days > 0 && (
+                        <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
+                            <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-4 text-orange-500">
+                                <Lock size={24} />
+                            </div>
+                            <div>
+                                <div className="text-3xl font-bold mb-1">{provider.money_back_days} Days</div>
+                                <div className="text-muted-foreground font-medium">Refund Policy</div>
+                            </div>
                         </div>
-                        <div>
-                            <div className="text-3xl font-bold mb-1">{provider.money_back_days} Days</div>
-                            <div className="text-muted-foreground font-medium">Refund Policy</div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
 
