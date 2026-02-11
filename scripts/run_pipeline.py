@@ -116,7 +116,8 @@ def run_scraper(scraper_class):
             # Upsert to Supabase
             if supabase:
                 # model_dump(mode='json') handles datetime serialization to ISO strings
-                payload = item.model_dump(mode='json') 
+                # exclude_none=True prevents overwriting existing DB data (like manually added logos) with nulls
+                payload = item.model_dump(mode='json', exclude_none=True) 
                 
                 conflict_target = "provider_name,plan_name" if table_name == "hosting_providers" else "provider_name"
                 

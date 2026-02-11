@@ -44,6 +44,7 @@ class VPNProvider(BaseModel):
     # Basic Info
     provider_name: str
     website_url: str
+    logo_url: Optional[str] = None
     last_updated: datetime = Field(default_factory=datetime.now)
     
     # ===== PRICING & TRUE COST =====
@@ -179,6 +180,7 @@ class HostingProvider(BaseModel):
     provider_type: str
     plan_name: str
     website_url: str
+    logo_url: Optional[str] = None
     last_updated: datetime = Field(default_factory=datetime.now)
     
     # ===== PRICING & TRUE COST (CRITICAL) =====

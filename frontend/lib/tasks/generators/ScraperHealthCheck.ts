@@ -31,7 +31,7 @@ export class ScraperHealthCheck implements TaskGenerator {
 
         const { data: existingTasks } = await supabase
             .from('admin_tasks')
-            .select('metadata')
+            .select('id, metadata')
             .eq('task_type', 'scraper_fix')
             .eq('status', 'pending');
 
@@ -43,6 +43,40 @@ export class ScraperHealthCheck implements TaskGenerator {
 
         const now = new Date();
         const staleThreshold = new Date(now.getTime() - this.STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000);
+
+        // 🛡️ AUTO-RESOLVE LOGIC
+        // If we have a pending task for a provider that is now SUCCESS, resolve it.
+        if (existingTasks && existingTasks.length > 0) {
+            for (const task of existingTasks) {
+                const meta = task.metadata as Record<string, unknown>;
+                const providerName = meta?.provider_name as string;
+                if (!providerName) continue;
+
+                // Find current status
+                const currentStatus = (scrapers || []).find(s => s.provider_name === providerName);
+
+                // If scraper is healthy (success) OR removed (not found in status table?), resolve.
+                if (!currentStatus) {
+                    await supabase
+                        .from('admin_tasks')
+                        .update({
+                            status: 'resolved',
+                            resolution_notes: 'Auto-resolved: Scraper no longer exists in monitoring (removed or inactive).'
+                        })
+                        .eq('id', task.id);
+                    console.log(`✅ Auto-resolved task for ${providerName} (Not found in status)`);
+                } else if (currentStatus.status === 'success') {
+                    await supabase
+                        .from('admin_tasks')
+                        .update({
+                            status: 'resolved',
+                            resolution_notes: 'Auto-resolved by ScraperHealthCheck: Scraper reported success.'
+                        })
+                        .eq('id', task.id);
+                    console.log(`✅ Auto-resolved task for ${providerName} (Success status)`);
+                }
+            }
+        }
 
         for (const scraper of (scrapers || []) as ScraperStatus[]) {
             if (existingProviderNames.has(scraper.provider_name)) continue;

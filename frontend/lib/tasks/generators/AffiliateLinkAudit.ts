@@ -47,9 +47,9 @@ export class AffiliateLinkAudit implements TaskGenerator {
             .eq('task_type', 'affiliate_audit')
             .eq('status', 'pending');
 
-        const existingProviderIds = new Set(
+        const existingProviderNames = new Set(
             (existingTasks || [])
-                .map(t => (t.metadata as Record<string, unknown>)?.provider_id)
+                .map(t => (t.metadata as Record<string, unknown>)?.provider_name)
                 .filter(Boolean)
         );
 
@@ -60,7 +60,8 @@ export class AffiliateLinkAudit implements TaskGenerator {
 
             if (hasAffiliate && affiliateStatus === 'active') continue;
 
-            if (existingProviderIds.has(provider.id)) continue;
+            // Check if we already have a pending task for this PROVIDER NAME (regardless of type/id)
+            if (existingProviderNames.has(provider.provider_name)) continue;
 
             const isExpired = affiliateStatus === 'expired';
             const isPaused = affiliateStatus === 'paused';
