@@ -209,7 +209,7 @@ class HostingProvider(BaseModel):
     # ===== STORAGE & RESOURCES =====
     storage_gb: Optional[int] = Field(default=None, ge=0)
     storage_type: StorageType = StorageType.UNKNOWN
-    bandwidth: str
+    bandwidth: Optional[str] = "Unmetered"
     ram_mb: Optional[int] = Field(default=None, ge=0)
     cpu_cores: Optional[int] = Field(default=None, ge=0)
     cpu_type: Optional[str] = None
@@ -257,7 +257,7 @@ class HostingProvider(BaseModel):
     email_webmail_interface: Optional[str] = None  # "RoundCube", "Horde"
     
     # ===== SSL & SECURITY =====
-    free_ssl: bool
+    free_ssl: bool = False
     ssl_type: Optional[str] = Field(default="Let's Encrypt")
     ssl_certificates_included: int = Field(default=1, ge=0)
     dedicated_ip_included: bool = False
