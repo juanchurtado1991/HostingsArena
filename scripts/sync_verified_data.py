@@ -53,6 +53,14 @@ def wipe_tables():
     except Exception as e:
         print(f"   ⚠️  Error clearing vpn: {e}")
 
+    print("🗑️  Wiping affiliate_partners (to avoid staleness)...")
+    try:
+        # User usually wants a clean slate when wiping
+        supabase.table("affiliate_links").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+        print("   ✅ affiliate_links cleared")
+    except Exception as e:
+        pass # Optional table, ignore if not exists
+
 
 def sync_hosting(data):
     """Sync hosting providers to Supabase"""
@@ -76,9 +84,12 @@ def sync_hosting(data):
             # Extract specs if available
             specs = provider.get("specs", {})
 
+            slug = provider["name"].lower().replace(' ', '-')
+            
             payload = {
                 "provider_name": provider["name"],
                 "plan_name": plan["name"],
+                "slug": slug,
                 "provider_type": "Shared",
                 "website_url": provider["url"],
                 "pricing_monthly": plan.get("price"),
@@ -95,7 +106,12 @@ def sync_hosting(data):
                     "inode_limit": plan.get("inode_limit"),
                     "ram_limit": plan.get("ram_limit"),
                     "money_back": provider.get("money_back"),
-                    "storage_type": plan.get("storage", "")
+                    "storage_type": plan.get("storage", ""),
+                    # 🚀 ENRICHED FEATURES
+                    "wordpress_support": specs.get("wordpress_support", True), # Default true for shared
+                    "free_migration": specs.get("free_migration", False),
+                    "email_accounts": specs.get("email_accounts", "Unlimited"),
+                    "staging_environment": specs.get("staging_environment", False)
                 },
                 # 🚀 DEEP DIVE SPECS INJECTION
                 "web_server": specs.get("web_server"),
@@ -151,14 +167,24 @@ def sync_vpn(data):
             except ValueError:
                 money_back_days = 30
 
+        slug = name.lower().replace(' ', '-')
+
         payload = {
             "provider_name": name,
+            "slug": slug,
             "website_url": f"https://www.{name.lower().replace(' ', '').replace('.', '')}.com",
             "pricing_monthly": monthly_price,
             "pricing_yearly": yearly_price,
+            "pricing_2year": provider.get("two_year_price"),
+            "pricing_3year": provider.get("three_year_price"),
             "money_back_days": money_back_days,
             "avg_speed_mbps": None,
             "server_count": provider.get("servers"),
+            "protocols": provider.get("protocols", []),
+            "jurisdiction": provider.get("jurisdiction"),
+            "simultaneous_connections": provider.get("simultaneous_connections"),
+            "encryption_type": provider.get("encryption", "unknown"),
+            "has_kill_switch": provider.get("has_kill_switch", True),
             "features": {
                 "jurisdiction": provider.get("jurisdiction"),
                 "simultaneous_devices": provider.get("simultaneous_connections"),

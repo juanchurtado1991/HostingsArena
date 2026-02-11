@@ -61,6 +61,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                 rating={provider.support_score ? `${provider.support_score / 10}` : undefined}
                 visitUrl={affiliateUrl}
                 discount={renewalHikePercent > 0 ? "Save BIG" : undefined}
+                renewalText={renewalHikePercent > 0 ? `Renews at $${provider.renewal_price}` : undefined}
             />
 
             {/* HERO SECTION */}
@@ -120,7 +121,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                             </a>
                         </Button>
                     </div>
-                    {provider.money_back_days && (
+                    {provider.money_back_days > 0 && (
                         <div className="mt-4 text-sm text-muted-foreground flex items-center justify-center gap-1">
                             <ShieldCheck className="w-4 h-4 text-green-500" /> {provider.money_back_days}-Day Money-Back Guarantee
                         </div>
@@ -185,12 +186,25 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                         <section>
                             <h3 className="text-2xl font-bold mb-8 tracking-tight">Included Features</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {Object.entries(features).map(([key, val]) => (
-                                    <div key={key} className="flex items-center gap-4 p-4 rounded-xl border border-border/30 bg-secondary/20">
-                                        {val ? <CheckCircle2 className="text-green-500 w-6 h-6 shrink-0" /> : <div className="w-6 h-6 rounded-full border border-muted shrink-0" />}
-                                        <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
-                                    </div>
-                                ))}
+                                {Object.entries(features)
+                                    .sort((a, b) => {
+                                        // Standardize order: Non-booleans (tags) first, then booleans
+                                        if (typeof a[1] !== 'boolean' && typeof b[1] === 'boolean') return -1;
+                                        if (typeof a[1] === 'boolean' && typeof b[1] !== 'boolean') return 1;
+                                        return a[0].localeCompare(b[0]);
+                                    })
+                                    .map(([key, val]) => (
+                                        <div key={key} className="flex items-center gap-4 p-4 rounded-xl border border-border/30 bg-secondary/20">
+                                            <div className="shrink-0">
+                                                {typeof val === 'boolean' ? (
+                                                    val ? <CheckCircle2 className="text-green-500 w-6 h-6" /> : <X className="text-red-500 w-6 h-6" />
+                                                ) : (
+                                                    <div className="text-green-500 font-bold text-xs bg-green-500/10 px-2 py-1 rounded-md min-w-[3rem] text-center border border-green-500/20">{String(val)}</div>
+                                                )}
+                                            </div>
+                                            <span className="capitalize font-medium text-sm">{key.replace(/_/g, ' ')}</span>
+                                        </div>
+                                    ))}
                             </div>
                         </section>
 
@@ -287,7 +301,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                         <div className="font-bold">{provider.control_panel}</div>
                                     </div>
                                 )}
-                                {provider.uptime_guarantee && (
+                                {provider.uptime_guarantee > 0 && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Uptime SLA</div>
                                         <div className="font-bold">{provider.uptime_guarantee}%</div>
@@ -299,7 +313,7 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                         <div className="font-bold">{provider.backup_frequency}</div>
                                     </div>
                                 )}
-                                {provider.inodes && (
+                                {provider.inodes > 0 && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Inode Limit</div>
                                         <div className="font-bold">{provider.inodes.toLocaleString()}</div>
@@ -331,6 +345,36 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                         <div className="font-bold flex items-center gap-1.5">
                                             {provider.storage_type.includes("NVMe") ? <HardDrive className="w-4 h-4 text-purple-500" /> : null}
                                             {provider.storage_type && provider.storage_type !== "unknown" ? provider.storage_type : ""}
+                                        </div>
+                                    </div>
+                                )}
+                                {features.wordpress_support && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">WordPress</div>
+                                        <div className="font-bold flex items-center gap-1.5 text-green-500">
+                                            <CheckCircle2 className="w-4 h-4" /> Optimized
+                                        </div>
+                                    </div>
+                                )}
+                                {features.free_migration && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Migration</div>
+                                        <div className="font-bold flex items-center gap-1.5 text-green-500">
+                                            <CheckCircle2 className="w-4 h-4" /> Free
+                                        </div>
+                                    </div>
+                                )}
+                                {features.email_accounts && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Emails</div>
+                                        <div className="font-bold">{String(features.email_accounts)}</div>
+                                    </div>
+                                )}
+                                {features.staging_environment && (
+                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
+                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Staging</div>
+                                        <div className="font-bold flex items-center gap-1.5 text-green-500">
+                                            <CheckCircle2 className="w-4 h-4" /> Available
                                         </div>
                                     </div>
                                 )}
@@ -371,13 +415,13 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
                                 {provider.renewal_price && (
                                     <div className={`rounded-2xl p-6 border text-center ${renewalHikePercent > 50 ? 'bg-destructive/5 border-destructive/20' : 'bg-primary/5 border-primary/10'}`}>
                                         <h3 className="text-xl font-bold mb-2">Ready to choose {provider.provider_name}?</h3>
-                                        {renewalHikePercent > 50 ? (
+                                        {renewalHikePercent > 0 && (
                                             <p className="text-sm text-muted-foreground mb-6">
-                                                Lock in the low price for 36 months to avoid the <span className="text-destructive font-bold">{renewalHikePercent}% hike</span> later.
-                                            </p>
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground mb-6">
-                                                Fair renewal pricing. Safe to choose for short or long term.
+                                                {renewalHikePercent > 50 ? (
+                                                    <>Lock in the low price for 36 months to avoid the <span className="text-destructive font-bold">{renewalHikePercent}% hike</span> later.</>
+                                                ) : (
+                                                    <>Fair renewal pricing. Safe to choose for short or long term.</>
+                                                )}
                                             </p>
                                         )}
 

@@ -79,3 +79,37 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+/**
+ * DELETE /api/admin/tasks
+ * 
+ * Bulks deletes tasks. 
+ * Defaults to all pending tasks if no filters provided.
+ */
+export async function DELETE(request: NextRequest) {
+    try {
+        const supabase = createAdminClient();
+
+        // Match everything by using a range filter on created_at (always true for all records)
+        const { error } = await supabase
+            .from('admin_tasks')
+            .delete()
+            .gt('created_at', '2000-01-01');
+
+        if (error) {
+            console.error('[TaskDelete] Supabase Error:', error);
+            throw error;
+        }
+
+        return NextResponse.json({ success: true, message: 'All pending tasks deleted' });
+    } catch (error: any) {
+        console.error('[TaskDelete] Error:', error);
+        return NextResponse.json(
+            {
+                error: 'Failed to delete tasks',
+                details: error.message || error.details || String(error)
+            },
+            { status: 500 }
+        );
+    }
+}

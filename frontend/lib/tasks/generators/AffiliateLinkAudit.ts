@@ -47,21 +47,30 @@ export class AffiliateLinkAudit implements TaskGenerator {
             .eq('task_type', 'affiliate_audit')
             .eq('status', 'pending');
 
-        const existingProviderNames = new Set(
+        const pendingProviderNames = new Set(
             (existingTasks || [])
-                .map(t => (t.metadata as Record<string, unknown>)?.provider_name)
+                .map(t => (t.metadata as Record<string, unknown>)?.provider_name as string)
                 .filter(Boolean)
         );
 
+        // Track names added in THIS current scan to avoid duplicates from allProviders
+        const processedInScan = new Set<string>();
+
         for (const provider of allProviders) {
-            const providerNameLower = provider.provider_name.toLowerCase();
+            const providerName = provider.provider_name;
+            const providerNameLower = providerName.toLowerCase();
+
+            // 1. Skip if already processed in this scan loop
+            if (processedInScan.has(providerNameLower)) continue;
+            processedInScan.add(providerNameLower);
+
+            // 2. Skip if affiliate exists and is active
             const hasAffiliate = affiliateMap.has(providerNameLower);
             const affiliateStatus = affiliateMap.get(providerNameLower);
-
             if (hasAffiliate && affiliateStatus === 'active') continue;
 
-            // Check if we already have a pending task for this PROVIDER NAME (regardless of type/id)
-            if (existingProviderNames.has(provider.provider_name)) continue;
+            // 3. Skip if we already have a PENDING task in DB for this provider
+            if (pendingProviderNames.has(providerName)) continue;
 
             const isExpired = affiliateStatus === 'expired';
             const isPaused = affiliateStatus === 'paused';
@@ -70,18 +79,18 @@ export class AffiliateLinkAudit implements TaskGenerator {
                 task_type: 'affiliate_audit',
                 priority: isExpired ? 'high' : 'critical',
                 title: isExpired
-                    ? `Renovar Link Expirado: ${provider.provider_name}`
+                    ? `Renovar Link Expirado: ${providerName}`
                     : isPaused
-                        ? `Link Pausado: ${provider.provider_name}`
-                        : `Falta Link de Afiliado: ${provider.provider_name}`,
+                        ? `Link Pausado: ${providerName}`
+                        : `Falta Link de Afiliado: ${providerName}`,
                 description: isExpired
-                    ? `El enlace de afiliado para ${provider.provider_name} ha expirado. Genera un nuevo link desde el panel del programa de afiliados.`
+                    ? `El enlace de afiliado para ${providerName} ha expirado. Genera un nuevo link desde el panel del programa de afiliados.`
                     : isPaused
-                        ? `El enlace de afiliado para ${provider.provider_name} está pausado. Verifica y reactiva.`
-                        : `No hay enlace de afiliado configurado para ${provider.provider_name}. Cada día sin link = dinero perdido.`,
+                        ? `El enlace de afiliado para ${providerName} está pausado. Verifica y reactiva.`
+                        : `No hay enlace de afiliado configurado para ${providerName}. Cada día sin link = dinero perdido.`,
                 metadata: {
                     provider_id: provider.id,
-                    provider_name: provider.provider_name,
+                    provider_name: providerName,
                     provider_type: provider.type,
                     has_inactive_link: hasAffiliate,
                     reason: isExpired ? 'link_expired' : isPaused ? 'link_paused' : 'link_missing',

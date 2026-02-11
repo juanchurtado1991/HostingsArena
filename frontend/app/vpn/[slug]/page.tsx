@@ -145,13 +145,13 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                         </div>
                     )}
 
-                    {raw.encryption_type && raw.encryption_type !== 'unknown' && (
+                    {provider.encryption_type && provider.encryption_type !== 'unknown' && (
                         <div className="bg-card p-8 rounded-[2rem] shadow-sm border border-border/50 flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
                             <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 text-purple-500">
                                 <Shield size={24} />
                             </div>
                             <div>
-                                <div className="text-3xl font-bold mb-1">{raw.encryption_type}</div>
+                                <div className="text-3xl font-bold mb-1">{provider.encryption_type}</div>
                                 <div className="text-muted-foreground font-medium">Encryption Standard</div>
                             </div>
                         </div>
@@ -182,7 +182,11 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {Object.entries(features).map(([key, val]) => (
                                     <div key={key} className="flex items-center gap-4 p-4 rounded-xl border border-border/30 bg-secondary/20">
-                                        {val ? <CheckCircle2 className="text-green-500 w-6 h-6 shrink-0" /> : <div className="w-6 h-6 rounded-full border border-muted shrink-0" />}
+                                        {val ? (
+                                            <CheckCircle2 className="text-green-500 w-6 h-6 shrink-0" />
+                                        ) : (
+                                            <X className="text-red-500 w-6 h-6 shrink-0" />
+                                        )}
                                         <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
                                     </div>
                                 ))}
@@ -192,21 +196,21 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             </div>
                         </section>
 
-                        {/* TECHNICAL DEEP DIVE (NEW) */}
+                        {/* TECHNICAL DEEP DIVE */}
                         <section className="mt-12">
                             <h3 className="text-2xl font-bold mb-6 tracking-tight">Technical Deep Dive</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {raw.protocols && raw.protocols.length > 0 && (
+                                {provider.protocols && provider.protocols.length > 0 && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Protocols</div>
                                         <div className="font-bold flex flex-wrap gap-2">
-                                            {raw.protocols.map((p: string) => (
+                                            {provider.protocols.map((p: string) => (
                                                 <Badge key={p} variant="outline" className="bg-background">{p}</Badge>
                                             ))}
                                         </div>
                                     </div>
                                 )}
-                                {provider.jurisdiction && (
+                                {provider.jurisdiction && provider.jurisdiction !== 'unknown' && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Jurisdiction</div>
                                         <div className="font-bold flex items-center gap-1">
@@ -215,33 +219,27 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                                         </div>
                                     </div>
                                 )}
-                                {provider.simultaneous_connections && (
+                                {provider.simultaneous_connections > 0 && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Devices</div>
                                         <div className="font-bold">{provider.simultaneous_connections === 999 ? "Unlimited" : provider.simultaneous_connections}</div>
                                     </div>
                                 )}
-                                {raw.streaming_support !== undefined && (
+                                {features.supports_streaming !== undefined && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Streaming</div>
                                         <div className="font-bold text-green-500 flex items-center gap-1">
-                                            {raw.streaming_support ? <CheckCircle2 className="w-4 h-4" /> : <X className="w-4 h-4 text-red-500" />}
-                                            {raw.streaming_support ? "Supported" : "Limited"}
+                                            {features.supports_streaming ? <CheckCircle2 className="w-4 h-4" /> : <X className="w-4 h-4 text-red-500" />}
+                                            {features.supports_streaming ? "Supported" : "Limited"}
                                         </div>
                                     </div>
                                 )}
-                                {raw.p2p_servers && (
+                                {features.supports_torrenting !== undefined && (
                                     <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30">
                                         <div className="text-xs text-muted-foreground uppercase font-bold mb-1">P2P / Torrenting</div>
-                                        <div className="font-bold capitalize">{raw.p2p_servers}</div>
-                                    </div>
-                                )}
-                                {raw.audit_company && (
-                                    <div className="bg-secondary/20 p-4 rounded-2xl border border-border/30 col-span-2">
-                                        <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Independent Audit</div>
-                                        <div className="font-bold flex items-center gap-2">
-                                            <Shield className="w-4 h-4 text-primary" />
-                                            Audited by {raw.audit_company} {raw.audit_year ? `(${raw.audit_year})` : ""}
+                                        <div className="font-bold text-green-500 flex items-center gap-1">
+                                            {features.supports_torrenting ? <CheckCircle2 className="w-4 h-4" /> : <X className="w-4 h-4 text-red-500" />}
+                                            {features.supports_torrenting ? "Optimized" : "Limited"}
                                         </div>
                                     </div>
                                 )}

@@ -2,7 +2,7 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,70 @@ import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import type { AdminTask, TaskType, TaskPriority } from "@/lib/tasks/types";
 
 const TASKS_PER_PAGE = 15;
+
+const TUTORIAL_TOPICS = [
+    {
+        id: "scrapers",
+        title: "Gestión de Scrapers",
+        icon: Server,
+        category: "Automatización",
+        content: `
+            HostingArena utiliza scrapers de Python para obtener datos reales. 
+            \n• **Online**: El scraper funciona correctamente y está sincronizado.
+            \n• **Warning**: Problemas menores (ej. un campo no se obtuvo), pero el resto está bien.
+            \n• **Error**: El scraper falló completamente por cambios en la web del proveedor. Requiere revisión técnica.
+            \n• **Sincronización**: Los datos se suben a Supabase y se refrescan mediante ISR en el frontend para máxima velocidad.
+        `
+    },
+    {
+        id: "tasks",
+        title: "Centro de Tareas",
+        icon: Zap,
+        category: "Operaciones",
+        content: `
+            El motor de auditoría genera tareas automáticamente para asegurar la calidad de los datos.
+            \n• **Escanear**: Ejecuta una auditoría manual para buscar links faltantes o errores.
+            \n• **Deduplicación**: El sistema agrupa los planes por proveedor para que solo tengas que arreglar un link una vez.
+            \n• **Borrador**: Puedes limpiar la lista usando el botón 'Borrar Todo' si has realizado un mantenimiento masivo manual.
+        `
+    },
+    {
+        id: "affiliates",
+        title: "Affiliate Manager",
+        icon: Handshake,
+        category: "Ingresos",
+        content: `
+            Gestiona cómo ganamos dinero con cada proveedor.
+            \n• **Links de Afiliado**: Se aplican automáticamente a todos los botones 'Ver Oferta' del sitio según el \`provider_name\`.
+            \n• **Dashboard Credentials**: Puedes guardar la URL del panel de afiliado y el teléfono/cuenta para acceso rápido.
+            \n• **Status**: Los proveedores 'Pausados' o 'Expirados' generarán alertas críticas en el Centro de Tareas.
+        `
+    },
+    {
+        id: "newsroom",
+        title: "AI Newsroom",
+        icon: Newspaper,
+        category: "Contenido",
+        content: `
+            Generación de contenido automatizado mediante IA.
+            \n• **Proveedor**: Selecciona un hosting o VPN para generar una guía o noticia.
+            \n• **SEO Editor**: El sistema optimiza automáticamente las meta-etiquetas y la estructura.
+            \n• **Publicación**: Una vez publicado, el artículo aparecerá en el blog oficial ayudando al posicionamiento orgánico.
+        `
+    },
+    {
+        id: "comparisons",
+        title: "Comparativas y Versus",
+        icon: GitBranch,
+        category: "Frontend",
+        content: `
+            El motor de comparativas es dinámico.
+            \n• **Tabla Premium**: Detecta automáticamente si un hosting usa LiteSpeed o si una VPN tiene Kill Switch.
+            \n• **Versus**: Usa el icono de espadas para indicar comparativas directas (A vs B).
+            \n• **Lógica de Ganador**: El sistema resalta automáticamente el 'Mejor Precio' o 'Mejor Valor' basándose en los datos del scraper.
+        `
+    }
+];
 
 export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState("overview");
@@ -29,7 +93,10 @@ export default function DashboardPage() {
     const [generatingTasks, setGeneratingTasks] = useState(false);
     const [selectedTask, setSelectedTask] = useState<AdminTask | null>(null);
     const [taskFilter, setTaskFilter] = useState<'all' | TaskType | TaskPriority>('all');
+    const [searchQuery, setSearchQuery] = useState("");
     const [taskPage, setTaskPage] = useState(1);
+    const [deletingAll, setDeletingAll] = useState(false);
+    const [tutorialSearch, setTutorialSearch] = useState("");
 
     const [revenueData, setRevenueData] = useState<{
         activeAffiliates: number;
@@ -90,6 +157,22 @@ export default function DashboardPage() {
             setTasks(prev => prev.filter(t => t.id !== taskId));
         } catch (error) {
             logger.error("Failed to dismiss task", error);
+        }
+    };
+
+    const deleteAllTasks = async () => {
+        if (!confirm("Se eliminarán permanentemente todas las tareas pendientes. ¿Continuar?")) return;
+        setDeletingAll(true);
+        try {
+            const res = await fetch('/api/admin/tasks', { method: 'DELETE' });
+            if (res.ok) {
+                setTasks([]);
+                alert("Todas las tareas han sido eliminadas.");
+            }
+        } catch (error) {
+            logger.error("Failed to delete all tasks", error);
+        } finally {
+            setDeletingAll(false);
         }
     };
 
@@ -232,12 +315,24 @@ export default function DashboardPage() {
     const normalTasks = tasks.filter(t => t.priority === 'normal' || t.priority === 'low');
 
     const filteredTasks = tasks.filter(task => {
-        if (taskFilter === 'all') return true;
-        if (taskFilter === 'critical' || taskFilter === 'high' || taskFilter === 'normal' || taskFilter === 'low') {
-            return task.priority === taskFilter;
+        // Priority/Type Filter
+        let matchesFilter = true;
+        if (taskFilter !== 'all') {
+            if (taskFilter === 'critical' || taskFilter === 'high' || taskFilter === 'normal' || taskFilter === 'low') {
+                matchesFilter = task.priority === taskFilter;
+            } else {
+                matchesFilter = task.task_type === taskFilter;
+            }
         }
-        return task.task_type === taskFilter;
+
+        // Search Filter
+        const matchesSearch = !searchQuery ||
+            task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (task.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        return matchesFilter && matchesSearch;
     });
+
     const paginatedTasks: AdminTask[] = filteredTasks.slice(
         (taskPage - 1) * TASKS_PER_PAGE,
         taskPage * TASKS_PER_PAGE
@@ -290,6 +385,13 @@ export default function DashboardPage() {
                         >
                             <GitBranch className="w-4 h-4" />
                             Scraper Workflows
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("tutorial")}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutorial" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                        >
+                            <HelpCircle className="w-4 h-4" />
+                            Tutorial
                         </button>
                     </div>
                 </div>
@@ -441,7 +543,20 @@ export default function DashboardPage() {
                                     {tasks.length} tareas pendientes • Página {taskPage} de {Math.ceil(filteredTasks.length / TASKS_PER_PAGE) || 1}
                                 </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar tareas..."
+                                        value={searchQuery}
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            setTaskPage(1);
+                                        }}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-64 pl-10"
+                                    />
+                                    <Activity className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                                </div>
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -462,6 +577,19 @@ export default function DashboardPage() {
                                         <Zap className="w-4 h-4 mr-2" />
                                     )}
                                     Escanear
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={deleteAllTasks}
+                                    disabled={deletingAll || tasks.length === 0}
+                                >
+                                    {deletingAll ? (
+                                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                    ) : (
+                                        <AlertTriangle className="w-4 h-4 mr-2" />
+                                    )}
+                                    Borrar Todo
                                 </Button>
                             </div>
                         </div>
@@ -730,6 +858,65 @@ export default function DashboardPage() {
                                 </div>
                             )}
                         </GlassCard>
+                    </div>
+                )}
+
+                {activeTab === "tutorial" && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-3xl font-bold tracking-tight">Centro de Ayuda y Tutoriales</h2>
+                                <p className="text-muted-foreground mt-1">Domina todas las herramientas de HostingArena.</p>
+                            </div>
+                            <div className="relative w-full md:w-96">
+                                <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    placeholder="¿Qué necesitas aprender hoy?"
+                                    value={tutorialSearch}
+                                    onChange={(e) => setTutorialSearch(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {TUTORIAL_TOPICS.filter(t =>
+                                t.title.toLowerCase().includes(tutorialSearch.toLowerCase()) ||
+                                t.content.toLowerCase().includes(tutorialSearch.toLowerCase())
+                            ).map((topic) => (
+                                <GlassCard key={topic.id} className="p-8 group hover:border-primary/30 transition-all">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                                            <topic.icon className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] uppercase tracking-widest font-bold text-primary/70">{topic.category}</span>
+                                                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
+                                            <h3 className="text-xl font-bold mb-4">{topic.title}</h3>
+                                            <div className="text-sm text-muted-foreground leading-relaxed space-y-2 whitespace-pre-wrap">
+                                                {topic.content}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </GlassCard>
+                            ))}
+                        </div>
+
+                        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-primary/20 rounded-full">
+                                    <BookOpen className="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold">¿Necesitas ayuda avanzada?</h4>
+                                    <p className="text-sm text-muted-foreground">Consulta la documentación técnica completa en el repositorio.</p>
+                                </div>
+                            </div>
+                            <Button variant="default">Ver Repo GitHub</Button>
+                        </div>
                     </div>
                 )}
 

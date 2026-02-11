@@ -84,10 +84,13 @@ export async function GET(request: NextRequest) {
         };
 
         return NextResponse.json({ affiliates: data || [], stats });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Affiliates API] GET error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch affiliates', details: String(error) },
+            {
+                error: 'Failed to fetch affiliates',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }
@@ -163,10 +166,13 @@ export async function POST(request: NextRequest) {
         if (error) throw error;
 
         return NextResponse.json({ affiliate: data, message: 'Affiliate saved successfully' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Affiliates API] POST error:', error);
         return NextResponse.json(
-            { error: 'Failed to save affiliate', details: String(error) },
+            {
+                error: 'Failed to save affiliate',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }
@@ -267,10 +273,13 @@ export async function PATCH(request: NextRequest) {
         }
 
         return NextResponse.json({ affiliate: data, message: 'Affiliate updated successfully' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Affiliates API] PATCH error:', error);
         return NextResponse.json(
-            { error: 'Failed to update affiliate', details: String(error) },
+            {
+                error: 'Failed to update affiliate',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }
@@ -298,10 +307,13 @@ export async function DELETE(request: NextRequest) {
         if (error) throw error;
 
         return NextResponse.json({ message: 'Affiliate deleted successfully' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Affiliates API] DELETE error:', error);
         return NextResponse.json(
-            { error: 'Failed to delete affiliate', details: String(error) },
+            {
+                error: 'Failed to delete affiliate',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }

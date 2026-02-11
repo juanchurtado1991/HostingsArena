@@ -61,10 +61,13 @@ export async function POST(request: NextRequest) {
                 return acc;
             }, {} as Record<string, number>),
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[TaskGenerate] Error:', error);
         return NextResponse.json(
-            { error: 'Failed to generate tasks', details: String(error) },
+            {
+                error: 'Failed to generate tasks',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }

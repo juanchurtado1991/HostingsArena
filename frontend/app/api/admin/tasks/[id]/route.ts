@@ -27,10 +27,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         }
 
         return NextResponse.json({ task: data });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[TaskGet] Error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch task', details: String(error) },
+            {
+                error: 'Failed to fetch task',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }
@@ -57,10 +60,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         if (error) throw error;
 
         return NextResponse.json({ success: true, task: data });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[TaskUpdate] Error:', error);
         return NextResponse.json(
-            { error: 'Failed to update task', details: String(error) },
+            {
+                error: 'Failed to update task',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }
@@ -84,10 +90,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         if (error) throw error;
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[TaskDelete] Error:', error);
         return NextResponse.json(
-            { error: 'Failed to delete task', details: String(error) },
+            {
+                error: 'Failed to delete task',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }

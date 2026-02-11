@@ -12,9 +12,10 @@ interface StickyBuyBarProps {
     rating?: string | number;
     visitUrl: string;
     discount?: string;
+    renewalText?: string;
 }
 
-export function StickyBuyBar({ providerName, price, rating, visitUrl, discount }: StickyBuyBarProps) {
+export function StickyBuyBar({ providerName, price, rating, visitUrl, discount, renewalText }: StickyBuyBarProps) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -49,9 +50,14 @@ export function StickyBuyBar({ providerName, price, rating, visitUrl, discount }
                             {rating && <div className="text-xs text-muted-foreground">⭐ {rating}/10 Expert Rating</div>}
                         </div>
                         <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-2">
-                            <span className="text-2xl font-bold text-foreground">${price}</span>
-                            <span className="text-xs md:text-sm text-muted-foreground">/mo</span>
-                            {discount && <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{discount} OFF</span>}
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-bold text-foreground">${price}</span>
+                                <span className="text-xs md:text-sm text-muted-foreground">/mo</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {discount && <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full whitespace-nowrap">{discount}</span>}
+                                {renewalText && <span className="text-[10px] text-muted-foreground italic truncate max-w-[150px]">{renewalText}</span>}
+                            </div>
                         </div>
                     </div>
 

@@ -21,9 +21,18 @@ export interface HostingProvider {
     free_ssl?: boolean;
     free_domain?: boolean;
     backup_included?: boolean;
-    features?: Record<string, unknown>;
-    raw_data?: Record<string, unknown>;
+    features?: Record<string, any>;
+    raw_data?: Record<string, any>;
     last_updated?: string;
+    // Enriched Specs
+    web_server?: string;
+    control_panel?: string;
+    backup_frequency?: string;
+    inodes?: string | number;
+    max_processes?: string | number;
+    php_versions?: string[];
+    data_center_locations?: string[];
+    uptime_guarantee?: number | string;
 }
 
 // Used by VPN pages
@@ -35,9 +44,14 @@ export interface VPNProvider {
     money_back_days?: number;
     avg_speed_mbps?: number;
     server_count?: number;
-    features?: Record<string, unknown>;
-    raw_data?: Record<string, unknown>;
+    features?: Record<string, any>;
+    raw_data?: Record<string, any>;
     last_updated?: string;
+    // Enriched Specs
+    protocols?: string[];
+    encryption_type?: string;
+    jurisdiction?: string;
+    simultaneous_connections?: number;
 }
 
 // Used by lib/data.ts

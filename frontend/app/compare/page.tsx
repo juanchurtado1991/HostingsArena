@@ -82,7 +82,7 @@ export default function ComparePage() {
                 {/* Comparison Table (Money First) */}
                 {p1 && p2 ? (
                     <div className="animate-in slide-in-from-bottom-4 duration-700 fade-in">
-                        <ComparisonTable data={[p1, p2]} title="Direct Comparison" />
+                        <ComparisonTable data={[p1, p2]} title="Direct Comparison" type={category} />
                     </div>
                 ) : (
                     <div className="text-center py-20 text-muted-foreground bg-card/30 rounded-3xl border border-dashed border-border/50">

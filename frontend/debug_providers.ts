@@ -24,19 +24,20 @@ async function checkProviders() {
     try {
         const supabase = createAdminClient();
 
-        console.log("Checking hosting_providers...");
-        const { data: hosting, error: hError } = await supabase.from('hosting_providers').select('*').limit(5);
+        console.log("Checking all Hostinger rows in hosting_providers...");
+        const { data: hosting, error: hError } = await supabase
+            .from('hosting_providers')
+            .select('*')
+            .ilike('provider_name', 'Hostinger');
 
         if (hError) {
             console.error("Hosting Error:", hError);
         } else {
             console.log(`Hosting Count: ${hosting?.length || 0}`);
             if (hosting && hosting.length > 0) {
-                console.log("Sample Hosting:", JSON.stringify(hosting[0], null, 2));
-                const hasRating = 'rating' in hosting[0];
-                console.log(`Column 'rating' exists in hosting_providers? ${hasRating}`);
+                console.log("Hostinger Specs:", JSON.stringify(hosting[0], null, 2));
             } else {
-                console.log("No hosting providers found.");
+                console.log("Hostinger not found.");
             }
         }
 

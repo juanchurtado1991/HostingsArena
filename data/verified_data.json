@@ -63,7 +63,11 @@
           "India"
         ],
         "uptime_guarantee": 99.90,
-        "storage_type": "NVMe SSD"
+        "storage_type": "NVMe SSD",
+        "wordpress_support": true,
+        "free_migration": true,
+        "email_accounts": 100,
+        "staging_environment": true
       },
       "money_back": "30 Days",
       "free_ssl": true
@@ -177,7 +181,11 @@
           "France"
         ],
         "uptime_guarantee": 99.99,
-        "storage_type": "SSD"
+        "storage_type": "SSD",
+        "wordpress_support": true,
+        "free_migration": true,
+        "email_accounts": "Unlimited",
+        "staging_environment": true
       },
       "money_back": "30 Days",
       "free_ssl": true

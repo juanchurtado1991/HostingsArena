@@ -132,10 +132,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             message: 'Task resolved successfully',
             result: actionResult,
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[TaskResolve] Error:', error);
         return NextResponse.json(
-            { error: 'Failed to resolve task', details: String(error) },
+            {
+                error: 'Failed to resolve task',
+                details: error.message || error.details || String(error)
+            },
             { status: 500 }
         );
     }
