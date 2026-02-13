@@ -1501,7 +1501,7 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                                     <div className="mt-auto pt-3 border-t border-border/50 flex items-center justify-between">
                                         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                             <Clock className="w-3 h-3" />
-                                            {new Date(post.created_at).toLocaleDateString()}
+                                            {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown Date'}
                                         </span>
                                         <div className="flex gap-1">
                                             <button

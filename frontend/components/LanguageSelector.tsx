@@ -72,4 +72,3 @@ export function LanguageSelector() {
     );
 }
 
-export default LanguageSelector;
