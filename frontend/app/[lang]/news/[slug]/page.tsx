@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getAffiliateUrl } from "@/lib/affiliates";
 import Image from "next/image";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ArticleContent } from "@/components/news/ArticleContent";
 
 export const revalidate = 300; // ISR: 5 minutes
 
@@ -112,74 +113,13 @@ export default async function NewsPostPage({ params }: PageProps) {
             <JsonLd post={post} url={`https://hostingsarena.com/news/${post.slug}`} />
             <PageTracker postSlug={post.slug} />
 
-            <article className="max-w-4xl mx-auto">
-                <Link href="/news" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors group">
-                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    Back to News
-                </Link>
-
-                {/* Header */}
-                <header className="mb-10 text-center">
-                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
-                        {post.category && (
-                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                                <Tag className="w-3.5 h-3.5" />
-                                {post.category}
-                            </span>
-                        )}
-                        <span className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
-                            {estimateReadTime(post.content || "")}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {new Date(post.published_at || post.created_at).toLocaleDateString(undefined, {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            })}
-                        </span>
-                    </div>
-
-                    <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight tracking-tight">
-                        {post.title}
-                    </h1>
-
-                    {post.excerpt && (
-                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                            {post.excerpt}
-                        </p>
-                    )}
-                </header>
-
-                {/* Cover Image */}
-                {post.cover_image_url && (
-                    <div className="relative aspect-video w-full rounded-3xl overflow-hidden mb-12 shadow-2xl shadow-primary/5 border border-white/10">
-                        <Image
-                            src={post.cover_image_url}
-                            alt={post.title}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                )}
-
+            <article className="max-w-7xl mx-auto">
                 {/* Content */}
                 <GlassCard className="p-8 md:p-12 mb-12">
-                    <div
-                        className="article-body max-w-none text-foreground leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: post.content || "" }}
-                    />
+                    <ArticleContent content={post.content || ""} />
                 </GlassCard>
-
-                {/* CTA with Suspense to prevent stream abortion issues */}
-                {post.related_provider_name && (
-                    <Suspense fallback={<div className="h-20 animate-pulse bg-muted/20" />}>
-                        <AffiliateCTA providerName={post.related_provider_name} />
-                    </Suspense>
-                )}
             </article>
-        </div>
+        </div >
     );
 }
+

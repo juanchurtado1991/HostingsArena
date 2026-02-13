@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, FormEvent, ChangeEvent } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -223,13 +224,19 @@ function EditorToolbar({
 
             {/* Color & Highlight */}
             <ToolbarGroup label="Style">
-                <div className="relative">
+                <div className="relative flex items-center gap-1">
                     <ToolbarBtn onClick={() => setShowColorPicker(!showColorPicker)} title="Text Color">
                         <Palette className="w-4 h-4" />
                     </ToolbarBtn>
+                    <input
+                        type="color"
+                        className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
+                        onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                        title="Custom Color"
+                    />
                     {showColorPicker && (
-                        <div className="p-3 rounded-2xl glass-panel shadow-2xl z-50 flex gap-1.5 flex-wrap w-44">
-                            <p className="w-full text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Text Color</p>
+                        <div className="absolute top-full left-0 mt-2 p-3 rounded-2xl glass-panel shadow-2xl z-50 flex gap-1.5 flex-wrap w-44 bg-card border border-border">
+                            <p className="w-full text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Presets</p>
                             {colors.map(c => (
                                 <button
                                     key={c}
@@ -256,19 +263,37 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Affiliate Link Inserter */}
+            {/* Links */}
             <div className="relative flex flex-col items-center gap-1">
                 <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40 select-none">Links</span>
-                <button
-                    type="button"
-                    onClick={() => setShowAffiliateMenu(!showAffiliateMenu)}
-                    title="Insert Affiliate Link"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-105"
-                >
-                    <LinkIcon className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Affiliate</span>
-                    <ChevronDown className="w-3 h-3" />
-                </button>
+                <div className="flex items-center gap-1">
+                    <ToolbarBtn
+                        onClick={() => {
+                            const previousUrl = editor.getAttributes('link').href;
+                            const url = window.prompt('URL', previousUrl);
+                            if (url === null) return;
+                            if (url === '') {
+                                editor.chain().focus().extendMarkRange('link').unsetLink().run();
+                                return;
+                            }
+                            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                        }}
+                        active={editor.isActive('link')}
+                        title="Insert/Edit Link"
+                    >
+                        <LinkIcon className="w-4 h-4" />
+                    </ToolbarBtn>
+
+                    <button
+                        type="button"
+                        onClick={() => setShowAffiliateMenu(!showAffiliateMenu)}
+                        title="Insert Affiliate Link"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-105"
+                    >
+                        <span className="hidden sm:inline">Affiliate</span>
+                        <ChevronDown className="w-3 h-3" />
+                    </button>
+                </div>
                 {showAffiliateMenu && (
                     <div className="absolute top-full right-0 mt-2 w-72 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-2xl shadow-black/20 dark:shadow-black/40 z-50 overflow-hidden">
                         <div className="p-3 border-b border-border/50 bg-primary/5">
@@ -366,10 +391,26 @@ function PostEditorModal({
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: { class: "text-primary underline hover:text-primary/80", target: "_blank", rel: "noopener noreferrer" },
+            }).extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        'data-provider': { default: null },
+                        'data-affiliate': { default: null },
+                    }
+                }
             }),
             Image.configure({
                 inline: true,
                 allowBase64: true,
+            }).extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        width: { default: null },
+                        style: { default: null },
+                    }
+                }
             }),
             Placeholder.configure({
                 placeholder: "Start writing your article here... Use the toolbar above to format text, add headings, or insert affiliate links.",
@@ -695,6 +736,44 @@ function PostEditorModal({
                                     onInsertImage={handleEditorImageUpload}
                                 />
                                 <div className="flex-1 overflow-y-auto">
+                                    {editor && (
+                                        <BubbleMenu editor={editor} shouldShow={({ editor }: { editor: any }) => editor.isActive('image')}>
+                                            <div className="flex items-center gap-1 p-1 bg-background/80 backdrop-blur-md border border-border rounded-lg shadow-xl">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 text-xs"
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '25%', style: 'width: 25%; height: auto;' }).run()}
+                                                >
+                                                    25%
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 text-xs"
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '50%', style: 'width: 50%; height: auto;' }).run()}
+                                                >
+                                                    50%
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 text-xs"
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '75%', style: 'width: 75%; height: auto;' }).run()}
+                                                >
+                                                    75%
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 text-xs"
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%', style: 'width: 100%; height: auto;' }).run()}
+                                                >
+                                                    100%
+                                                </Button>
+                                            </div>
+                                        </BubbleMenu>
+                                    )}
                                     <EditorContent editor={editor} />
                                 </div>
                             </div>
