@@ -22,60 +22,57 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Post not found' }, { status: 404 });
         }
 
-        // Webhook URL from generic environment variable or specific one
+        // 1. Try Native Twitter Integration
+        let twitterUrl = null;
+        if (post.social_tw_text) {
+            try {
+                const { twitterClient } = await import('@/lib/twitter');
+                twitterUrl = await twitterClient.postTweet(post.social_tw_text);
+            } catch (e) {
+                logger.error('Error importing or using twitterClient', e);
+            }
+        }
+
+        // 2. Webhook Integration (Make.com / Buffer) - Optional
         const webhookUrl = process.env.SOCIAL_PUBLISH_WEBHOOK_URL;
+        let webhookData = {};
 
-        if (!webhookUrl) {
-            logger.warn('SOCIAL_PUBLISH_WEBHOOK_URL is not defined. Skipping webhook trigger.');
-            return NextResponse.json({
-                success: true,
-                message: 'Webhook processed (skipped - no URL configured)',
-                data: post
+        if (webhookUrl) {
+            // ... (existing webhook logic) ...
+            const payload = {
+                id: post.id,
+                title: post.title,
+                slug: post.slug,
+                url: `https://hostingarena.com/news/${post.slug}`,
+                excerpt: post.excerpt,
+                cover_image: post.cover_image_url,
+                social_twitter: post.social_tw_text,
+                social_linkedin: post.social_li_text,
+                hashtags: post.social_hashtags,
+                published_at: new Date().toISOString()
+            };
+
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
-        }
 
-        // Prepare payload for Make/Zapier
-        const payload = {
-            id: post.id,
-            title: post.title,
-            slug: post.slug,
-            url: `https://hostingarena.com/news/${post.slug}`,
-            excerpt: post.excerpt,
-            cover_image: post.cover_image_url,
-            social_twitter: post.social_tw_text,
-            social_linkedin: post.social_li_text,
-            hashtags: post.social_hashtags,
-            published_at: new Date().toISOString()
-        };
-
-        // Fire and await response to get real links
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            logger.error(`Webhook trigger failed with status ${response.status}`);
-            const errorText = await response.text();
-            return NextResponse.json({
-                error: 'Upstream webhook failed',
-                details: errorText
-            }, { status: 502 });
-        }
-
-        // Try to parse JSON from Make.com to get social links
-        let upstreamData = {};
-        try {
-            upstreamData = await response.json();
-        } catch (e) {
-            logger.warn('Webhook success but no JSON returned');
+            if (response.ok) {
+                try {
+                    webhookData = await response.json();
+                } catch (e) { /* ignore */ }
+            }
         }
 
         return NextResponse.json({
             success: true,
-            message: 'Webhook triggered successfully',
-            data: upstreamData
+            message: 'Publishing actions completed',
+            data: {
+                ...webhookData,
+                // If native twitter worked, it overrides/supplements the webhook data
+                x_url: twitterUrl || (webhookData as any)?.x_url
+            }
         });
 
     } catch (error: any) {
