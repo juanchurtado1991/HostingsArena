@@ -349,6 +349,7 @@ function PostEditorModal({
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [publishStatus, setPublishStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [publishError, setPublishError] = useState<string | undefined>(undefined);
+    const [indexingStatus, setIndexingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
 
     const editor = useEditor({
@@ -531,14 +532,22 @@ function PostEditorModal({
 
             if (publish && postId) {
                 // Trigger Google Indexing
+                setIndexingStatus('loading');
                 try {
-                    await fetch("/api/admin/posts/index-google", {
+                    const idxRes = await fetch("/api/admin/posts/index-google", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
                     });
+
+                    if (idxRes.ok) {
+                        setIndexingStatus('success');
+                    } else {
+                        setIndexingStatus('error');
+                    }
                 } catch (idxErr) {
                     console.error("Google Indexing trigger failed:", idxErr);
+                    setIndexingStatus('error');
                     // We don't fail the whole publish for indexing, as the post is already live
                 }
 
@@ -1029,6 +1038,7 @@ function PostEditorModal({
                     hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : undefined
                 }}
                 errorDetails={publishError}
+                indexingStatus={indexingStatus}
             />
         </div>
     );
@@ -1049,8 +1059,12 @@ function GenerationConfigModal({
     const [customCategory, setCustomCategory] = useState("");
     const [provider, setProvider] = useState("random");
     const [customProvider, setCustomProvider] = useState("");
-    const [scenario, setScenario] = useState("random");
+    const [scenario, setScenario] = useState("random"); // Narrative Arc
     const [customScenario, setCustomScenario] = useState("");
+    const [persona, setPersona] = useState("random");
+    const [customPersona, setCustomPersona] = useState("");
+    const [structure, setStructure] = useState("random");
+    const [customStructure, setCustomStructure] = useState("");
     const [model, setModel] = useState("gpt-4o-mini");
     const [wordCount, setWordCount] = useState("1500");
     const [instructions, setInstructions] = useState("");
@@ -1062,6 +1076,8 @@ function GenerationConfigModal({
             category: category === "custom" ? customCategory : category,
             provider_name: provider === "custom" ? customProvider : (provider === "random" ? undefined : provider),
             scenario: scenario === "custom" ? customScenario : (scenario === "random" ? undefined : scenario),
+            persona: persona === "custom" ? customPersona : (persona === "random" ? undefined : persona),
+            structure: structure === "custom" ? customStructure : (structure === "random" ? undefined : structure),
             model: model,
             target_word_count: parseInt(wordCount),
             extra_instructions: instructions
@@ -1129,23 +1145,76 @@ function GenerationConfigModal({
                             )}
                         </div>
 
-                        {/* Scenario */}
+                        {/* Narrative Arc (Scenario) */}
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Target Persona</label>
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Narrative Arc</label>
                             <select value={scenario} onChange={(e) => setScenario(e.target.value)} className={INPUT_CLASS}>
-                                <option value="random">🎲 Random Persona</option>
-                                <option value="High-Traffic E-commerce Business">🛍️ E-commerce</option>
-                                <option value="Privacy-First Journalist">🕵️ Privacy Journalist</option>
-                                <option value="Budget-Conscious Startup">💸 Budget Startup</option>
-                                <option value="Full-Stack Developer">👨‍💻 Developer</option>
-                                <option value="custom">✨ Custom Persona</option>
+                                <option value="random">🎲 Random Arc</option>
+                                <option value="The 'Skeptic Converted'">😲 The Skeptic Converted</option>
+                                <option value="The 'Hidden Flaw'">🕵️ The Hidden Flaw</option>
+                                <option value="The 'David vs Goliath'">⚔️ David vs Goliath</option>
+                                <option value="The 'Migration Nightmare'">😫 Migration Nightmare</option>
+                                <option value="The 'Speed Freak'">🚀 The Speed Freak</option>
+                                <option value="custom">✨ Custom Arc</option>
                             </select>
                             {scenario === "custom" && (
                                 <input
                                     type="text"
-                                    placeholder="e.g. Minecraft Server Admin"
+                                    placeholder="e.g. Underdog Story"
                                     value={customScenario}
                                     onChange={(e) => setCustomScenario(e.target.value)}
+                                    className={`mt-2 ${INPUT_CLASS}`}
+                                />
+                            )}
+                        </div>
+
+                        {/* Persona */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Persona</label>
+                            <select value={persona} onChange={(e) => setPersona(e.target.value)} className={INPUT_CLASS}>
+                                <option value="random">🎲 Random Persona</option>
+                                <option value="The Ruthless CTO">💼 The Ruthless CTO</option>
+                                <option value="The Privacy Paranoiac">🔒 The Privacy Paranoiac</option>
+                                <option value="The Startup Hustler">🚀 The Startup Hustler</option>
+                                <option value="The Gamer/Streamer">🎮 The Gamer/Streamer</option>
+                                <option value="The DevOps Wizard">👨‍💻 The DevOps Wizard</option>
+                                <option value="The WordPress Purist">📝 The WordPress Purist</option>
+                                <option value="The Encyclopedia">📚 The Encyclopedia</option>
+                                <option value="The Enthusiastic Futurist">🤩 The Enthusiastic Futurist</option>
+                                <option value="custom">✨ Custom Persona</option>
+                            </select>
+                            {persona === "custom" && (
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Angry Sysadmin"
+                                    value={customPersona}
+                                    onChange={(e) => setCustomPersona(e.target.value)}
+                                    className={`mt-2 ${INPUT_CLASS}`}
+                                />
+                            )}
+                        </div>
+
+                        {/* Structure */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Structure & Style</label>
+                            <select value={structure} onChange={(e) => setStructure(e.target.value)} className={INPUT_CLASS}>
+                                <option value="random">🎲 Random Style</option>
+                                <option value="The 'Vs. The World' Showdown">🥊 Vs. The World Showdown</option>
+                                <option value="The 24-Hour Stress Test Diary">⏱️ 24-Hour Stress Test</option>
+                                <option value="The 'Migrator's Nightmare' Log">🏚️ Migrator's Nightmare</option>
+                                <option value="The ROI Analysis Report">💰 ROI Analysis</option>
+                                <option value="The 'Explain It Like I'm 5' (ELI5)">👶 ELI5 (Simple)</option>
+                                <option value="The Q&A Interview">🎤 Q&A Interview</option>
+                                <option value="The 'TL;DR' Executive Brief">⚡ TL;DR Brief</option>
+                                <option value="The Hero's Journey">🦸 Hero's Journey</option>
+                                <option value="custom">✨ Custom Structure</option>
+                            </select>
+                            {structure === "custom" && (
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Socratic Dialogue"
+                                    value={customStructure}
+                                    onChange={(e) => setCustomStructure(e.target.value)}
                                     className={`mt-2 ${INPUT_CLASS}`}
                                 />
                             )}

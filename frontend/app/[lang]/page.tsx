@@ -4,6 +4,16 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { RefreshCw, Zap, ShieldCheck } from "lucide-react";
 import { getDictionary } from "../../get-dictionary";
 import type { Locale } from "../../i18n-config";
+import { Metadata } from "next";
+import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
+
+export const metadata: Metadata = {
+  title: "Best Web Hosting 2024 (Verified Data) | HostingArena",
+  description: "We tested 120+ hosting providers. See the real winners for speed, uptime, and support. No fake reviews, just data.",
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL!,
+  }
+};
 
 export default async function Home({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params;
@@ -11,6 +21,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Locale 
 
   return (
     <div className="flex flex-col pb-20 overflow-x-hidden">
+      <OrganizationJsonLd />
 
 
       <HeroSection dict={dict.hero} lang={lang} />

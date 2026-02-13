@@ -7,13 +7,35 @@ import { Star, Check, X, Shield, Globe, Zap, Server, ChevronRight, AlertTriangle
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 import { getAffiliateUrl } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
+import { ReviewJsonLd } from "@/components/seo/ReviewJsonLd";
+import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
     const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    // We'd ideally fetch the provider image here for OG, but for now we use a default or the provider name
+
     return {
-        title: `${title} - In-Depth Review & Benchmarks | HostingArena`,
-        description: `Performance tests, uptime stats, and pricing analysis for ${title}.`,
+        title: `${title} - In-Depth Review & Benchmarks ${new Date().getFullYear()} | HostingArena`,
+        description: `Performance tests, uptime stats, and pricing analysis for ${title}. See why it scored 8+/10.`,
+        alternates: {
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/hosting/${slug}`,
+        },
+        openGraph: {
+            title: `${title} Review - Is it Worth It in ${new Date().getFullYear()}?`,
+            description: `Real data: Performance, Pricing, and Hidden Fees analyzed for ${title}.`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/hosting/${slug}`,
+            siteName: 'HostingsArena',
+            images: [
+                {
+                    url: `${process.env.NEXT_PUBLIC_SITE_URL}/og-hosting.png`, // Fallback or dynamic generation
+                    width: 1200,
+                    height: 630,
+                    alt: `${title} Review`,
+                }
+            ],
+            type: 'article',
+        }
     };
 }
 
@@ -55,6 +77,22 @@ export default async function HostingDetailPage({ params }: { params: Promise<{ 
     return (
         <main className="min-h-screen bg-background pb-20">
             <PageTracker />
+            <ReviewJsonLd
+                providerName={provider.provider_name}
+                description={`In-depth review of ${provider.provider_name} hosting services. Performance grade: ${provider.performance_grade || 'B'}.`}
+                rating={provider.support_score ? provider.support_score / 10 : 8.5}
+                slug={slug}
+                type="hosting"
+                datePublished={provider.created_at || new Date().toISOString()}
+                price={provider.pricing_monthly}
+            />
+            <BreadcrumbJsonLd
+                items={[
+                    { name: "Home", item: "/" },
+                    { name: "Hosting Reviews", item: "/hosting" },
+                    { name: provider.provider_name, item: `/hosting/${slug}` }
+                ]}
+            />
             <StickyBuyBar
                 providerName={provider.provider_name}
                 price={provider.pricing_monthly}

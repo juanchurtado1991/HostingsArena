@@ -40,7 +40,11 @@ export function Footer({ dict, lang }: FooterProps) {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="#" className="hover:text-foreground">{dict.footer.link_about}</Link></li>
               <li><Link href="#" className="hover:text-foreground">{dict.footer.link_methodology}</Link></li>
-              <li><Link href="#" className="hover:text-foreground">{dict.footer.link_contact}</Link></li>
+              <li><Link href="mailto:soporte@hostingsarena.com" className="hover:text-foreground">{dict.footer.link_contact}</Link></li>
+              <li className="pt-2 flex gap-3">
+                <a href="https://x.com/HostingsArena" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">X (Twitter)</a>
+                <a href="https://www.facebook.com/profile.php?id=61588177618478" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">Facebook</a>
+              </li>
             </ul>
           </div>
         </div>

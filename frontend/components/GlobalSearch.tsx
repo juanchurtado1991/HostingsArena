@@ -92,12 +92,12 @@ export function GlobalSearch({ placeholder = "Search providers..." }: GlobalSear
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-[200px] lg:w-[300px] justify-between text-muted-foreground bg-muted/50 border-input hover:bg-accent hover:text-accent-foreground"
+                    className="w-[200px] xl:w-[300px] justify-between text-muted-foreground bg-muted/50 border-input hover:bg-accent hover:text-accent-foreground"
                 >
                     <span className="flex items-center gap-2">
                         <Search className="h-4 w-4" />
-                        <span className="hidden lg:inline">Search providers...</span>
-                        <span className="lg:hidden">Search...</span>
+                        <span className="hidden xl:inline">Search providers...</span>
+                        <span className="xl:hidden">Search...</span>
                     </span>
                     <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                         <span className="text-xs">⌘</span>K

@@ -17,14 +17,14 @@ export function JsonLd({ post, url }: JsonLdProps) {
         "author": [{
             "@type": "Person",
             "name": "HostingsArena Team",
-            "url": "https://hostingsarena.com/about"
+            "url": `${process.env.NEXT_PUBLIC_SITE_URL}/about`
         }],
         "publisher": {
             "@type": "Organization",
             "name": "HostingsArena",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://hostingsarena.com/logo.png"
+                "url": `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`
             }
         },
         "mainEntityOfPage": {

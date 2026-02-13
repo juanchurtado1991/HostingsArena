@@ -114,11 +114,11 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         <div className="flex h-16 items-center justify-between rounded-full border border-border/40 bg-background/70 px-6 shadow-sm backdrop-blur-xl mt-4 supports-[backdrop-filter]:bg-background/60">
           <Link href={`/${lang}`} className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-foreground">
-              Hosting<span className="text-primary">Arena</span>
+              Hostings<span className="text-primary">Arena</span>
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -133,7 +133,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             <GlobalSearch />
             <LocaleSwitcher />
 
@@ -173,7 +173,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           </div>
 
           <button
-            className="md:hidden p-2 text-muted-foreground"
+            className="lg:hidden p-2 text-muted-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
@@ -182,7 +182,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="absolute top-24 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl md:hidden animate-in fade-in slide-in-from-top-4 z-40">
+        <div className="absolute top-24 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl lg:hidden animate-in fade-in slide-in-from-top-4 z-40">
           <div className="flex flex-col gap-4">
             <div className="mb-4 flex flex-col gap-4">
               <GlobalSearch />

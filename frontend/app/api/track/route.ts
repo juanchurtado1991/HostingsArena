@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
             referrer: referrer?.slice(0, 500) || null,
             user_agent: userAgent.slice(0, 500),
             country: country?.slice(0, 10) || null,
+            ip_address: (request.headers.get("x-forwarded-for")?.split(',')[0] || "unknown").slice(0, 45),
         });
 
         return NextResponse.json({ ok: true });

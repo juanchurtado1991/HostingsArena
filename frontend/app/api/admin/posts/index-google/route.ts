@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
+import { requestIndexing } from '@/lib/google-indexing';
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,21 +12,37 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        // TODO: Integrate actual Google Indexing API here
-        // This requires a Service Account JSON key and is strictly rate-limited.
-        // For now, we mock the success to complete the UI flow.
+        // Force www.hostingsarena.com to match Search Console Property
+        let finalUrl = url;
+        try {
+            const urlObj = new URL(url);
+            if (urlObj.hostname === 'hostingsarena.com') {
+                urlObj.hostname = 'www.hostingsarena.com';
+                finalUrl = urlObj.toString();
+            }
+        } catch (e) {
+            // If invalid URL, let it fail downstream or handle here
+            console.error('Invalid URL parsing:', url);
+        }
 
-        console.log(`[Google Indexing] Request received for: ${url}`);
+        console.log(`[Google Indexing] Request for: ${url} -> Normalized: ${finalUrl}`);
 
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const result = await requestIndexing(finalUrl);
+
+        if (!result) {
+            return NextResponse.json({
+                success: false,
+                message: 'Indexing skipped (No credentials configured)'
+            });
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'Indexing request submitted to Google (Mock)'
+            data: result
         });
 
     } catch (error: any) {
+        console.error('Google Indexing API Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

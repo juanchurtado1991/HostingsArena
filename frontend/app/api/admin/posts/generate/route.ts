@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
 import { logger } from '@/lib/logger';
+import { personas, structures, narrativeArcs, stressTests } from './data';
+import { buildContentSystemPrompt, buildMetaSystemPrompt } from './prompts';
 
 export async function POST(request: NextRequest) {
     const { readable, writable } = new TransformStream();
@@ -51,7 +53,6 @@ export async function POST(request: NextRequest) {
             } else {
                 provider = allProviders[Math.floor(Math.random() * allProviders.length)];
             }
-            const price = provider.pricing_monthly ? `$${provider.pricing_monthly}/mo` : 'market standard rates';
 
             const specs = provider.type === 'hosting' ? {
                 price: provider.pricing_monthly || "Hidden",
@@ -71,54 +72,19 @@ export async function POST(request: NextRequest) {
 
             const specsString = JSON.stringify(specs, null, 2);
 
-            const narrativeArcs = [
-                "The 'Skeptic Converted': You thought it was trash, but were proven wrong.",
-                "The 'Hidden Flaw': It looks perfect on paper, but you found a deal-breaker.",
-                "The 'David vs Goliath': Comparing this small provider to AWS/Google and finding it better for specific things.",
-                "The 'Migration Nightmare': You are testing this because your previous host crashed.",
-                "The 'Speed Freak': You care ONLY about milliseconds and raw performance."
-            ];
-
             const selectedArc = body.scenario && body.scenario !== 'random'
                 ? body.scenario
                 : narrativeArcs[Math.floor(Math.random() * narrativeArcs.length)];
 
-            const stressTests = [
-                "Installing a heavy WooCommerce store with 5,000 products.",
-                "Running a Minecraft Server with 50+ mods.",
-                "Simulating a Reddit 'Hug of Death' traffic spike.",
-                "Uploading a 10GB SQL database dump via CLI.",
-                "Streaming 4K video through the VPN from 3 different continents simultaneously."
-            ];
             const selectedTest = stressTests[Math.floor(Math.random() * stressTests.length)];
 
-            const structures = [
-                {
-                    name: "The Hero's Journey",
-                    desc: "A narrative review. Start with a problem, introduce the provider as a potential solution, face challenges (cons), and reach a resolution.",
-                    html_guideline: "Use <h2> for chapters (The Call, The Trial, The Reward). Focus on storytelling."
-                },
-                {
-                    name: "The Deep Dive Technical Analysis",
-                    desc: "A rigorous, data-heavy review. Focus on benchmarks, speed tests, and raw specs.",
-                    html_guideline: "Use <div class='data-box'> for metrics. Compare strictly against competitors."
-                },
-                {
-                    name: "The Ultimate Buyer's Guide",
-                    desc: "Educational and helpful. Explain WHY features matter while reviewing the provider.",
-                    html_guideline: "Use 'Who is this for?' sections and 'Pro Tips' boxes."
-                }
-            ];
+            const selectedStructure = body.structure
+                ? structures.find(s => s.name === body.structure) || structures[0]
+                : structures[Math.floor(Math.random() * structures.length)];
 
-            const selectedStructure = structures[Math.floor(Math.random() * structures.length)];
-
-            const personas = [
-                "The Enthusiastic Futurist (Loves innovation, optimistic)",
-                "The Helpful Mentor (Explains things simply, wants you to succeed)",
-                "The Digital AESTHETE (Appreciates good UI/UX and clean code)",
-                "The Performance Junkie (Gets excited about speed and uptime)"
-            ];
-            const selectedPersona = personas[Math.floor(Math.random() * personas.length)];
+            const selectedPersona = body.persona && personas.includes(body.persona)
+                ? body.persona
+                : personas[Math.floor(Math.random() * personas.length)];
 
             const modelToUse = body.model || 'gpt-4o-mini';
             const targetWordCount = body.target_word_count || 1500;
@@ -141,48 +107,17 @@ export async function POST(request: NextRequest) {
                     messages: [
                         {
                             role: 'system',
-                            content: `You are a World-Class Tech Editor.
-                            Task: Write a comprehensive, imaginative review of **${provider.provider_name}**.
-                            
-                            **CRITICAL DATA (MUST USE):**
-                            ${specsString}
-                            
-                            **PARAMETERS:**
-                            - Length: **Approx ${targetWordCount} words**. This is a ${approxReadingTime}-minute read.
-                            - Structure: **${selectedStructure.name}** (${selectedStructure.desc}).
-                            - Tone: **${selectedPersona}**. Positive, constructive, and imaginative.
-                            - Narrative Arc: **${selectedArc}**.
-                            - Key Stress Test: **${selectedTest}**.
-                            - Custom Instructions: ${extraInstructions}
-                            
-                            **WRITING RULES:**
-                            1. **Be Imaginative:** Use metaphors and vivid descriptions.
-                            2. **Focus on Good:** Highlight strengths. Frame weaknesses as "trade-offs" or "areas for improvement".
-                            3. **Deep Content:** Do not skim. Discuss unique features, explore the dashboard, discuss value proposition depth.
-                            4. **Formatting:** Use short paragraphs, varied sentence length, and **bold** for emphasis.
-                            
-                            **HTML OUTPUT FORMAT (Adhere to ${selectedStructure.name}):**
-                            <div class="review-content">
-                                ${selectedStructure.html_guideline}
-                                
-                                <!-- Content Body (approx ${targetWordCount} words) -->
-                                [GENERATE CONTENT HERE]
-                                
-                                <!-- Required Elements -->
-                                <div class="specs-box">
-                                   <h3>Technical Snapshot</h3>
-                                   <!-- Generate a table using the CRITICAL DATA provided above -->
-                                   <table class="specs-table">
-                                      <tr><th>Metric</th><th>Details</th></tr>
-                                      <!-- Fill with JSON data -->
-                                   </table>
-                                </div>
-                                
-                                <div class="verdict-box">
-                                   <h3>Final Thoughts</h3>
-                                   [A 3-paragraph summary ending on a high note]
-                                </div>
-                            </div>`
+                            content: buildContentSystemPrompt({
+                                providerName: provider.provider_name,
+                                specsString,
+                                targetWordCount,
+                                approxReadingTime,
+                                structure: selectedStructure,
+                                persona: selectedPersona,
+                                arc: selectedArc,
+                                test: selectedTest,
+                                extraInstructions
+                            })
                         }
                     ],
                     temperature: 0.9,
@@ -204,34 +139,13 @@ export async function POST(request: NextRequest) {
                     messages: [
                         {
                             role: 'system',
-                            content: `You are a Viral Content Strategist.
-                            The article is a **${selectedStructure.name}** review of **${provider.provider_name}**.
-                            Persona: **${selectedPersona}**.
-                            ${extraInstructions}
-                            
-                            Generate metadata that is:
-                            1. **Imaginative & Positive** (Focus on value/innovation).
-                            2. **High CTR** (Use curiosity gaps, but avoid negativity).
-                            3. **SEO Optimized** for "${provider.provider_name} review ${currentYear}".
-                            4. **Social Media Ready**:
-                                - Twitter: Short, punchy, curiosity-inducing (max 280 chars).
-                                - LinkedIn: Professional, value-driven, industry insight.
-                                - Facebook: Friendly, engaging, story-oriented or community-focused.
-                                - Hashtags: 3-5 relevant tags.
-                            
-                            Return JSON:
-                            {
-                                "title": "Viral Title (e.g., 'The Future of Hosting?', 'Why X is a Game Changer')",
-                                "seo_title": "SEO Title (60 chars max)",
-                                "seo_description": "Meta Description (160 chars) - Focus on benefits.",
-                                "excerpt": "2 sentences that hook the reader with a powerful metaphor.",
-                                "image_prompt": "Cinematic 8k photography, futuristic server room, neon cyan and blue accents, depth of field",
-                                "social_tw_text": "Twitter post content (strings)",
-                                "social_li_text": "LinkedIn post content (string)",
-                                "social_fb_text": "Facebook post content (string)",
-                                "social_hashtags": ["tag1", "tag2"],
-                                "rating_score": 90
-                            }`
+                            content: buildMetaSystemPrompt({
+                                structureName: selectedStructure.name,
+                                providerName: provider.provider_name,
+                                persona: selectedPersona,
+                                extraInstructions,
+                                currentYear
+                            })
                         }
                     ],
                     temperature: 0.85,

@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps) {
         openGraph: {
             title: post.seo_title || post.title,
             description: post.seo_description || post.excerpt,
-            url: `https://hostingsarena.com/news/${post.slug}`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/news/${post.slug}`,
             siteName: 'HostingsArena',
             images: post.cover_image_url ? [
                 {

@@ -7,13 +7,34 @@ import { CheckCircle2, Shield, Globe, Zap, Lock, ChevronRight, ArrowRight, Alert
 import { StickyBuyBar } from "@/components/conversion/StickyBuyBar";
 import { getAffiliateUrl } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
+import { ReviewJsonLd } from "@/components/seo/ReviewJsonLd";
+import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
     const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
     return {
         title: `${title} Review & Specs ${new Date().getFullYear()} | HostingArena`,
         description: `Detailed review, speed tests, and pricing for ${title}. See what users are saying.`,
+        alternates: {
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/vpn/${slug}`,
+        },
+        openGraph: {
+            title: `${title} VPN Review - Speed & Privacy Tested`,
+            description: `We tested ${title}'s speed, security, and streaming capabilities. Is it safe?`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/vpn/${slug}`,
+            siteName: 'HostingsArena',
+            images: [
+                {
+                    url: `${process.env.NEXT_PUBLIC_SITE_URL}/og-vpn.png`,
+                    width: 1200,
+                    height: 630,
+                    alt: `${title} Review`,
+                }
+            ],
+            type: 'article',
+        }
     };
 }
 
@@ -47,6 +68,22 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
     return (
         <main className="min-h-screen bg-background pb-20">
             <PageTracker />
+            <ReviewJsonLd
+                providerName={provider.provider_name}
+                description={`Comprehensive review of ${provider.provider_name} VPN. Average speed: ${provider.avg_speed_mbps} Mbps.`}
+                rating={provider.support_quality_score ? provider.support_quality_score / 10 : 8.5}
+                slug={slug}
+                type="vpn"
+                datePublished={provider.created_at || new Date().toISOString()}
+                price={provider.pricing_monthly}
+            />
+            <BreadcrumbJsonLd
+                items={[
+                    { name: "Home", item: "/" },
+                    { name: "VPN Reviews", item: "/vpn" },
+                    { name: provider.provider_name, item: `/vpn/${slug}` }
+                ]}
+            />
             <StickyBuyBar
                 providerName={provider.provider_name}
                 price={provider.pricing_monthly}

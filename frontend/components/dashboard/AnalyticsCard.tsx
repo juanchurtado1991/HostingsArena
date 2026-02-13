@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus, Users } from "lucide-react";
 
 interface AnalyticsData {
     summary: { today: number; week: number; month: number };
@@ -11,12 +11,17 @@ interface AnalyticsData {
     dailyTraffic: { day: string; views: number }[];
     topReferrers: { referrer: string; views: number }[];
     topCountries: { country: string; views: number }[];
+    recentVisitors: { ip_address: string; country: string; path: string; referrer: string; created_at: string }[];
 }
 
-const COUNTRY_FLAGS: Record<string, string> = {
-    US: "🇺🇸", MX: "🇲🇽", ES: "🇪🇸", CO: "🇨🇴", AR: "🇦🇷",
-    BR: "🇧🇷", CL: "🇨🇱", PE: "🇵🇪", GB: "🇬🇧", DE: "🇩🇪",
-    FR: "🇫🇷", CA: "🇨🇦", IN: "🇮🇳", JP: "🇯🇵", AU: "🇦🇺",
+const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
+
+const getCountryName = (code: string) => {
+    try {
+        return countryNames.of(code) || code;
+    } catch {
+        return code;
+    }
 };
 
 function MiniBarChart({ data, maxViews }: { data: { day: string; views: number }[]; maxViews: number }) {
@@ -51,7 +56,7 @@ function TrendBadge({ current, previous }: { current: number; previous: number }
 export function AnalyticsCard() {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeView, setActiveView] = useState<"posts" | "pages" | "referrers" | "countries">("posts");
+    const [activeView, setActiveView] = useState<"posts" | "pages" | "referrers" | "countries" | "visitors">("visitors");
 
     useEffect(() => {
         fetch("/api/admin/analytics")
@@ -98,6 +103,7 @@ export function AnalyticsCard() {
         { label: "pages", title: "Top Pages", icon: <Eye className="w-3.5 h-3.5" /> },
         { label: "referrers", title: "Referrers", icon: <ExternalLink className="w-3.5 h-3.5" /> },
         { label: "countries", title: "Countries", icon: <Globe className="w-3.5 h-3.5" /> },
+        { label: "visitors", title: "Live Visitors", icon: <Users className="w-3.5 h-3.5" /> },
     ] as const;
 
     return (
@@ -153,8 +159,8 @@ export function AnalyticsCard() {
                         key={v.label}
                         onClick={() => setActiveView(v.label)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${activeView === v.label
-                                ? "bg-primary/15 text-primary border border-primary/20"
-                                : "text-muted-foreground hover:bg-muted/50 border border-transparent"
+                            ? "bg-primary/15 text-primary border border-primary/20"
+                            : "text-muted-foreground hover:bg-muted/50 border border-transparent"
                             }`}
                     >
                         {v.icon}
@@ -210,11 +216,62 @@ export function AnalyticsCard() {
                         <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
                             <div className="flex items-center gap-3 min-w-0">
                                 <span className="text-xs font-bold text-muted-foreground w-5">{i + 1}</span>
-                                <span className="text-sm">{COUNTRY_FLAGS[c.country] || "🌍"} {c.country}</span>
+                                <span className="text-sm">
+                                    <span className="mr-2 text-lg">
+                                        {/* Simple flag mapping or emoji if needed, or just remove if name is enough */}
+                                        {`https://flagcdn.com/24x18/${c.country.toLowerCase()}.png` ? <img src={`https://flagcdn.com/24x18/${c.country.toLowerCase()}.png`} alt={c.country} className="inline w-4 h-3 object-cover mr-1 rounded-[1px]" onError={(e) => e.currentTarget.style.display = 'none'} /> : "🌍"}
+                                    </span>
+                                    {getCountryName(c.country)}
+                                </span>
                             </div>
                             <span className="text-sm font-semibold tabular-nums">{c.views.toLocaleString()}</span>
                         </div>
                     )) : <p className="text-sm text-muted-foreground text-center py-6">No country data yet.</p>
+                )}
+
+                {activeView === "visitors" && (
+                    data.recentVisitors?.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="text-xs text-muted-foreground border-b border-border/50">
+                                    <tr>
+                                        <th className="px-4 py-2 font-medium">Time</th>
+                                        <th className="px-4 py-2 font-medium">IP Address</th>
+                                        <th className="px-4 py-2 font-medium">Country</th>
+                                        <th className="px-4 py-2 font-medium">Path</th>
+                                        <th className="px-4 py-2 font-medium">Referrer</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/30">
+                                    {data.recentVisitors.map((v, i) => (
+                                        <tr key={i} className="hover:bg-muted/30 transition-colors">
+                                            <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
+                                                {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                            <td className="px-4 py-2.5 font-mono text-xs">{v.ip_address || "—"}</td>
+                                            <td className="px-4 py-2.5">
+                                                {v.country ? (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <img
+                                                            src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`}
+                                                            alt={v.country}
+                                                            className="w-4 h-3 object-cover rounded-[1px]"
+                                                            onError={(e) => e.currentTarget.style.display = 'none'}
+                                                        />
+                                                        <span className="truncate max-w-[100px]">{getCountryName(v.country)}</span>
+                                                    </span>
+                                                ) : <span className="text-muted-foreground">—</span>}
+                                            </td>
+                                            <td className="px-4 py-2.5 max-w-[150px] truncate text-muted-foreground" title={v.path}>{v.path}</td>
+                                            <td className="px-4 py-2.5 max-w-[150px] truncate text-muted-foreground" title={v.referrer || ""}>
+                                                {v.referrer ? new URL(v.referrer).hostname : "—"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : <p className="text-sm text-muted-foreground text-center py-6">No recent visitors tracked.</p>
                 )}
             </div>
         </GlassCard>
