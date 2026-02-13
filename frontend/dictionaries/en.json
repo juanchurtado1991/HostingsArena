@@ -1,0 +1,187 @@
+{
+    "common": {
+        "view_deal": "View Exclusive Deal ⚡️",
+        "read_review": "Read {provider} review",
+        "price_monthly": "{price}/mo",
+        "save_percent": "-{percent}%",
+        "best_deal": "Best Deal",
+        "visit_site": "Visit Site",
+        "loading": "Loading...",
+        "error": "Error loading data",
+        "try_again": "Try again",
+        "back_home": "Back to Home",
+        "coming_soon": "Coming Soon",
+        "search_placeholder": "Search providers..."
+    },
+    "nav": {
+        "hosting": "Hosting",
+        "vpn": "VPN",
+        "compare": "Compare",
+        "calculator": "Calculator",
+        "news": "News",
+        "login": "Sign In",
+        "get_started": "Get Started",
+        "dashboard": "Dashboard",
+        "sign_out": "Sign Out"
+    },
+    "hero": {
+        "badge": "Based on 100% Real Verification Data",
+        "title": "The Truth About",
+        "title_highlight": "Hosting & VPNs",
+        "subtitle": "Stop relying on fake reviews. We verified 120+ providers with deep data extraction. See hidden renewal fees, real RAM limits, and proven audit histories.",
+        "cta_compare": "Start Comparing",
+        "cta_browse": "Browse Providers"
+    },
+    "home": {
+        "trust_title": "Why Trust HostingArena?",
+        "trust_desc": "We don't rely on marketing claims. We scrape, verify, and benchmark every single provider daily.",
+        "trust_1_title": "Real Renewal Prices",
+        "trust_1_desc": "Hosting companies hide their real prices. We expose the 200% price hikes after year 1.",
+        "trust_2_title": "True Performance",
+        "trust_2_desc": "We track TTFB and Uptime from multiple global locations, not just what they advertise.",
+        "trust_3_title": "Privacy Verified",
+        "trust_3_desc": "For VPNs, we verify No-Log policies and ownership jurisdictions to ensure your safety.",
+        "convince_title": "Not convinced?",
+        "convince_desc": "Compare 50+ providers side-by-side with our deep data engine."
+    },
+    "hosting": {
+        "title": "Premium Hosting Providers",
+        "subtitle": "Compare real performance metrics, hidden renewal costs, and infrastructure limits.",
+        "search_placeholder": "Search providers (e.g. Bluehost)...",
+        "no_results": "No hosting providers found matching \"{query}\".",
+        "clear_search": "Clear search",
+        "starting_plan": "Starting Plan",
+        "renewal": "Renewal",
+        "storage": "Storage",
+        "inode_limit": "Inode Limit",
+        "unlimited": "Unlimited",
+        "save_percent": "Save {percent}%",
+        "view_deal": "View Exclusive Deal ⚡️",
+        "read_review": "Read {provider} review",
+        "page_x_of_y": "Page {current} of {total}"
+    },
+    "vpn": {
+        "title": "Verified Private Networks",
+        "subtitle": "We checked the jurisdiction, court history, and RAM-only infrastructure of 60+ VPNs.",
+        "search_placeholder": "Search VPNs (e.g. Proton)...",
+        "no_results": "No VPN providers found matching \"{query}\".",
+        "verified": "VERIFIED",
+        "countries": "{count} Countries",
+        "jurisdiction": "Jurisdiction",
+        "servers": "Servers",
+        "devices": "Devices",
+        "simultaneous": "Simultaneous",
+        "audited_by": "Audited By",
+        "pending": "Pending"
+    },
+    "compare": {
+        "badge": "Truth vs Truth",
+        "title": "Compare Providers Side-by-Side",
+        "subtitle": "Select two providers to see their differences in renewal price, hidden limits, and performance benchmarks.",
+        "tab_hosting": "Hosting",
+        "tab_vpn": "VPNs",
+        "provider_a": "Provider A",
+        "provider_b": "Provider B",
+        "select_instruction_title": "Select providers to compare",
+        "select_instruction_desc": "Choose two providers above to see the breakdown."
+    },
+    "calculator": {
+        "title": "True Cost Calculator",
+        "subtitle": "See how \"cheap\" hosting really costs after the promo ends.",
+        "stop_bleeding": "Stop the bleeding! You could waste {amount} over {years} years.",
+        "projection_period": "Projection Period",
+        "provider_a_trap": "Provider A (The Trap?)",
+        "provider_b_savior": "Provider B (The Savior?)",
+        "intro": "Intro",
+        "renewal": "Renewal",
+        "loser": "The Loser",
+        "total_cost": "Total cost over {years} years.",
+        "winner": "The Winner",
+        "you_save": "You save {amount}!",
+        "switch_to": "Switch to {provider} & Save ⚡️"
+    },
+    "news": {
+        "title_part1": "Industry",
+        "title_part2": "Intelligence",
+        "subtitle": "AI-curated updates on privacy, price changes, and infrastructure verified by our scrapers.",
+        "coming_soon_title": "Coming soon",
+        "coming_soon_desc": "Our editors are curating fresh industry articles. Check back shortly.",
+        "read_time": "{minutes} min read",
+        "check_deal": "Check Deal"
+    },
+    "footer": {
+        "tagline": "Data-driven reviews for the modern web infrastructure stack.",
+        "link_compare_vpn": "Compare VPNs",
+        "link_nordvpn": "NordVPN Review",
+        "link_expressvpn": "ExpressVPN Review",
+        "link_compare_hosting": "Compare Hosting",
+        "link_bluehost": "Bluehost Review",
+        "link_siteground": "SiteGround Review",
+        "company": "Company",
+        "link_about": "About Us",
+        "link_methodology": "Methodology",
+        "link_contact": "Contact",
+        "rights_reserved": "All rights reserved."
+    },
+    "dashboard": {
+        "title": "System Status",
+        "subtitle": "Live monitoring of the HostingArena ecosystem.",
+        "search_placeholder": "Search tasks...",
+        "tabs": {
+            "overview": "Overview",
+            "tasks": "Tasks",
+            "affiliates": "Affiliates",
+            "newsroom": "AI Newsroom",
+            "workflows": "Scraper Workflows",
+            "tutorial": "Tutorial"
+        },
+        "metrics": {
+            "monitored_scrapers": "Monitored Scrapers",
+            "success_rate": "Success Rate",
+            "avg_duration": "Avg. Duration",
+            "est_revenue": "Est. Revenue",
+            "success": "Success",
+            "fail": "Fail"
+        },
+        "scrapers": {
+            "title": "Live Scraper Health",
+            "copy_report": "Copy Report",
+            "refresh": "Refresh",
+            "col_provider": "Provider",
+            "col_type": "Type",
+            "col_status": "Status",
+            "col_items": "Items Synced",
+            "col_duration": "Duration",
+            "col_last_update": "Last Update",
+            "col_message": "Message"
+        },
+        "tasks": {
+            "title": "Task Center",
+            "pending_count": "{count} pending tasks",
+            "page_x_of_y": "Page {current} of {total}",
+            "btn_scan": "Scan",
+            "btn_clear_all": "Clear All",
+            "btn_refresh": "Refresh",
+            "priority_critical": "Critical",
+            "priority_high": "High",
+            "priority_normal": "Normal",
+            "priority_low": "Low",
+            "type_links": "Missing Links",
+            "type_scrapers": "Scrapers",
+            "filter_all": "All",
+            "btn_resolve": "Resolve",
+            "btn_dismiss": "Dismiss",
+            "empty_title": "All Good! 🎉",
+            "empty_desc": "No pending tasks. Your affiliates and scrapers are working perfectly.",
+            "prev": "Previous",
+            "next": "Next"
+        },
+        "tutorial": {
+            "newsroom": {
+                "title": "AI Newsroom & SEO",
+                "category": "Content",
+                "content": "Create and distribute news with the power of GPT-4o.\n\n• **AI Config**: Choose `GPT-4o` for deep analysis or `Mini` for speed. Adjust length (800-2500 words).\n• **Social Tab**: Edit generated Twitter and LinkedIn posts before publishing.\n• **Publish & Share**: The `Publish & Share` button saves the post and sends data to Make.com for automatic distribution.\n• **Indexing**: Use the 🌐 button to request Google to index your article immediately."
+            }
+        }
+    }
+}

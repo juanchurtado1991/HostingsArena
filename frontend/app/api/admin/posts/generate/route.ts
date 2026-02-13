@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
     const { readable, writable } = new TransformStream();
@@ -22,7 +23,6 @@ export async function POST(request: NextRequest) {
                 return;
             }
 
-            // 1. OBTENCIÓN DE DATOS
             const [hostingRes, vpnRes, affiliateRes] = await Promise.all([
                 supabase.from('hosting_providers').select('*'),
                 supabase.from('vpn_providers').select('*'),
@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
                 return;
             }
 
-            // Selección del Proveedor
             let provider;
             if (body.provider_name) {
                 provider = allProviders.find(p => p.provider_name === body.provider_name) || {
@@ -54,7 +53,6 @@ export async function POST(request: NextRequest) {
             }
             const price = provider.pricing_monthly ? `$${provider.pricing_monthly}/mo` : 'market standard rates';
 
-            // Build a rich data object for the AI
             const specs = provider.type === 'hosting' ? {
                 price: provider.pricing_monthly || "Hidden",
                 renewal: provider.pricing_renewal || "Unknown",
@@ -73,9 +71,6 @@ export async function POST(request: NextRequest) {
 
             const specsString = JSON.stringify(specs, null, 2);
 
-            // 2. MOTOR DE "PERSONALIDAD Y CAOS"
-
-            // A. El "Gancho" Narrativo (Storytelling Arc)
             const narrativeArcs = [
                 "The 'Skeptic Converted': You thought it was trash, but were proven wrong.",
                 "The 'Hidden Flaw': It looks perfect on paper, but you found a deal-breaker.",
@@ -84,12 +79,10 @@ export async function POST(request: NextRequest) {
                 "The 'Speed Freak': You care ONLY about milliseconds and raw performance."
             ];
 
-            // Si el usuario eligió un escenario manual, lo usamos. Si no, caos aleatorio.
             const selectedArc = body.scenario && body.scenario !== 'random'
                 ? body.scenario
                 : narrativeArcs[Math.floor(Math.random() * narrativeArcs.length)];
 
-            // B. La "Prueba de Tortura" (Specific Stress Test)
             const stressTests = [
                 "Installing a heavy WooCommerce store with 5,000 products.",
                 "Running a Minecraft Server with 50+ mods.",
@@ -99,7 +92,6 @@ export async function POST(request: NextRequest) {
             ];
             const selectedTest = stressTests[Math.floor(Math.random() * stressTests.length)];
 
-            // 2. STRUCTURE & TONE ENGINE
             const structures = [
                 {
                     name: "The Hero's Journey",
@@ -120,7 +112,6 @@ export async function POST(request: NextRequest) {
 
             const selectedStructure = structures[Math.floor(Math.random() * structures.length)];
 
-            // Positive & Imaginative Personas
             const personas = [
                 "The Enthusiastic Futurist (Loves innovation, optimistic)",
                 "The Helpful Mentor (Explains things simply, wants you to succeed)",
@@ -128,7 +119,10 @@ export async function POST(request: NextRequest) {
                 "The Performance Junkie (Gets excited about speed and uptime)"
             ];
             const selectedPersona = personas[Math.floor(Math.random() * personas.length)];
-            const selectedVoice = selectedPersona;
+
+            const modelToUse = body.model || 'gpt-4o-mini';
+            const targetWordCount = body.target_word_count || 1500;
+            const approxReadingTime = Math.ceil(targetWordCount / 200);
 
             const extraInstructions = body.extra_instructions
                 ? `\n\n**SPECIAL USER INSTRUCTIONS (Must Follow):** ${body.extra_instructions}`
@@ -139,12 +133,11 @@ export async function POST(request: NextRequest) {
                 progress: 20
             });
 
-            // 3. GENERACIÓN DE CONTENIDO
             const contentRes = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify({
-                    model: 'gpt-4o',
+                    model: modelToUse,
                     messages: [
                         {
                             role: 'system',
@@ -155,7 +148,7 @@ export async function POST(request: NextRequest) {
                             ${specsString}
                             
                             **PARAMETERS:**
-                            - Length: **Long-form (approx 2000 words)**. This is a 10-minute read.
+                            - Length: **Approx ${targetWordCount} words**. This is a ${approxReadingTime}-minute read.
                             - Structure: **${selectedStructure.name}** (${selectedStructure.desc}).
                             - Tone: **${selectedPersona}**. Positive, constructive, and imaginative.
                             - Narrative Arc: **${selectedArc}**.
@@ -172,7 +165,7 @@ export async function POST(request: NextRequest) {
                             <div class="review-content">
                                 ${selectedStructure.html_guideline}
                                 
-                                <!-- Content Body (approx 1500-2000 words) -->
+                                <!-- Content Body (approx ${targetWordCount} words) -->
                                 [GENERATE CONTENT HERE]
                                 
                                 <!-- Required Elements -->
@@ -192,7 +185,7 @@ export async function POST(request: NextRequest) {
                             </div>`
                         }
                     ],
-                    temperature: 0.9, // Subimos temperatura para más creatividad
+                    temperature: 0.9,
                 })
             });
 
@@ -202,7 +195,6 @@ export async function POST(request: NextRequest) {
 
             await sendProgress({ status: `Generating Viral Metadata...`, progress: 80 });
 
-            // 4. GENERACIÓN DE METADATA (Enfoque Clickbait/Viral)
             const metaRes = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
@@ -221,6 +213,10 @@ export async function POST(request: NextRequest) {
                             1. **Imaginative & Positive** (Focus on value/innovation).
                             2. **High CTR** (Use curiosity gaps, but avoid negativity).
                             3. **SEO Optimized** for "${provider.provider_name} review ${currentYear}".
+                            4. **Social Media Ready**:
+                                - Twitter: Short, punchy, curiosity-inducing (max 280 chars).
+                                - LinkedIn: Professional, value-driven, industry insight.
+                                - Hashtags: 3-5 relevant tags.
                             
                             Return JSON:
                             {
@@ -229,6 +225,9 @@ export async function POST(request: NextRequest) {
                                 "seo_description": "Meta Description (160 chars) - Focus on benefits.",
                                 "excerpt": "2 sentences that hook the reader with a powerful metaphor.",
                                 "image_prompt": "Cinematic 8k photography, futuristic server room, neon cyan and blue accents, depth of field",
+                                "social_tw_text": "Twitter post content (strings)",
+                                "social_li_text": "LinkedIn post content (string)",
+                                "social_hashtags": ["tag1", "tag2"],
                                 "rating_score": 90
                             }`
                         }
@@ -248,6 +247,9 @@ export async function POST(request: NextRequest) {
                     seo_description: `Honest review of ${provider.provider_name}.`,
                     excerpt: `We tested ${provider.provider_name} to see if the hype is real.`,
                     image_prompt: "server room tech",
+                    social_tw_text: `Is ${provider.provider_name} the best host in ${currentYear}? We tested it. 👇`,
+                    social_li_text: `We just completed our deep dive review of ${provider.provider_name}. Here is what the data says about their performance and pricing.`,
+                    social_hashtags: ["webhosting", "techreview", "server"],
                     rating_score: 80
                 };
             }
@@ -277,6 +279,9 @@ export async function POST(request: NextRequest) {
                 seo_description: meta.seo_description,
                 related_provider_name: provider.provider_name,
                 image_prompt: meta.image_prompt,
+                social_tw_text: meta.social_tw_text,
+                social_li_text: meta.social_li_text,
+                social_hashtags: meta.social_hashtags,
                 updated_at: new Date().toISOString(),
             });
 
@@ -285,7 +290,7 @@ export async function POST(request: NextRequest) {
             await sendProgress({ status: 'Done', progress: 100, success: true });
 
         } catch (error: any) {
-            console.error('Fatal error:', error);
+            logger.error('Fatal error during AI generation:', error);
             await sendProgress({ error: error.message || 'Generation failed' });
         } finally {
             writer.close();

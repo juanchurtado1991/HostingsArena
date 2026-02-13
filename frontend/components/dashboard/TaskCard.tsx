@@ -23,20 +23,20 @@ interface TaskCardProps {
 }
 
 const priorityConfig: Record<TaskPriority, { color: string; bg: string; label: string }> = {
-    critical: { color: "text-red-500", bg: "bg-red-500/10", label: "🔥 Crítico" },
-    high: { color: "text-orange-500", bg: "bg-orange-500/10", label: "⚠️ Alto" },
+    critical: { color: "text-red-500", bg: "bg-red-500/10", label: "🔥 Critical" },
+    high: { color: "text-orange-500", bg: "bg-orange-500/10", label: "⚠️ High" },
     normal: { color: "text-blue-500", bg: "bg-blue-500/10", label: "📝 Normal" },
-    low: { color: "text-gray-500", bg: "bg-gray-500/10", label: "💤 Bajo" },
+    low: { color: "text-gray-500", bg: "bg-gray-500/10", label: "💤 Low" },
 };
 
 const typeConfig: Record<TaskType, { icon: React.ElementType; label: string }> = {
-    affiliate_audit: { icon: LinkIcon, label: "Link Faltante" },
+    affiliate_audit: { icon: LinkIcon, label: "Missing Link" },
     scraper_fix: { icon: Server, label: "Scraper Error" },
-    content_review: { icon: FileText, label: "Revisar Contenido" },
-    system_alert: { icon: Bell, label: "Alerta Sistema" },
-    seo_opportunity: { icon: ArrowRight, label: "Oportunidad SEO" },
-    social_post: { icon: FileText, label: "Post Social" },
-    content_update: { icon: FileText, label: "Actualizar Contenido" },
+    content_review: { icon: FileText, label: "Content Review" },
+    system_alert: { icon: Bell, label: "System Alert" },
+    seo_opportunity: { icon: ArrowRight, label: "SEO Opportunity" },
+    social_post: { icon: FileText, label: "Social Post" },
+    content_update: { icon: FileText, label: "Content Update" },
 };
 
 export function TaskCard({ task, onResolve, onDismiss }: TaskCardProps) {
@@ -86,7 +86,7 @@ export function TaskCard({ task, onResolve, onDismiss }: TaskCardProps) {
                         className="text-xs"
                     >
                         <CheckCircle className="w-3 h-3 mr-1" />
-                        Resolver
+                        Resolve
                     </Button>
                     <Button
                         size="sm"
@@ -94,7 +94,7 @@ export function TaskCard({ task, onResolve, onDismiss }: TaskCardProps) {
                         onClick={() => onDismiss(task.id!)}
                         className="text-xs text-muted-foreground"
                     >
-                        Ignorar
+                        Ignore
                     </Button>
                 </div>
             </div>

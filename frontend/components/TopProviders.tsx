@@ -41,7 +41,7 @@ const TOP_PROVIDERS = [
     }
 ];
 
-export function TopProviders() {
+export function TopProviders({ dict, lang = 'en' }: { dict?: any, lang?: string }) {
     return (
         <section className="container mx-auto px-4 md:px-6 relative z-20 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
@@ -95,7 +95,7 @@ export function TopProviders() {
                                 </div>
                                 <div className="flex items-baseline justify-center gap-1">
                                     <span className="text-5xl font-black tracking-tighter text-foreground">${provider.price}</span>
-                                    <span className="text-sm text-muted-foreground font-medium">/mo</span>
+                                    <span className="text-sm text-muted-foreground font-medium">{dict?.price_monthly?.replace("{price}", "") || "/mo"}</span>
                                 </div>
                             </div>
 
@@ -118,10 +118,10 @@ export function TopProviders() {
                         ${provider.rank === 1 ? 'bg-primary hover:bg-primary/90 hover:shadow-primary/25' : 'bg-white/5 hover:bg-white/10 text-foreground border border-white/10'}
                     `}
                                 >
-                                    Ver Oferta {provider.rank === 1 && '⚡️'}
+                                    {dict?.view_deal || "View Deal"} {provider.rank === 1 && '⚡️'}
                                 </Button>
-                                <Link href={`/hosting/${provider.slug}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
-                                    Ver análisis detallado
+                                <Link href={`/${lang}/hosting/${provider.slug}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+                                    {dict?.read_review?.replace("{provider}", "") || "Read detailed review"}
                                 </Link>
                             </div>
                         </div>

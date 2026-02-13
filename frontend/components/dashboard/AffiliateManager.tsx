@@ -166,7 +166,7 @@ export function AffiliateManager() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro? This will remove the affiliate link and all CTAs will fall back to website_url.")) return;
+        if (!confirm("Are you sure? This will remove the affiliate link and all CTAs will fall back to website_url.")) return;
 
         setDeletingId(id);
         try {

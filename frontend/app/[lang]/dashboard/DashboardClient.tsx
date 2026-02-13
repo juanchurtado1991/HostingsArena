@@ -12,72 +12,70 @@ import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import type { AdminTask, TaskType, TaskPriority } from "@/lib/tasks/types";
 
 const TASKS_PER_PAGE = 15;
+export default function DashboardClient({ dict, lang }: { dict: any; lang: string }) {
+    const TUTORIAL_TOPICS = [
+        {
+            id: "scrapers",
+            title: dict.dashboard.tabs.workflows,
+            icon: Server,
+            category: lang === 'es' ? "Automatización" : "Automation",
+            content: lang === 'es' ? `
+                HostingArena utiliza scrapers de Python para obtener datos en tiempo real.
+                \n• **Online**: El scraper funciona correctamente y está sincronizado.
+                \n• **Warning**: Problemas menores (ej. faltó un campo), pero mayormente operativo.
+                \n• **Error**: El scraper falló completamente por cambios en el sitio del proveedor. Requiere revisión técnica.
+                \n• **Sync**: Los datos se suben a Supabase y se refrescan vía ISR para máxima velocidad.
+            ` : `
+                HostingArena uses Python scrapers to fetch real-time data. 
+                \n• **Online**: Scraper is working correctly and synced.
+                \n• **Warning**: Minor issues (e.g., a field was missed), but mostly operational.
+                \n• **Error**: Scraper failed completely due to provider website changes. Needs technical review.
+                \n• **Sync**: Data is uploaded to Supabase and refreshed via ISR for maximum speed.
+            `
+        },
+        {
+            id: "tasks",
+            title: dict.dashboard.tasks.title,
+            icon: Zap,
+            category: lang === 'es' ? "Operaciones" : "Operations",
+            content: lang === 'es' ? `
+                El motor de auditoría genera tareas automáticamente para asegurar la calidad de los datos.
+                \n• **Scan**: Ejecuta una auditoría manual para revisar links faltantes o errores.
+                \n• **Deduplicación**: El sistema agrupa planes por proveedor para que solo arregles un link una vez.
+                \n• **Draft**: Puedes limpiar la lista usando 'Borrar Todo' si realizaste mantenimiento manual masivo.
+            ` : `
+                The audit engine generates tasks automatically to ensure data quality.
+                \n• **Scan**: Runs a manual audit to check for missing links or errors.
+                \n• **Deduplication**: System groups plans by provider so you only fix a link once.
+                \n• **Draft**: You can clear the list using 'Clear All' if you've done massive manual maintenance.
+            `
+        },
+        {
+            id: "affiliates",
+            title: dict.dashboard.tabs.affiliates,
+            icon: Handshake,
+            category: lang === 'es' ? "Ingresos" : "Revenue",
+            content: lang === 'es' ? `
+                Gestiona cómo monetizamos cada proveedor.
+                \n• **Links de Afiliado**: Se aplican automáticamente a todos los botones 'Ver Oferta' basados en 'provider_name'.
+                \n• **Credenciales de Panel**: Guarda la URL y login del panel de afiliados para acceso rápido.
+                \n• **Estado**: Proveedores 'Pausados' o 'Expirados' dispararán alertas críticas en el Centro de Tareas.
+            ` : `
+                Manage how we monetize each provider.
+                \n• **Affiliate Links**: Automatically applied to all 'View Deal' buttons based on 'provider_name'.
+                \n• **Dashboard Credentials**: Store affiliate panel URL and login for quick access.
+                \n• **Status**: 'Paused' or 'Expired' providers will trigger critical alerts in Task Center.
+            `
+        },
+        {
+            id: "newsroom",
+            title: dict.dashboard.tutorial.newsroom.title,
+            icon: Newspaper,
+            category: dict.dashboard.tutorial.newsroom.category,
+            content: dict.dashboard.tutorial.newsroom.content
+        }
+    ];
 
-const TUTORIAL_TOPICS = [
-    {
-        id: "scrapers",
-        title: "Gestión de Scrapers",
-        icon: Server,
-        category: "Automatización",
-        content: `
-            HostingArena utiliza scrapers de Python para obtener datos reales. 
-            \n• **Online**: El scraper funciona correctamente y está sincronizado.
-            \n• **Warning**: Problemas menores (ej. un campo no se obtuvo), pero el resto está bien.
-            \n• **Error**: El scraper falló completamente por cambios en la web del proveedor. Requiere revisión técnica.
-            \n• **Sincronización**: Los datos se suben a Supabase y se refrescan mediante ISR en el frontend para máxima velocidad.
-        `
-    },
-    {
-        id: "tasks",
-        title: "Centro de Tareas",
-        icon: Zap,
-        category: "Operaciones",
-        content: `
-            El motor de auditoría genera tareas automáticamente para asegurar la calidad de los datos.
-            \n• **Escanear**: Ejecuta una auditoría manual para buscar links faltantes o errores.
-            \n• **Deduplicación**: El sistema agrupa los planes por proveedor para que solo tengas que arreglar un link una vez.
-            \n• **Borrador**: Puedes limpiar la lista usando el botón 'Borrar Todo' si has realizado un mantenimiento masivo manual.
-        `
-    },
-    {
-        id: "affiliates",
-        title: "Affiliate Manager",
-        icon: Handshake,
-        category: "Ingresos",
-        content: `
-            Gestiona cómo ganamos dinero con cada proveedor.
-            \n• **Links de Afiliado**: Se aplican automáticamente a todos los botones 'Ver Oferta' del sitio según el \`provider_name\`.
-            \n• **Dashboard Credentials**: Puedes guardar la URL del panel de afiliado y el teléfono/cuenta para acceso rápido.
-            \n• **Status**: Los proveedores 'Pausados' o 'Expirados' generarán alertas críticas en el Centro de Tareas.
-        `
-    },
-    {
-        id: "newsroom",
-        title: "AI Newsroom",
-        icon: Newspaper,
-        category: "Contenido",
-        content: `
-            Generación de contenido automatizado mediante IA.
-            \n• **Proveedor**: Selecciona un hosting o VPN para generar una guía o noticia.
-            \n• **SEO Editor**: El sistema optimiza automáticamente las meta-etiquetas y la estructura.
-            \n• **Publicación**: Una vez publicado, el artículo aparecerá en el blog oficial ayudando al posicionamiento orgánico.
-        `
-    },
-    {
-        id: "comparisons",
-        title: "Comparativas y Versus",
-        icon: GitBranch,
-        category: "Frontend",
-        content: `
-            El motor de comparativas es dinámico.
-            \n• **Tabla Premium**: Detecta automáticamente si un hosting usa LiteSpeed o si una VPN tiene Kill Switch.
-            \n• **Versus**: Usa el icono de espadas para indicar comparativas directas (A vs B).
-            \n• **Lógica de Ganador**: El sistema resalta automáticamente el 'Mejor Precio' o 'Mejor Valor' basándose en los datos del scraper.
-        `
-    }
-];
-
-export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState("overview");
     const [workflowRuns, setWorkflowRuns] = useState<any[]>([]);
     const [scraperStatuses, setScraperStatuses] = useState<any[]>([]);
@@ -85,7 +83,6 @@ export default function DashboardPage() {
     const [loadingScrapers, setLoadingScrapers] = useState(false);
     const [triggering, setTriggering] = useState(false);
 
-    // Create client once on mount
     const [supabase] = useState(() => createClient());
 
     const [tasks, setTasks] = useState<AdminTask[]>([]);
@@ -161,13 +158,13 @@ export default function DashboardPage() {
     };
 
     const deleteAllTasks = async () => {
-        if (!confirm("Se eliminarán permanentemente todas las tareas pendientes. ¿Continuar?")) return;
+        if (!confirm(lang === 'es' ? "¿Seguro que deseas eliminar todas las tareas?" : "Are you sure you want to delete all tasks?")) return;
         setDeletingAll(true);
         try {
             const res = await fetch('/api/admin/tasks', { method: 'DELETE' });
             if (res.ok) {
                 setTasks([]);
-                alert("Todas las tareas han sido eliminadas.");
+                alert(lang === 'es' ? "Tareas eliminadas." : "Tasks deleted.");
             }
         } catch (error) {
             logger.error("Failed to delete all tasks", error);
@@ -183,9 +180,8 @@ export default function DashboardPage() {
             keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 5)
         });
         try {
-            // Create a timeout promise to detect hangs
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Request timed out start checking connection')), 5000)
+                setTimeout(() => reject(new Error('Request timed out: Check your Supabase connection or Table Policies')), 15000)
             );
 
             const fetchPromise = supabase
@@ -199,7 +195,7 @@ export default function DashboardPage() {
 
             if (error) {
                 logger.error("Supabase Error fetching scrapers", error);
-                alert(`Error fetching scrapers: ${error.message} (${error.code})`);
+                logger.error("Scraper fetch error:", error.message);
                 throw error;
             }
 
@@ -208,11 +204,11 @@ export default function DashboardPage() {
             if (data?.length === 0) {
                 logger.log('SYSTEM', "Received 0 rows. Check RLS or Table content.");
             }
-        } catch (error: any) {
-            logger.error("Exception fetching scrapers", error);
+        } catch (error) {
+            const err = error as Error;
+            logger.error("Exception fetching scrapers", err);
 
-            // FALLBACK: Try direct fetch if timeout
-            if (error.message && error.message.includes('timed out')) {
+            if (err.message && err.message.includes('timed out')) {
                 logger.log('SYSTEM', "⚠️ Trying direct FETCH fallback...");
                 try {
                     const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scraper_status?select=*&order=last_run.desc`;
@@ -231,12 +227,12 @@ export default function DashboardPage() {
                         const text = await res.text();
                         logger.error("Fallback fetch failed", { status: res.status, body: text });
                     }
-                } catch (fallbackError) {
+                } catch (fallbackError: any) {
                     logger.error("Fallback fetch exception", fallbackError);
                 }
             }
 
-            alert(`Error fetching scrapers: ${error.message || 'Unknown error'}`);
+            alert(`Error fetching scrapers: ${err.message || 'Unknown error'}`);
         } finally {
             setLoadingScrapers(false);
         }
@@ -261,11 +257,11 @@ export default function DashboardPage() {
         try {
             const res = await fetch('/api/github/workflow', { method: 'POST' });
             if (res.ok) {
-                alert("Workflow triggered! It may take a few seconds to appear in the list.");
+                alert(lang === 'es' ? "¡Flujo iniciado! Puede tardar unos segundos en aparecer." : "Workflow triggered! It may take a few seconds to appear in the list.");
                 setTimeout(fetchWorkflows, 3000); // Refresh after 3s
             } else {
                 const err = await res.json();
-                alert("Error triggering workflow: " + err.error);
+                alert((lang === 'es' ? "Error iniciando flujo: " : "Error triggering workflow: ") + err.error);
             }
         } catch (e) {
             alert("Failed to trigger workflow");
@@ -339,12 +335,12 @@ export default function DashboardPage() {
     );
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-6">
+        <div className="min-h-screen pt-24 pb-12 px-6 dashboard-content">
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-12">
                     <div>
-                        <h1 className="text-4xl font-bold tracking-tight">System Status</h1>
-                        <p className="text-muted-foreground mt-2">Live monitoring of the HostingArena ecosystem.</p>
+                        <h1 className="text-4xl font-bold tracking-tight">{dict.dashboard.title}</h1>
+                        <p className="text-muted-foreground mt-2">{dict.dashboard.subtitle}</p>
                     </div>
 
                     <div className="flex gap-4">
@@ -353,14 +349,14 @@ export default function DashboardPage() {
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "overview" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <LayoutDashboard className="w-4 h-4" />
-                            Overview
+                            {dict.dashboard.tabs.overview}
                         </button>
                         <button
                             onClick={() => setActiveTab("tasks")}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tasks" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Zap className="w-4 h-4" />
-                            Tasks
+                            {dict.dashboard.tabs.tasks}
                             {tasks.length > 0 && (
                                 <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{tasks.length}</span>
                             )}
@@ -370,28 +366,28 @@ export default function DashboardPage() {
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "affiliates" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Handshake className="w-4 h-4" />
-                            Affiliate Manager
+                            {dict.dashboard.tabs.affiliates}
                         </button>
                         <button
                             onClick={() => setActiveTab("newsroom")}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "newsroom" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Newspaper className="w-4 h-4" />
-                            AI Newsroom
+                            {dict.dashboard.tabs.newsroom}
                         </button>
                         <button
                             onClick={() => setActiveTab("workflows")}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "workflows" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <GitBranch className="w-4 h-4" />
-                            Scraper Workflows
+                            {dict.dashboard.tabs.workflows}
                         </button>
                         <button
                             onClick={() => setActiveTab("tutorial")}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutorial" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <HelpCircle className="w-4 h-4" />
-                            Tutorial
+                            {dict.dashboard.tabs.tutorial}
                         </button>
                     </div>
                 </div>
@@ -407,7 +403,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold mb-1">{activeProviders}</div>
-                                <div className="text-sm text-muted-foreground">Monitored Scrapers</div>
+                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.monitored_scrapers}</div>
                             </GlassCard>
 
                             <GlassCard className="p-6">
@@ -418,7 +414,7 @@ export default function DashboardPage() {
                                     <span className="text-xs font-medium text-muted-foreground">{successCount} Success / {errorCount} Fail</span>
                                 </div>
                                 <div className="text-3xl font-bold mb-1">{successRate.toFixed(1)}%</div>
-                                <div className="text-sm text-muted-foreground">Success Rate</div>
+                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.success_rate}</div>
                             </GlassCard>
 
                             <GlassCard className="p-6">
@@ -428,7 +424,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold mb-1">{avgDuration.toFixed(2)}s</div>
-                                <div className="text-sm text-muted-foreground">Avg. Duration</div>
+                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.avg_duration}</div>
                             </GlassCard>
 
                             <GlassCard className="p-6 relative group">
@@ -443,7 +439,7 @@ export default function DashboardPage() {
                                 <div className="text-3xl font-bold mb-1">
                                     {formatCurrency(revenueData.projectedRevenue)}
                                 </div>
-                                <div className="text-sm text-muted-foreground">Est. Revenue</div>
+                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.est_revenue}</div>
                                 <div className="mt-3 flex gap-2 text-[10px] text-muted-foreground">
                                     <span className="bg-white/5 px-1.5 py-0.5 rounded">{revenueData.activeAffiliates} affiliates</span>
                                     <span className="bg-white/5 px-1.5 py-0.5 rounded">{revenueData.totalPosts} posts</span>
@@ -458,7 +454,7 @@ export default function DashboardPage() {
                         {/* Status Table */}
                         <GlassCard className="p-8">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold">Live Scraper Health</h3>
+                                <h3 className="text-xl font-bold">{dict.dashboard.scrapers.title}</h3>
                                 <div className="flex gap-2">
                                     <Button size="sm" variant="outline" onClick={() => {
                                         const report = scraperStatuses.map(s =>
@@ -467,10 +463,10 @@ export default function DashboardPage() {
                                         navigator.clipboard.writeText(report);
                                         alert("Report copied to clipboard!");
                                     }}>
-                                        Copy Report
+                                        {dict.dashboard.scrapers.copy_report}
                                     </Button>
                                     <Button size="sm" variant="outline" onClick={fetchScraperStatus}>
-                                        Refresh
+                                        {dict.dashboard.scrapers.refresh}
                                     </Button>
                                 </div>
                             </div>
@@ -482,13 +478,13 @@ export default function DashboardPage() {
                                     <table className="w-full text-left">
                                         <thead className="text-xs uppercase text-muted-foreground border-b border-white/10 sticky top-0 bg-background/95 backdrop-blur z-10">
                                             <tr>
-                                                <th className="pb-4 pl-4">Provider</th>
-                                                <th className="pb-4">Type</th>
-                                                <th className="pb-4">Status</th>
-                                                <th className="pb-4">Items Synced</th>
-                                                <th className="pb-4">Duration</th>
-                                                <th className="pb-4">Last Update</th>
-                                                <th className="pb-4 w-[200px]">Message</th>
+                                                <th className="pb-4 pl-4">{dict.dashboard.scrapers.col_provider}</th>
+                                                <th className="pb-4">{dict.dashboard.scrapers.col_type}</th>
+                                                <th className="pb-4">{dict.dashboard.scrapers.col_status}</th>
+                                                <th className="pb-4">{dict.dashboard.scrapers.col_items}</th>
+                                                <th className="pb-4">{dict.dashboard.scrapers.col_duration}</th>
+                                                <th className="pb-4">{dict.dashboard.scrapers.col_last_update}</th>
+                                                <th className="pb-4 w-[200px]">{dict.dashboard.scrapers.col_message}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/5">
@@ -538,16 +534,16 @@ export default function DashboardPage() {
                         {/* Header with stats and actions */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold">Centro de Tareas</h2>
+                                <h2 className="text-2xl font-bold">{dict.dashboard.tasks.title}</h2>
                                 <p className="text-muted-foreground">
-                                    {tasks.length} tareas pendientes • Página {taskPage} de {Math.ceil(filteredTasks.length / TASKS_PER_PAGE) || 1}
+                                    {dict.dashboard.tasks.pending_count.replace('{count}', tasks.length.toString())} • {dict.dashboard.tasks.page_x_of_y.replace('{current}', taskPage.toString()).replace('{total}', (Math.ceil(filteredTasks.length / TASKS_PER_PAGE) || 1).toString())}
                                 </p>
                             </div>
                             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
                                 <div className="relative">
                                     <input
                                         type="text"
-                                        placeholder="Buscar tareas..."
+                                        placeholder={dict.dashboard.tasks.search_placeholder}
                                         value={searchQuery}
                                         onChange={(e) => {
                                             setSearchQuery(e.target.value);
@@ -564,7 +560,7 @@ export default function DashboardPage() {
                                     disabled={loadingTasks}
                                 >
                                     <RefreshCw className={`w-4 h-4 mr-2 ${loadingTasks ? 'animate-spin' : ''}`} />
-                                    Actualizar
+                                    {dict.dashboard.tasks.btn_refresh}
                                 </Button>
                                 <Button
                                     onClick={generateTasks}
@@ -576,7 +572,7 @@ export default function DashboardPage() {
                                     ) : (
                                         <Zap className="w-4 h-4 mr-2" />
                                     )}
-                                    Escanear
+                                    {dict.dashboard.tasks.btn_scan}
                                 </Button>
                                 <Button
                                     variant="destructive"
@@ -589,7 +585,7 @@ export default function DashboardPage() {
                                     ) : (
                                         <AlertTriangle className="w-4 h-4 mr-2" />
                                     )}
-                                    Borrar Todo
+                                    {dict.dashboard.tasks.btn_clear_all}
                                 </Button>
                             </div>
                         </div>
@@ -605,7 +601,7 @@ export default function DashboardPage() {
                                     <span className="text-2xl font-bold text-red-500">{criticalTasks.length}</span>
                                     <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-1">🔥 Críticas</p>
+                                <p className="text-sm text-muted-foreground mt-1">🔥 {dict.dashboard.tasks.priority_critical}</p>
                                 <p className="text-xs text-red-500/70 mt-1">Links de afiliado faltantes</p>
                             </button>
                             <button
@@ -617,7 +613,7 @@ export default function DashboardPage() {
                                     <span className="text-2xl font-bold text-orange-500">{highTasks.length}</span>
                                     <div className="w-3 h-3 bg-orange-500 rounded-full" />
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-1">⚠️ Altas</p>
+                                <p className="text-sm text-muted-foreground mt-1">⚠️ {dict.dashboard.tasks.priority_high}</p>
                                 <p className="text-xs text-orange-500/70 mt-1">Scrapers con errores</p>
                             </button>
                             <button
@@ -629,7 +625,7 @@ export default function DashboardPage() {
                                     <span className="text-2xl font-bold text-blue-500">{normalTasks.length}</span>
                                     <div className="w-3 h-3 bg-blue-500 rounded-full" />
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-1">📝 Normales</p>
+                                <p className="text-sm text-muted-foreground mt-1">📝 {dict.dashboard.tasks.priority_normal}</p>
                                 <p className="text-xs text-blue-500/70 mt-1">Scrapers desactualizados</p>
                             </button>
                         </div>
@@ -641,7 +637,7 @@ export default function DashboardPage() {
                                 size="sm"
                                 onClick={() => setTaskFilter('all')}
                             >
-                                Todas ({tasks.length})
+                                {dict.dashboard.tasks.filter_all} ({tasks.length})
                             </Button>
                             <Button
                                 variant={taskFilter === 'affiliate_audit' ? 'default' : 'outline'}
@@ -649,7 +645,7 @@ export default function DashboardPage() {
                                 onClick={() => setTaskFilter('affiliate_audit')}
                             >
                                 <LinkIcon className="w-3 h-3 mr-1" />
-                                Links Faltantes ({tasks.filter(t => t.task_type === 'affiliate_audit').length})
+                                {dict.dashboard.tasks.type_links} ({tasks.filter(t => t.task_type === 'affiliate_audit').length})
                             </Button>
                             <Button
                                 variant={taskFilter === 'scraper_fix' ? 'default' : 'outline'}
@@ -657,7 +653,7 @@ export default function DashboardPage() {
                                 onClick={() => setTaskFilter('scraper_fix')}
                             >
                                 <Server className="w-3 h-3 mr-1" />
-                                Scrapers ({tasks.filter(t => t.task_type === 'scraper_fix').length})
+                                {dict.dashboard.tasks.type_scrapers} ({tasks.filter(t => t.task_type === 'scraper_fix').length})
                             </Button>
                         </div>
 
@@ -669,9 +665,9 @@ export default function DashboardPage() {
                                     <div className="p-4 bg-green-500/10 rounded-full">
                                         <CheckCircle className="w-8 h-8 text-green-500" />
                                     </div>
-                                    <h3 className="text-xl font-bold">¡Todo en Orden! 🎉</h3>
+                                    <h3 className="text-xl font-bold">{dict.dashboard.tasks.empty_title}</h3>
                                     <p className="text-muted-foreground max-w-md">
-                                        No hay tareas pendientes. Tus links de afiliados y scrapers están funcionando.
+                                        {dict.dashboard.tasks.empty_desc}
                                     </p>
                                 </div>
                             </GlassCard>
@@ -682,9 +678,9 @@ export default function DashboardPage() {
                                     <table className="w-full text-left">
                                         <thead className="text-xs uppercase text-muted-foreground border-b border-white/10 bg-white/5">
                                             <tr>
-                                                <th className="py-3 px-4 w-16">Prioridad</th>
-                                                <th className="py-3 px-4">Tarea</th>
-                                                <th className="py-3 px-4 w-32">Tipo</th>
+                                                <th className="py-3 px-4 w-16">{dict.dashboard.tasks.priority_critical.substring(0, 1)}</th>
+                                                <th className="py-3 px-4">{dict.dashboard.tasks.title.split(' ')[0]}</th>
+                                                <th className="py-3 px-4 w-32">{dict.dashboard.scrapers.col_type}</th>
                                                 <th className="py-3 px-4 w-32 text-right">Acciones</th>
                                             </tr>
                                         </thead>
@@ -721,7 +717,7 @@ export default function DashboardPage() {
                                                                 onClick={() => setSelectedTask(task)}
                                                                 className="h-7 text-xs"
                                                             >
-                                                                Resolver
+                                                                {dict.dashboard.tasks.btn_resolve}
                                                             </Button>
                                                             <Button
                                                                 size="sm"
@@ -752,7 +748,7 @@ export default function DashboardPage() {
                                                 onClick={() => setTaskPage(p => Math.max(1, p - 1))}
                                                 disabled={taskPage === 1}
                                             >
-                                                ← Anterior
+                                                ← {dict.dashboard.tasks.prev}
                                             </Button>
                                             <Button
                                                 variant="outline"
@@ -760,7 +756,7 @@ export default function DashboardPage() {
                                                 onClick={() => setTaskPage(p => p + 1)}
                                                 disabled={taskPage >= Math.ceil(filteredTasks.length / TASKS_PER_PAGE)}
                                             >
-                                                Siguiente →
+                                                {dict.dashboard.tasks.next} →
                                             </Button>
                                         </div>
                                     </div>
@@ -794,8 +790,8 @@ export default function DashboardPage() {
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h2 className="text-2xl font-bold">GitHub Actions Workflows</h2>
-                                <p className="text-muted-foreground">Monitor and trigger scraping pipelines directly.</p>
+                                <h2 className="text-2xl font-bold">{dict.dashboard.tabs.workflows}</h2>
+                                <p className="text-muted-foreground">{lang === 'es' ? "Monitorea y dispara flujos de scraping directamente." : "Monitor and trigger scraping pipelines directly."}</p>
                             </div>
 
                             <Button
@@ -804,7 +800,7 @@ export default function DashboardPage() {
                                 className="flex items-center gap-2 bg-foreground text-background"
                             >
                                 {triggering ? <Clock className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                                {triggering ? "Starting..." : "Run Manual Update"}
+                                {triggering ? (lang === 'es' ? "Iniciando..." : "Starting...") : (lang === 'es' ? "Ejecutar Actualización Manual" : "Run Manual Update")}
                             </Button>
                         </div>
 

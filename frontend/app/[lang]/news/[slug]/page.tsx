@@ -7,6 +7,7 @@ import { Clock, Tag, ExternalLink, Calendar, User, ChevronLeft } from "lucide-re
 import Link from "next/link";
 import { getAffiliateUrl } from "@/lib/affiliates";
 import Image from "next/image";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 export const revalidate = 300; // ISR: 5 minutes
 
@@ -45,6 +46,25 @@ export async function generateMetadata({ params }: PageProps) {
         title: post.seo_title || post.title,
         description: post.seo_description || post.excerpt,
         openGraph: {
+            title: post.seo_title || post.title,
+            description: post.seo_description || post.excerpt,
+            url: `https://hostingarena.com/news/${post.slug}`,
+            siteName: 'HostingArena',
+            images: post.cover_image_url ? [
+                {
+                    url: post.cover_image_url,
+                    width: 1200,
+                    height: 630,
+                    alt: post.title,
+                }
+            ] : [],
+            locale: 'en_US',
+            type: 'article',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.seo_title || post.title,
+            description: post.seo_description || post.excerpt,
             images: post.cover_image_url ? [post.cover_image_url] : [],
         },
     };
@@ -89,6 +109,7 @@ export default async function NewsPostPage({ params }: PageProps) {
 
     return (
         <div className="min-h-screen pt-24 pb-20 px-6">
+            <JsonLd post={post} url={`https://hostingarena.com/news/${post.slug}`} />
             <PageTracker postSlug={post.slug} />
 
             <article className="max-w-4xl mx-auto">

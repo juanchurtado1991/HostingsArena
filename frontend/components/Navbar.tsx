@@ -3,27 +3,36 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Menu, X, LayoutDashboard, LogOut, User } from "lucide-react";
-import { logger } from "@/lib/logger";
+import { Menu, X, LayoutDashboard, LogOut, User as UserIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { GlobalSearch } from "./GlobalSearch";
+import { LanguageSelector } from "./LanguageSelector";
 import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
-const NAV_LINKS = [
-  { name: "Hosting", href: "/hosting" },
-  { name: "VPN", href: "/vpn" },
-  { name: "Compare", href: "/compare" },
-  { name: "Calculator", href: "/calculator" },
-  { name: "News", href: "/news" },
-];
+interface NavbarProps {
+  dict?: any;
+  lang?: string;
+}
 
-export function Navbar() {
+export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
+
+  const getLink = (path: string) => `/${lang}${path}`;
+
+  const navLinks = [
+    { name: dict?.nav?.hosting || "Hosting", href: "/hosting" },
+    { name: dict?.nav?.vpn || "VPN", href: "/vpn" },
+    { name: dict?.nav?.compare || "Compare", href: "/compare" },
+    { name: dict?.nav?.calculator || "Calculator", href: "/calculator" },
+    { name: dict?.nav?.news || "News", href: "/news" },
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -41,10 +50,7 @@ export function Navbar() {
           .eq('id', uid)
           .single();
 
-        if (error) {
-          console.warn("Error checking user role:", error);
-          return;
-        }
+        if (error) return;
 
         if (mounted) {
           const isUserAdmin = profile?.role === 'admin';
@@ -56,7 +62,7 @@ export function Navbar() {
           }
         }
       } catch (err) {
-        console.error("Failed to check user role:", err);
+        logger.error("Failed to check user role:", err);
       }
     };
 
@@ -97,11 +103,8 @@ export function Navbar() {
     setUser(null);
     setIsAdmin(false);
     localStorage.removeItem('isAdmin');
-    router.push("/login");
-
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Error signing out:", error);
-
+    router.push(`/${lang}/login`);
+    await supabase.auth.signOut();
     router.refresh();
   };
 
@@ -109,23 +112,20 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="flex h-16 items-center justify-between rounded-full border border-border/40 bg-background/70 px-6 shadow-sm backdrop-blur-xl mt-4 supports-[backdrop-filter]:bg-background/60">
-
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href={`/${lang}`} className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-foreground">
               Hosting<span className="text-primary">Arena</span>
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={getLink(link.href)}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === link.href ? "text-primary" : "text-muted-foreground"
+                  pathname.includes(link.href) ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 {link.name}
@@ -133,17 +133,16 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Actions */}
           <div className="hidden md:flex items-center gap-4">
             <GlobalSearch />
+            <LanguageSelector />
 
             {user ? (
               <div className="flex items-center gap-2">
                 {isAdmin && (
                   <Link
-                    href="/dashboard"
+                    href={getLink("/dashboard")}
                     className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                    title="Admin Dashboard"
                   >
                     <LayoutDashboard className="h-5 w-5" />
                   </Link>
@@ -152,28 +151,27 @@ export function Navbar() {
                   onClick={handleSignOut}
                   className="rounded-full bg-muted hover:bg-destructive hover:text-destructive-foreground px-4 py-2 text-sm font-semibold text-foreground transition-all"
                 >
-                  Sign Out
+                  {dict?.nav?.sign_out || "Sign Out"}
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
-                  href="/login"
+                  href={`/${lang}/login`}
                   className="rounded-full bg-transparent px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Sign In
+                  {dict?.nav?.login || "Sign In"}
                 </Link>
                 <Link
-                  href="/signup" // Assuming you have or will make a signup page, otherwise login usually handles both or tabs
+                  href={`/${lang}/signup`}
                   className="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition-transform hover:scale-105 active:scale-95 shadow-md"
                 >
-                  Get Started
+                  {dict?.nav?.get_started || "Get Started"}
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile Toggle */}
           <button
             className="md:hidden p-2 text-muted-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -183,17 +181,19 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="absolute top-24 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl md:hidden animate-in fade-in slide-in-from-top-4 z-40">
           <div className="flex flex-col gap-4">
-            <div className="mb-4">
+            <div className="mb-4 flex flex-col gap-4">
               <GlobalSearch />
+              <div className="flex justify-start px-2">
+                <LanguageSelector />
+              </div>
             </div>
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={getLink(link.href)}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-lg font-medium text-foreground py-2 border-b border-border/50"
               >
@@ -206,7 +206,7 @@ export function Navbar() {
                 <>
                   {isAdmin && (
                     <Link
-                      href="/dashboard"
+                      href={getLink("/dashboard")}
                       className="flex items-center gap-2 text-lg font-medium py-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -217,24 +217,24 @@ export function Navbar() {
                     onClick={handleSignOut}
                     className="rounded-xl bg-destructive/10 text-destructive px-4 py-3 text-center font-semibold mt-2"
                   >
-                    Sign Out
+                    {dict?.nav?.sign_out || "Sign Out"}
                   </button>
                 </>
               ) : (
                 <>
                   <Link
-                    href="/login"
+                    href={`/${lang}/login`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="rounded-xl bg-muted px-4 py-3 text-center font-semibold text-foreground"
                   >
-                    Sign In
+                    {dict?.nav?.login || "Sign In"}
                   </Link>
                   <Link
-                    href="/signup"
+                    href={`/${lang}/signup`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="rounded-xl bg-primary px-4 py-3 text-center font-semibold text-primary-foreground shadow-lg"
                   >
-                    Create Account
+                    {dict?.nav?.get_started || "Get Started"}
                   </Link>
                 </>
               )}

@@ -13,6 +13,7 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
+import { PublishSummaryModal } from "./PublishSummaryModal";
 import {
     Search, Plus, Loader2, Edit3, Trash2,
     Bold, Italic, Underline as UnderlineIcon, Strikethrough,
@@ -20,11 +21,14 @@ import {
     Heading1, Heading2, Heading3, List, ListOrdered, Quote,
     Link as LinkIcon, Palette, Highlighter, Sparkles, Upload,
     FileText, CheckCircle, Clock, Tag, X,
-    ChevronDown, ExternalLink, ImageIcon, Type, Undo2, Redo2, AlertTriangle,
+    ChevronDown, ExternalLink, ImageIcon, Type, Undo2, Redo2, AlertTriangle, Share2,
+    Save,
+    Send,
+    Globe
 } from "lucide-react";
 
 
-interface Post {
+export interface Post {
     id: string;
     title: string;
     slug: string;
@@ -42,6 +46,10 @@ interface Post {
     cover_image_url: string | null;
     published_at: string | null;
     created_at: string;
+    social_tw_text: string | null;
+    social_li_text: string | null;
+    social_hashtags: string[] | null;
+    updated_at?: string;
 }
 
 interface AffiliateLink {
@@ -326,11 +334,21 @@ function PostEditorModal({
     const [relatedProvider, setRelatedProvider] = useState(post?.related_provider_name || "");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [activeSection, setActiveSection] = useState<"content" | "seo" | "image">("content");
+    const [activeSection, setActiveSection] = useState<"content" | "seo" | "social" | "image">("content");
     const [coverImageUrl, setCoverImageUrl] = useState(post?.cover_image_url || "");
+    const [socialTw, setSocialTw] = useState(post?.social_tw_text || "");
+    const [socialLi, setSocialLi] = useState(post?.social_li_text || "");
+    const [socialTags, setSocialTags] = useState(post?.social_hashtags?.join(" ") || "");
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [tick, setTick] = useState(0); // Used to force re-render on editor updates
+
+    // Publish Modal State
+    const [showPublishModal, setShowPublishModal] = useState(false);
+    const [publishStatus, setPublishStatus] = useState<'loading' | 'success' | 'error'>('loading');
+    const [publishError, setPublishError] = useState<string | undefined>(undefined);
+    const [socialLinks, setSocialLinks] = useState<{ x_url?: string; li_url?: string } | undefined>(undefined);
+
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -366,6 +384,27 @@ function PostEditorModal({
             },
         },
     });
+
+    // Update state when post changes (e.g. after AI generation)
+    useEffect(() => {
+        if (post) {
+            setTitle(post.title);
+            setSlug(post.slug);
+            setExcerpt(post.excerpt || "");
+            setCategory(post.category || "");
+            setSeoTitle(post.seo_title || "");
+            setSeoDesc(post.seo_description || "");
+            setKeywords(post.target_keywords?.join(", ") || "");
+            setImagePrompt(post.image_prompt || "");
+            setStatus(post.status);
+            setRelatedProvider(post.related_provider_name || "");
+            setCoverImageUrl(post.cover_image_url || "");
+            setSocialTw(post.social_tw_text || "");
+            setSocialLi(post.social_li_text || "");
+            setSocialTags(post.social_hashtags?.join(" ") || "");
+            editor?.commands.setContent(post.content);
+        }
+    }, [post, editor]);
 
     const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
     const charCount = editor?.getText()?.length || 0;
@@ -438,13 +477,21 @@ function PostEditorModal({
         if (file) handleImageUpload(file);
     };
 
-    const handleSave = async () => {
+    const handleSave = async (publish = false) => {
         if (!title.trim()) {
             setError("Title is required");
             return;
         }
         setError(null);
         setSaving(true);
+
+        if (publish) {
+            setShowPublishModal(true);
+            setPublishStatus('loading');
+            setPublishError(undefined);
+            setSocialLinks(undefined);
+        }
+
         try {
             await onSave({
                 id: post?.id,
@@ -453,18 +500,83 @@ function PostEditorModal({
                 content: editor?.getHTML() || "",
                 excerpt,
                 category: category || null,
-                status,
+                status: publish ? 'published' : (status || 'draft'),
                 seo_title: seoTitle || title,
                 seo_description: seoDesc || excerpt,
                 target_keywords: keywords ? keywords.split(",").map(k => k.trim()).filter(Boolean) : null,
                 related_provider_name: relatedProvider || null,
                 image_prompt: imagePrompt || null,
                 cover_image_url: coverImageUrl || null,
+                social_tw_text: socialTw || null,
+                social_li_text: socialLi || null,
+                social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
             });
+
+            if (publish) {
+                // 1. Trigger Webhook (Synchronous)
+                const webhookRes = await fetch("/api/admin/posts/publish-webhook", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: post?.id })
+                });
+
+                if (!webhookRes.ok) {
+                    const errorData = await webhookRes.json();
+                    throw new Error(errorData.details || errorData.error || "Distribution failed");
+                }
+
+                const webhookData = await webhookRes.json();
+
+                // 2. Trigger Google Indexing (Mock)
+                await fetch("/api/admin/posts/index-google", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: `https://hostingarena.com/news/${slug}` })
+                });
+
+                // Success!
+                setSocialLinks({
+                    x_url: webhookData.data?.x_url,
+                    li_url: webhookData.data?.li_url
+                });
+                setPublishStatus('success');
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Save failed");
+            if (publish) {
+                setPublishStatus('error');
+                setPublishError(err instanceof Error ? err.message : "Distribution failed");
+            }
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleRetryDistribution = async () => {
+        setPublishStatus('loading');
+        setPublishError(undefined);
+        try {
+            const webhookRes = await fetch("/api/admin/posts/publish-webhook", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: post?.id })
+            });
+
+            if (!webhookRes.ok) {
+                const errorData = await webhookRes.json();
+                throw new Error(errorData.details || errorData.error || "Distribution failed");
+            }
+
+            const webhookData = await webhookRes.json();
+
+            setSocialLinks({
+                x_url: webhookData.data?.x_url,
+                li_url: webhookData.data?.li_url
+            });
+            setPublishStatus('success');
+        } catch (err) {
+            setPublishStatus('error');
+            setPublishError(err instanceof Error ? err.message : "Retry failed");
         }
     };
 
@@ -479,6 +591,7 @@ function PostEditorModal({
     const sectionTabs = [
         { key: "content" as const, icon: <Type className="w-3.5 h-3.5" />, label: "Content" },
         { key: "seo" as const, icon: <Search className="w-3.5 h-3.5" />, label: "SEO" },
+        { key: "social" as const, icon: <Share2 className="w-3.5 h-3.5" />, label: "Social" },
         { key: "image" as const, icon: <ImageIcon className="w-3.5 h-3.5" />, label: "Image" },
     ];
 
@@ -521,13 +634,23 @@ function PostEditorModal({
                             </select>
                         </div>
                         {/* Save */}
-                        <Button
-                            onClick={handleSave}
-                            className="rounded-2xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 text-sm font-semibold px-6 transition-all duration-200 hover:scale-105"
-                            disabled={saving || !title.trim()}
-                        >
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-1.5" /> {post ? "Save Changes" : "Create Post"}</>}
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => handleSave()}
+                                className="rounded-2xl bg-muted hover:bg-muted/80 text-foreground border border-border shadow-sm text-sm font-semibold px-4 transition-all duration-200"
+                                disabled={saving || !title.trim()}
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-1.5" /> Save Draft</>}
+                            </Button>
+
+                            <Button
+                                onClick={() => handleSave(true)}
+                                className="rounded-2xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 text-sm font-semibold px-6 transition-all duration-200 hover:scale-105"
+                                disabled={saving || !title.trim()}
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-1.5" /> Publish & Share</>}
+                            </Button>
+                        </div>
                         {/* Close */}
                         <button onClick={onClose} className="p-2.5 rounded-2xl hover:bg-muted/50 transition-all duration-200 group">
                             <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -627,6 +750,109 @@ function PostEditorModal({
                                             {keywords.split(",").map((k, i) => k.trim() && (
                                                 <span key={i} className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-medium border border-primary/15">
                                                     {k.trim()}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === "social" && (
+                            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                                {/* Twitter / X */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                                            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-foreground" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                                            Twitter Post
+                                        </label>
+                                        <span className={`text-[10px] font-mono ${socialTw.length > 280 ? "text-red-400" : "text-muted-foreground"}`}>{socialTw.length}/280</span>
+                                    </div>
+
+                                    {/* Preview Card */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
+                                        <div className="flex gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0" />
+                                            <div className="flex-1 space-y-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-sm font-bold">HostingArena</span>
+                                                    <span className="text-xs text-muted-foreground">@hostingarena · 1m</span>
+                                                </div>
+                                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{socialTw || "Write something amazing..."} {socialTags}</p>
+                                                {coverImageUrl && (
+                                                    <div className="mt-2 rounded-xl overflow-hidden border border-border/50">
+                                                        <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <textarea
+                                        value={socialTw}
+                                        onChange={(e) => setSocialTw(e.target.value)}
+                                        placeholder="What's happening?"
+                                        className={`${INPUT_CLASS} h-24 resize-none font-medium`}
+                                    />
+                                </div>
+
+                                <div className="h-px bg-border/50" />
+
+                                {/* LinkedIn */}
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#0077b5]" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                                        LinkedIn Post
+                                    </label>
+
+                                    {/* Preview Card */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
+                                        <div className="flex gap-2 mb-3">
+                                            <div className="w-10 h-10 rounded-sm bg-primary/10 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold">HostingArena</p>
+                                                <p className="text-xs text-muted-foreground">redefining verified benchmarks.</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{socialLi || "Share your professional insights..."}</p>
+                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mb-3">{socialTags}</p>
+                                        {coverImageUrl && (
+                                            <div className="rounded-sm overflow-hidden border border-border/50 bg-muted/20">
+                                                <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
+                                                <div className="p-2 bg-muted/30">
+                                                    <p className="text-xs font-semibold">{seoTitle || title || "Article Title"}</p>
+                                                    <p className="text-[10px] text-muted-foreground">hostingarena.com</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <textarea
+                                        value={socialLi}
+                                        onChange={(e) => setSocialLi(e.target.value)}
+                                        placeholder="Share your insights..."
+                                        className={`${INPUT_CLASS} h-32 resize-none`}
+                                    />
+                                </div>
+
+                                <div className="h-px bg-border/50" />
+
+                                {/* Hashtags */}
+                                <div>
+                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Hashtags</label>
+                                    <input
+                                        type="text"
+                                        value={socialTags}
+                                        onChange={(e) => setSocialTags(e.target.value)}
+                                        placeholder="#webhosting #tech #review"
+                                        className={INPUT_CLASS}
+                                    />
+                                    {socialTags && (
+                                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                            {socialTags.split(" ").map((t, i) => t.trim() && (
+                                                <span key={i} className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-medium border border-blue-500/15">
+                                                    {t.startsWith("#") ? t : `#${t}`}
                                                 </span>
                                             ))}
                                         </div>
@@ -795,6 +1021,8 @@ function GenerationConfigModal({
     const [customProvider, setCustomProvider] = useState("");
     const [scenario, setScenario] = useState("random");
     const [customScenario, setCustomScenario] = useState("");
+    const [model, setModel] = useState("gpt-4o-mini");
+    const [wordCount, setWordCount] = useState("1500");
     const [instructions, setInstructions] = useState("");
 
     const INPUT_CLASS = "w-full px-4 py-3 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-200";
@@ -804,6 +1032,8 @@ function GenerationConfigModal({
             category: category === "custom" ? customCategory : category,
             provider_name: provider === "custom" ? customProvider : (provider === "random" ? undefined : provider),
             scenario: scenario === "custom" ? customScenario : (scenario === "random" ? undefined : scenario),
+            model: model,
+            target_word_count: parseInt(wordCount),
             extra_instructions: instructions
         });
     };
@@ -889,6 +1119,25 @@ function GenerationConfigModal({
                                     className={`mt-2 ${INPUT_CLASS}`}
                                 />
                             )}
+                        </div>
+                    </div>
+
+                    {/* Model & Length */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">AI Model</label>
+                            <select value={model} onChange={(e) => setModel(e.target.value)} className={INPUT_CLASS}>
+                                <option value="gpt-4o-mini">⚡ GPT-4o Mini (Fast & Cheap)</option>
+                                <option value="gpt-4o">🧠 GPT-4o (High Quality)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Article Length</label>
+                            <select value={wordCount} onChange={(e) => setWordCount(e.target.value)} className={INPUT_CLASS}>
+                                <option value="800">Short (~800 words)</option>
+                                <option value="1500">Standard (~1500 words)</option>
+                                <option value="2500">Deep Dive (~2500+ words)</option>
+                            </select>
                         </div>
                     </div>
 
@@ -1015,7 +1264,7 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         let successCount = 0;
 
         for (let i = 0; i < totalToGenerate; i++) {
-            setGenerationStatus(`Initializing AI Agent...`);
+            setGenerationStatus(`Initializing AI Agent (${config.model || 'gpt-4o-mini'})...`);
 
             try {
                 const response = await fetch("/api/admin/posts/generate", {
@@ -1026,6 +1275,8 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                         provider_name: config.provider_name,
                         scenario: config.scenario,
                         custom_category: config.category,
+                        model: config.model,
+                        target_word_count: config.target_word_count,
                         extra_instructions: config.extra_instructions
                     }),
                 });

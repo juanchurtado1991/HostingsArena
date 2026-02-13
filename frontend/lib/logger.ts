@@ -43,6 +43,10 @@ class DebugLogger {
         this.log('ERROR', message, error);
     }
 
+    warn(message: string, data?: any) {
+        this.log('SYSTEM', `[WARN] ${message}`, data);
+    }
+
     getLogs() {
         return this.logs;
     }

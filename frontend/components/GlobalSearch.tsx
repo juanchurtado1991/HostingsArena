@@ -12,7 +12,11 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-export function GlobalSearch() {
+interface GlobalSearchProps {
+    placeholder?: string;
+}
+
+export function GlobalSearch({ placeholder = "Search providers..." }: GlobalSearchProps) {
     const [open, setOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [hostingResults, setHostingResults] = React.useState<any[]>([]);

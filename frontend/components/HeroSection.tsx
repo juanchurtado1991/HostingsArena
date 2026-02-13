@@ -5,14 +5,14 @@ import { GlassCard } from "./ui/GlassCard";
 import { ArrowRight, Shield, Zap, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-export function HeroSection() {
+export function HeroSection({ dict, lang = 'en' }: { dict?: any, lang?: string }) {
   return (
     <section className="relative pt-28 pb-12 flex flex-col items-center justify-start overflow-hidden">
 
       {/* Background Gradients */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-[128px] animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-[128px] animate-pulse delay-1000" />
+        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400/20 rounded-full blur-[64px]" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-[64px]" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10 text-center">
@@ -28,43 +28,41 @@ export function HeroSection() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>
-          Based on 100% Real Verification Data
+          {dict?.badge || "Based on 100% Real Verification Data"}
         </motion.div>
 
         {/* Title */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.5, delay: 0 }}
           className="hero-title max-w-4xl mx-auto"
         >
-          The Truth About <span className="text-primary">Hosting & VPNs</span>
+          {dict?.title || "The Truth About"} <span className="text-primary">{dict?.title_highlight || "Hosting & VPNs"}</span>
         </motion.h1>
 
         {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           className="hero-subtitle mb-10"
         >
-          Stop relying on fake reviews. We verified 120+ providers with deep data extraction.
-          <br className="hidden md:block" />
-          See hidden renewal fees, real RAM limits, and proven audit histories.
+          {dict?.subtitle || "Stop relying on fake reviews. We verified 120+ providers with deep data extraction."}
         </motion.p>
 
         {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
         >
-          <Link href="/compare" className="h-12 px-8 rounded-full bg-foreground text-background font-semibold flex items-center gap-2 hover:scale-105 transition-transform">
-            Start Comparing <ArrowRight className="w-4 h-4" />
+          <Link href={`/${lang}/compare`} className="h-12 px-8 rounded-full bg-foreground text-background font-semibold flex items-center gap-2 hover:scale-105 transition-transform">
+            {dict?.cta_compare || "Start Comparing"} <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/hosting" className="h-12 px-8 rounded-full border border-border bg-background/50 backdrop-blur-sm text-foreground font-semibold flex items-center gap-2 hover:bg-background/80 transition-colors">
-            Browse Providers
+          <Link href={`/${lang}/hosting`} className="h-12 px-8 rounded-full border border-border bg-background/50 backdrop-blur-sm text-foreground font-semibold flex items-center gap-2 hover:bg-background/80 transition-colors">
+            {dict?.cta_browse || "Browse Providers"}
           </Link>
         </motion.div>
 

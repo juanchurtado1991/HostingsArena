@@ -11,9 +11,14 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertCircle, TrendingUp, Zap } from "lucide-react";
 
-export default function CalculatorPage() {
+interface CalculatorClientProps {
+    dict: any;
+    lang: string;
+}
+
+export default function CalculatorClient({ dict, lang }: CalculatorClientProps) {
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
-    const [years, setYears] = useState(3); // Money First: Default to 3 years (The Trap)
+    const [years, setYears] = useState(3);
     const [provider1, setProvider1] = useState({ name: "Bluehost", initial: 2.95, renewal: 10.99, promo: 12 });
     const [provider2, setProvider2] = useState({ name: "FastComet", initial: 2.95, renewal: 2.95, promo: 12 });
     useTrackPageView();
@@ -50,17 +55,17 @@ export default function CalculatorPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold mb-4">
-                        True Cost <span className="text-primary">Calculator</span>
+                        {dict.calculator.title}
                     </h1>
                     <p className="text-muted-foreground text-lg mb-8">
-                        See how "cheap" hosting really costs after the promo ends.
+                        {dict.calculator.subtitle}
                     </p>
 
                     {/* Money First: STOP THE BLEEDING Banner */}
                     <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 max-w-2xl mx-auto flex items-center justify-center gap-3 animate-pulse">
                         <AlertCircle className="w-6 h-6" />
                         <span className="font-bold text-lg">
-                            Stop the bleeding! You could waste <span className="underline decoration-wavy decoration-destructive/50">{formatCurrency(diff)}</span> over {years} years.
+                            {dict.calculator.stop_bleeding.replace('{amount}', formatCurrency(diff)).replace('{years}', years.toString())}
                         </span>
                     </div>
                 </div>
@@ -69,9 +74,9 @@ export default function CalculatorPage() {
                     {/* Controls */}
                     <GlassCard className="lg:col-span-1 p-6 space-y-8 h-fit sticky top-24">
                         <div className="space-y-6">
-                            {/* Year Selector (Money First: Preset Buttons) */}
+                            {/* Year Selector */}
                             <div>
-                                <label className="text-sm font-medium text-muted-foreground mb-2 block">Projection Period</label>
+                                <label className="text-sm font-medium text-muted-foreground mb-2 block">{dict.calculator.projection_period}</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {[1, 3, 5, 10].map((y) => (
                                         <Button
@@ -90,7 +95,7 @@ export default function CalculatorPage() {
                             <div className="border-t border-border pt-6">
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                    Provider A (The Trap?)
+                                    {dict.calculator.provider_a_trap}
                                 </h3>
                                 <div className="space-y-4">
                                     <ProviderSelector
@@ -110,11 +115,11 @@ export default function CalculatorPage() {
                                     />
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-xs text-muted-foreground">Intro</label>
+                                            <label className="text-xs text-muted-foreground">{dict.calculator.intro}</label>
                                             <input type="number" value={provider1.initial} onChange={e => setProvider1({ ...provider1, initial: Number(e.target.value) })} className="w-full bg-background border rounded px-2 py-1 text-sm" />
                                         </div>
                                         <div>
-                                            <label className="text-xs text-muted-foreground">Renewal</label>
+                                            <label className="text-xs text-muted-foreground">{dict.calculator.renewal}</label>
                                             <input type="number" value={provider1.renewal} onChange={e => setProvider1({ ...provider1, renewal: Number(e.target.value) })} className="w-full bg-background border border-destructive/50 text-destructive font-bold rounded px-2 py-1 text-sm" />
                                         </div>
                                     </div>
@@ -124,7 +129,7 @@ export default function CalculatorPage() {
                             <div className="border-t border-border pt-6">
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Provider B (The Savior?)
+                                    {dict.calculator.provider_b_savior}
                                 </h3>
                                 <div className="space-y-4">
                                     <ProviderSelector
@@ -144,11 +149,11 @@ export default function CalculatorPage() {
                                     />
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-xs text-muted-foreground">Intro</label>
+                                            <label className="text-xs text-muted-foreground">{dict.calculator.intro}</label>
                                             <input type="number" value={provider2.initial} onChange={e => setProvider2({ ...provider2, initial: Number(e.target.value) })} className="w-full bg-background border rounded px-2 py-1 text-sm" />
                                         </div>
                                         <div>
-                                            <label className="text-xs text-muted-foreground">Renewal</label>
+                                            <label className="text-xs text-muted-foreground">{dict.calculator.renewal}</label>
                                             <input type="number" value={provider2.renewal} onChange={e => setProvider2({ ...provider2, renewal: Number(e.target.value) })} className="w-full bg-background border border-green-500/50 text-green-600 font-bold rounded px-2 py-1 text-sm" />
                                         </div>
                                     </div>
@@ -193,12 +198,12 @@ export default function CalculatorPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <GlassCard className="p-6 border-l-4 border-l-destructive bg-destructive/5 flex flex-col justify-between">
                                 <div>
-                                    <div className="text-sm font-medium text-destructive mb-1 uppercase tracking-wider">The Loser</div>
+                                    <div className="text-sm font-medium text-destructive mb-1 uppercase tracking-wider">{dict.calculator.loser}</div>
                                     <h3 className="text-2xl font-bold text-foreground mb-4">{loser}</h3>
                                     <div className="text-4xl font-black text-destructive/80 mb-2">
                                         {formatCurrency(Math.max(p1Total, p2Total))}
                                     </div>
-                                    <p className="text-sm text-muted-foreground">Total cost over {years} years.</p>
+                                    <p className="text-sm text-muted-foreground">{dict.calculator.total_cost.replace('{years}', years.toString())}</p>
                                 </div>
                             </GlassCard>
 
@@ -209,21 +214,21 @@ export default function CalculatorPage() {
 
                                 <div>
                                     <div className="text-sm font-medium text-green-600 mb-1 uppercase tracking-wider flex items-center gap-2">
-                                        <Zap className="w-4 h-4 fill-current" /> The Winner
+                                        <Zap className="w-4 h-4 fill-current" /> {dict.calculator.winner}
                                     </div>
                                     <h3 className="text-2xl font-bold text-foreground mb-4">{winner}</h3>
                                     <div className="text-4xl font-black text-green-600 mb-2">
                                         {formatCurrency(Math.min(p1Total, p2Total))}
                                     </div>
                                     <p className="text-sm text-green-700/80 font-medium">
-                                        You save {formatCurrency(diff)}!
+                                        {dict.calculator.you_save.replace('{amount}', formatCurrency(diff))}
                                     </p>
                                 </div>
 
                                 <div className="mt-6">
                                     <Button size="lg" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg shadow-green-500/20" asChild>
-                                        <Link href={`/hosting/${winner.toLowerCase().replace(/\s+/g, '-')}`}>
-                                            Switch to {winner} & Save ⚡️
+                                        <Link href={`/${lang}/hosting/${winner.toLowerCase().replace(/\s+/g, '-')}`}>
+                                            {dict.calculator.switch_to.replace('{provider}', winner)}
                                         </Link>
                                     </Button>
                                 </div>

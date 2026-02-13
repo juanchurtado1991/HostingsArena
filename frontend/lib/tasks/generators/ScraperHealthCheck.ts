@@ -99,7 +99,7 @@ export class ScraperHealthCheck implements TaskGenerator {
                         ? `Advertencia en Scraper: ${scraper.provider_name}`
                         : `Scraper Desactualizado: ${scraper.provider_name}`,
                 description: isError
-                    ? `El scraper de ${scraper.provider_name} falló con error: "${scraper.error_message || 'Unknown'}". Los precios pueden estar desactualizados.`
+                    ? `The scraper for ${scraper.provider_name} failed with error: "${scraper.error_message || 'Unknown'}". Prices may be outdated.`
                     : isWarning
                         ? `El scraper de ${scraper.provider_name} tiene advertencias: "${scraper.error_message || 'Datos parciales'}". Revisa los datos extraídos.`
                         : `El scraper de ${scraper.provider_name} no ha corrido en ${this.STALE_THRESHOLD_DAYS}+ días. Última ejecución: ${lastRun?.toLocaleDateString() || 'Nunca'}.`,

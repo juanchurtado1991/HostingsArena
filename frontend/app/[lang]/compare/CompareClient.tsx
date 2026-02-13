@@ -11,7 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ComparisonTable } from "@/components/comparisons/ComparisonTable";
 
-export default function ComparePage() {
+interface CompareClientProps {
+    dict: any;
+    lang: string;
+}
+
+export default function CompareClient({ dict, lang }: CompareClientProps) {
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
     const [p1, setP1] = useState<any>(null);
     const [p2, setP2] = useState<any>(null);
@@ -24,13 +29,13 @@ export default function ComparePage() {
                 {/* Header */}
                 <div className="text-center mb-12">
                     <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold mb-4 tracking-wide uppercase">
-                        Truth vs Truth
+                        {dict.compare.badge}
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-                        Compare <span className="text-primary">Providers</span> Side-by-Side
+                        {dict.compare.title}
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                        Select two providers to see their differences in renewal price, hidden limits, and performance benchmarks.
+                        {dict.compare.subtitle}
                     </p>
                 </div>
 
@@ -43,15 +48,15 @@ export default function ComparePage() {
                     }}>
                         <div className="flex justify-center mb-8">
                             <TabsList className="bg-muted/50 border border-border backdrop-blur-md">
-                                <TabsTrigger value="hosting" className="px-8">Hosting</TabsTrigger>
-                                <TabsTrigger value="vpn" className="px-8">VPNs</TabsTrigger>
+                                <TabsTrigger value="hosting" className="px-8">{dict.compare.tab_hosting}</TabsTrigger>
+                                <TabsTrigger value="vpn" className="px-8">{dict.compare.tab_vpn}</TabsTrigger>
                             </TabsList>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
                             {/* Provider 1 */}
                             <div className="bg-card/50 p-6 rounded-2xl border border-border/50 text-center">
-                                <div className="mb-4 text-sm font-medium text-muted-foreground">Provider A</div>
+                                <div className="mb-4 text-sm font-medium text-muted-foreground">{dict.compare.provider_a}</div>
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP1}
@@ -68,7 +73,7 @@ export default function ComparePage() {
 
                             {/* Provider 2 */}
                             <div className="bg-card/50 p-6 rounded-2xl border border-border/50 text-center">
-                                <div className="mb-4 text-sm font-medium text-muted-foreground">Provider B</div>
+                                <div className="mb-4 text-sm font-medium text-muted-foreground">{dict.compare.provider_b}</div>
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP2}
@@ -87,8 +92,8 @@ export default function ComparePage() {
                 ) : (
                     <div className="text-center py-20 text-muted-foreground bg-card/30 rounded-3xl border border-dashed border-border/50">
                         <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <h3 className="text-lg font-medium mb-1">Select providers to compare</h3>
-                        <p className="text-sm">Choose two providers above to see the breakdown.</p>
+                        <h3 className="text-lg font-medium mb-1">{dict.compare.select_instruction_title}</h3>
+                        <p className="text-sm">{dict.compare.select_instruction_desc}</p>
                     </div>
                 )}
             </div>

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
         const { tasks, results } = await factory.runAllDetailed();
 
-        console.log('[TaskGenerate] Results:', JSON.stringify(results, null, 2));
+
 
         if (tasks.length === 0) {
             return NextResponse.json({

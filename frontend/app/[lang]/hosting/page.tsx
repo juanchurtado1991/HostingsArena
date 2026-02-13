@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getAffiliateUrlBatch } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
+import { getDictionary } from "@/get-dictionary";
+import { Locale } from "@/i18n-config";
 
 export const metadata = {
   title: "Top Hosting Providers - Verified Benchmarks | HostingArena",
@@ -15,11 +17,15 @@ export const metadata = {
 
 export default async function HostingPage({
   searchParams,
+  params
 }: {
   searchParams: Promise<{ page?: string; q?: string }>;
+  params: Promise<{ lang: Locale }>;
 }) {
   const supabase = await createClient();
   const { page, q } = await searchParams;
+  const { lang } = await params;
+  const dict = await getDictionary(lang);
 
   const currentPage = Number(page) || 1;
   const query = q || "";
@@ -73,20 +79,20 @@ export default async function HostingPage({
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-            Premium <span className="text-primary">Hosting</span> Providers
+            {dict.hosting.title.split('Hosting')[0]} <span className="text-primary">Hosting</span> {dict.hosting.title.split('Hosting')[1] || ''}
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
-            Compare real performance metrics, hidden renewal costs, and infrastructure limits.
+            {dict.hosting.subtitle}
           </p>
 
           {/* Search Bar */}
           <div className="max-w-md mx-auto relative">
-            <form action="/hosting" method="get">
+            <form action={`/${lang}/hosting`} method="get">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <input
                 type="text"
                 name="q"
-                placeholder="Search providers (e.g. Bluehost)..."
+                placeholder={dict.hosting.search_placeholder}
                 defaultValue={query}
                 className="w-full h-12 pl-10 pr-4 rounded-full border border-border bg-black/5 dark:bg-white/5 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
@@ -104,7 +110,7 @@ export default async function HostingPage({
                 <div>
                   <h3 className="text-2xl font-bold line-clamp-1" title={provider.provider_name}>{provider.provider_name}</h3>
                   <div className="flex items-center gap-1 mt-1">
-                    <span className="text-sm font-medium text-muted-foreground">{provider.plan_name || "Starting Plan"}</span>
+                    <span className="text-sm font-medium text-muted-foreground">{provider.plan_name || dict.hosting.starting_plan}</span>
                   </div>
                 </div>
                 <div className="text-right">
@@ -118,7 +124,7 @@ export default async function HostingPage({
                 <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-3 mb-6">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-destructive font-medium flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" /> Renewal
+                      <TrendingUp className="w-4 h-4" /> {dict.hosting.renewal}
                     </span>
                     <span className="font-bold text-foreground">{formatCurrency(provider.renewal_price)}/mo</span>
                   </div>
@@ -130,17 +136,17 @@ export default async function HostingPage({
                 {provider.storage_gb && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-2">
-                      <Server className="w-4 h-4" /> Storage
+                      <Server className="w-4 h-4" /> {dict.hosting.storage}
                     </span>
                     <span className="font-medium">
-                      {provider.storage_gb && provider.storage_gb >= 999 ? "Unlimited" : `${provider.storage_gb} GB`} {provider.storage_type && provider.storage_type !== 'unknown' ? provider.storage_type : ''}
+                      {provider.storage_gb && provider.storage_gb >= 999 ? dict.hosting.unlimited : `${provider.storage_gb} GB`} {provider.storage_type && provider.storage_type !== 'unknown' ? provider.storage_type : ''}
                     </span>
                   </div>
                 )}
                 {provider.inodes && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-2">
-                      <Database className="w-4 h-4" /> Inode Limit
+                      <Database className="w-4 h-4" /> {dict.hosting.inode_limit}
                     </span>
                     <span className="font-medium">{provider.inodes?.toLocaleString()}</span>
                   </div>
@@ -151,7 +157,7 @@ export default async function HostingPage({
               {provider.renewal_price && provider.pricing_monthly && provider.renewal_price > provider.pricing_monthly && (
                 <div className="mb-4">
                   <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-1 rounded-full border border-green-500/20">
-                    Save {Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.renewal_price) * 100)}%
+                    {dict.hosting.save_percent.replace('{percent}', Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.renewal_price) * 100).toString())}
                   </span>
                 </div>
               )}
@@ -160,11 +166,11 @@ export default async function HostingPage({
               <div className="mt-auto space-y-3">
                 <Link href={affiliateUrls.get(provider.provider_name) || provider.website_url} target="_blank" className="w-full block">
                   <Button className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform" size="lg">
-                    Ver Oferta Exclusiva ⚡️
+                    {dict.hosting.view_deal}
                   </Button>
                 </Link>
-                <Link href={`/hosting/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
-                  Ver análisis de {provider.provider_name}
+                <Link href={`/${lang}/hosting/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+                  {dict.hosting.read_review.replace('{provider}', provider.provider_name)}
                 </Link>
               </div>
 
@@ -176,17 +182,17 @@ export default async function HostingPage({
         {totalPages > 1 && (
           <div className="flex justify-center gap-4">
             {currentPage > 1 && (
-              <Link href={`/hosting?page=${currentPage - 1}${query ? `&q=${query}` : ''}`}>
+              <Link href={`/${lang}/hosting?page=${currentPage - 1}${query ? `&q=${query}` : ''}`}>
                 <Button variant="outline" size="icon" className="rounded-full">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
               </Link>
             )}
             <span className="flex items-center font-medium text-muted-foreground">
-              Page {currentPage} of {totalPages}
+              {dict.hosting.page_x_of_y.replace('{current}', currentPage.toString()).replace('{total}', totalPages.toString())}
             </span>
             {currentPage < totalPages && (
-              <Link href={`/hosting?page=${currentPage + 1}${query ? `&q=${query}` : ''}`}>
+              <Link href={`/${lang}/hosting?page=${currentPage + 1}${query ? `&q=${query}` : ''}`}>
                 <Button variant="outline" size="icon" className="rounded-full">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -197,8 +203,8 @@ export default async function HostingPage({
 
         {(!providers || providers.length === 0) && (
           <div className="text-center py-20 text-muted-foreground">
-            <p>No hosting providers found matching "{query}".</p>
-            <Link href="/hosting" className="text-primary hover:underline mt-2 inline-block">Clear search</Link>
+            <p>{dict.hosting.no_results.replace('{query}', query)}</p>
+            <Link href={`/${lang}/hosting`} className="text-primary hover:underline mt-2 inline-block">{dict.hosting.clear_search}</Link>
           </div>
         )}
 

@@ -7,6 +7,9 @@ import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
  * Accepts multipart/form-data with a "file" field.
  * Returns the public URL of the uploaded image.
  */
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+
 export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
@@ -16,16 +19,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
-        if (!allowedTypes.includes(file.type)) {
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
             return NextResponse.json(
                 { error: "Invalid file type. Allowed: JPEG, PNG, WebP, GIF, SVG" },
                 { status: 400 }
             );
         }
 
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
+        if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json(
                 { error: "File too large. Maximum size: 5MB" },
                 { status: 400 }

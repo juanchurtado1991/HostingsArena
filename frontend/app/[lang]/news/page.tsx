@@ -4,6 +4,8 @@ import { getAffiliateUrl } from "@/lib/affiliates";
 import { createClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/tracking/PageTracker";
 import Link from "next/link";
+import { getDictionary } from "@/get-dictionary";
+import { Locale } from "@/i18n-config";
 
 export const revalidate = 300; // ISR: revalidate every 5 minutes
 
@@ -29,7 +31,13 @@ function estimateReadTime(content: string): string {
     return `${minutes} min read`;
 }
 
-export default async function NewsPage() {
+export default async function NewsPage({
+    params
+}: {
+    params: Promise<{ lang: Locale }>;
+}) {
+    const { lang } = await params;
+    const dict = await getDictionary(lang);
     const posts = await getPublishedPosts();
 
     return (
@@ -38,18 +46,18 @@ export default async function NewsPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-                        Industry <span className="text-primary">Intelligence</span>
+                        {dict.news.title_part1} <span className="text-primary">{dict.news.title_part2}</span>
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                        AI-curated updates on privacy, price changes, and infrastructure verified by our scrapers.
+                        {dict.news.subtitle}
                     </p>
                 </div>
 
                 {posts.length === 0 ? (
                     <div className="text-center py-16">
                         <Sparkles className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
-                        <p className="text-lg font-semibold mb-2">Coming soon</p>
-                        <p className="text-muted-foreground">Our editors are curating fresh industry articles. Check back shortly.</p>
+                        <p className="text-lg font-semibold mb-2">{dict.news.coming_soon_title}</p>
+                        <p className="text-muted-foreground">{dict.news.coming_soon_desc}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -60,7 +68,7 @@ export default async function NewsPage() {
 
                             return (
                                 <GlassCard key={post.id} className="flex flex-col h-full hover:scale-[1.01] transition-transform group">
-                                    <Link href={`/news/${post.slug}`} className="block flex-1 group/link">
+                                    <Link href={`/${lang}/news/${post.slug}`} className="block flex-1 group/link">
                                         {/* Image Placeholder */}
                                         <div className="bg-gray-500/10 h-48 w-full rounded-xl mb-6 flex items-center justify-center relative overflow-hidden p-4 group-hover/link:opacity-90 transition-opacity">
                                             {post.cover_image_url ? (
@@ -94,7 +102,6 @@ export default async function NewsPage() {
                                             {post.excerpt || post.seo_description || ""}
                                         </p>
                                     </Link>
-
                                     <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-center text-xs text-muted-foreground">
                                         <span>
                                             {post.published_at

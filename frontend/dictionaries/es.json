@@ -1,0 +1,187 @@
+{
+    "common": {
+        "view_deal": "Ver Oferta Exclusiva ⚡️",
+        "read_review": "Ver análisis de {provider}",
+        "price_monthly": "{price}/mes",
+        "save_percent": "-{percent}%",
+        "best_deal": "Mejor Oferta",
+        "visit_site": "Visitar Sitio",
+        "loading": "Cargando...",
+        "error": "Error cargando datos",
+        "try_again": "Reintentar",
+        "back_home": "Volver al Inicio",
+        "coming_soon": "Próximamente",
+        "search_placeholder": "Buscar proveedores..."
+    },
+    "nav": {
+        "hosting": "Hosting",
+        "vpn": "VPN",
+        "compare": "Comparar",
+        "calculator": "Calculadora",
+        "news": "Noticias",
+        "login": "Ingresar",
+        "get_started": "Empezar",
+        "dashboard": "Panel",
+        "sign_out": "Salir"
+    },
+    "hero": {
+        "badge": "Basado en Datos de Verificación 100% Reales",
+        "title": "La Verdad Sobre",
+        "title_highlight": "Hosting y VPNs",
+        "subtitle": "Deja de confiar en reviews falsas. Verificamos 120+ proveedores con extracción profunda de datos. Ve tarifas ocultas, límites reales de RAM e historiales de auditoría probados.",
+        "cta_compare": "Comparar Ahora",
+        "cta_browse": "Ver Proveedores"
+    },
+    "home": {
+        "trust_title": "¿Por qué confiar en HostingArena?",
+        "trust_desc": "No confiamos en reclamos de marketing. Rastreamos, verificamos y comparamos cada proveedor diariamente.",
+        "trust_1_title": "Precios Reales de Renovación",
+        "trust_1_desc": "Las empresas de hosting ocultan sus precios reales. Exponemos los aumentos del 200% después del primer año.",
+        "trust_2_title": "Rendimiento Real",
+        "trust_2_desc": "Rastreamos TTFB y Uptime desde múltiples ubicaciones globales, no solo lo que anuncian.",
+        "trust_3_title": "Privacidad Verificada",
+        "trust_3_desc": "Para VPNs, verificamos políticas de No Logs y jurisdicciones para garantizar tu seguridad.",
+        "convince_title": "¿No estás convencido?",
+        "convince_desc": "Compara más de 50 proveedores lado a lado con nuestro motor de datos profundos."
+    },
+    "hosting": {
+        "title": "Proveedores de Hosting Premium",
+        "subtitle": "Compara métricas de rendimiento reales, costos de renovación ocultos y límites de infraestructura.",
+        "search_placeholder": "Buscar proveedores (ej. Bluehost)...",
+        "no_results": "No se encontraron proveedores coincidentes con \"{query}\".",
+        "clear_search": "Limpiar búsqueda",
+        "starting_plan": "Plan Inicial",
+        "renewal": "Renovación",
+        "storage": "Almacenamiento",
+        "inode_limit": "Límite de Inodos",
+        "unlimited": "Ilimitado",
+        "save_percent": "Ahorra {percent}%",
+        "view_deal": "Ver Oferta Exclusiva ⚡️",
+        "read_review": "Leer opinión de {provider}",
+        "page_x_of_y": "Página {current} de {total}"
+    },
+    "vpn": {
+        "title": "Redes Privadas Verificadas",
+        "subtitle": "Verificamos la jurisdicción, historial judicial e infraestructura RAM-only de 60+ VPNs.",
+        "search_placeholder": "Buscar VPNs (ej. Proton)...",
+        "no_results": "No se encontraron proveedores VPN coincidentes con \"{query}\".",
+        "verified": "VERIFICADO",
+        "countries": "{count} Países",
+        "jurisdiction": "Jurisdicción",
+        "servers": "Servidores",
+        "devices": "Dispositivos",
+        "simultaneous": "Simultáneos",
+        "audited_by": "Auditado Por",
+        "pending": "Pendiente"
+    },
+    "compare": {
+        "badge": "Verdad vs Verdad",
+        "title": "Comparar Proveedores Lado a Lado",
+        "subtitle": "Selecciona dos proveedores para ver sus diferencias en precio de renovación, límites ocultos y benchmarks de rendimiento.",
+        "tab_hosting": "Hosting",
+        "tab_vpn": "VPNs",
+        "provider_a": "Proveedor A",
+        "provider_b": "Proveedor B",
+        "select_instruction_title": "Selecciona proveedores para comparar",
+        "select_instruction_desc": "Elige dos proveedores arriba para ver el desglose."
+    },
+    "calculator": {
+        "title": "Calculadora de Costo Real",
+        "subtitle": "Mira cuánto cuesta realmente el hosting \"barato\" después de que termina la promo.",
+        "stop_bleeding": "¡Detén el sangrado! Podrías desperdiciar {amount} en {years} años.",
+        "projection_period": "Período de Proyección",
+        "provider_a_trap": "Proveedor A (¿La Trampa?)",
+        "provider_b_savior": "Proveedor B (¿El Salvador?)",
+        "intro": "Intro",
+        "renewal": "Renovación",
+        "loser": "El Perdedor",
+        "total_cost": "Costo total en {years} años.",
+        "winner": "El Ganador",
+        "you_save": "¡Ahorras {amount}!",
+        "switch_to": "Cambiar a {provider} y Ahorrar ⚡️"
+    },
+    "news": {
+        "title_part1": "Inteligencia",
+        "title_part2": "de la Industria",
+        "subtitle": "Actualizaciones curadas por IA sobre privacidad, cambios de precios e infraestructura verificada por nuestros scrapers.",
+        "coming_soon_title": "Próximamente",
+        "coming_soon_desc": "Nuestros editores están curando artículos frescos de la industria. Vuelve pronto.",
+        "read_time": "{minutes} min de lectura",
+        "check_deal": "Ver Oferta"
+    },
+    "footer": {
+        "tagline": "Reseñas basadas en datos para la infraestructura web moderna.",
+        "link_compare_vpn": "Comparar VPNs",
+        "link_nordvpn": "Reseña de NordVPN",
+        "link_expressvpn": "Reseña de ExpressVPN",
+        "link_compare_hosting": "Comparar Hosting",
+        "link_bluehost": "Reseña de Bluehost",
+        "link_siteground": "Reseña de SiteGround",
+        "company": "Compañía",
+        "link_about": "Sobre Nosotros",
+        "link_methodology": "Metodología",
+        "link_contact": "Contacto",
+        "rights_reserved": "Todos los derechos reservados."
+    },
+    "dashboard": {
+        "title": "Estado del Sistema",
+        "subtitle": "Monitoreo en vivo del ecosistema HostingArena.",
+        "search_placeholder": "Buscar tareas...",
+        "tabs": {
+            "overview": "Resumen",
+            "tasks": "Tareas",
+            "affiliates": "Afiliados",
+            "newsroom": "Noticias IA",
+            "workflows": "Flujos de Scrapers",
+            "tutorial": "Tutorial"
+        },
+        "metrics": {
+            "monitored_scrapers": "Scrapers Monitoreados",
+            "success_rate": "Tasa de Éxito",
+            "avg_duration": "Duración Promedio",
+            "est_revenue": "Ingresos Est.",
+            "success": "Éxito",
+            "fail": "Fallo"
+        },
+        "scrapers": {
+            "title": "Salud de Scrapers en Vivo",
+            "copy_report": "Copiar Reporte",
+            "refresh": "Actualizar",
+            "col_provider": "Proveedor",
+            "col_type": "Tipo",
+            "col_status": "Estado",
+            "col_items": "Items Sincronizados",
+            "col_duration": "Duración",
+            "col_last_update": "Última Actualización",
+            "col_message": "Mensaje"
+        },
+        "tasks": {
+            "title": "Centro de Tareas",
+            "pending_count": "{count} tareas pendientes",
+            "page_x_of_y": "Página {current} de {total}",
+            "btn_scan": "Escanear",
+            "btn_clear_all": "Borrar Todo",
+            "btn_refresh": "Actualizar",
+            "priority_critical": "Crítica",
+            "priority_high": "Alta",
+            "priority_normal": "Normal",
+            "priority_low": "Baja",
+            "type_links": "Links Faltantes",
+            "type_scrapers": "Scrapers",
+            "filter_all": "Todas",
+            "btn_resolve": "Resolver",
+            "btn_dismiss": "Descartar",
+            "empty_title": "¡Todo en Orden! 🎉",
+            "empty_desc": "No hay tareas pendientes. Tus afiliados y scrapers están funcionando perfectamente.",
+            "prev": "Anterior",
+            "next": "Siguiente"
+        },
+        "tutorial": {
+            "newsroom": {
+                "title": "Newsroom IA & SEO",
+                "category": "Contenido",
+                "content": "Crea y distribuye noticias con el poder de GPT-4o.\n\n• **Configuración IA**: Elige `GPT-4o` para análisis profundos o `Mini` para velocidad. Ajusta la longitud (800-2500 palabras).\n• **Social Tab**: Edita los posts generados para Twitter y LinkedIn antes de publicar.\n• **Publicar y Compartir**: El botón `Publish & Share` guarda el post y envía los datos a Make.com para su distribución automática.\n• **Indexación**: Usa el botón 🌐 para pedirle a Google que indexe tu artículo inmediatamente."
+            }
+        }
+    }
+}
