@@ -1,27 +1,36 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { match as matchLocale } from '@formatjs/intl-localematcher';
-import Negotiator from 'negotiator';
+// import Negotiator from 'negotiator';
 import { i18n } from './i18n-config';
 
 // 1. Get locale function
 function getLocale(request: NextRequest): string {
     try {
-        // Negotiator expects plain object so we need to transform headers
-        const negotiatorHeaders: Record<string, string> = {};
-        request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
+        // Simple manual locale detection for Edge Runtime compatibility
+        // 1. Check cookies
+        const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+        if (cookieLocale && i18n.locales.includes(cookieLocale as any)) {
+            return cookieLocale;
+        }
 
-        // @ts-ignore locales are readonly
-        const locales: string[] = i18n.locales;
+        // 2. Check Accept-Language header
+        const acceptLanguage = request.headers.get('accept-language');
+        if (acceptLanguage) {
+            // Very basic parsing: "es-ES,es;q=0.9,en;q=0.8" -> ["es-ES", "es", "en"]
+            const preferredLocales = acceptLanguage
+                .split(',')
+                .map(part => part.split(';')[0].trim())
+                .map(part => part.split('-')[0]); // simplified to base language (es-ES -> es)
 
-        // Use negotiator and intl-localematcher to get best locale
-        let languages = new Negotiator({ headers: negotiatorHeaders }).languages(
-            locales
-        );
+            for (const lang of preferredLocales) {
+                if (i18n.locales.includes(lang as any)) {
+                    return lang;
+                }
+            }
+        }
 
-        const locale = matchLocale(languages, locales, i18n.defaultLocale);
-
-        return locale;
+        return i18n.defaultLocale;
     } catch (error) {
         console.error("Middleware getLocale error:", error);
         return i18n.defaultLocale;
