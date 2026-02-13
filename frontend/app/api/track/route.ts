@@ -11,7 +11,7 @@ import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { path, referrer, post_slug } = body;
+        const { path, referrer, post_slug, utm_source, utm_medium, utm_campaign } = body;
 
         if (!path || typeof path !== "string") {
             return NextResponse.json({ error: "path is required" }, { status: 400 });
@@ -22,6 +22,12 @@ export async function POST(request: NextRequest) {
         const country = request.headers.get("x-vercel-ip-country") ||
             request.headers.get("cf-ipcountry") || null;
 
+        // Simple Device Detection
+        let deviceType = 'desktop';
+        if (/mobile/i.test(userAgent)) deviceType = 'mobile';
+        if (/tablet|ipad/i.test(userAgent)) deviceType = 'tablet';
+        if (/bot|crawler|spider/i.test(userAgent)) deviceType = 'bot';
+
         await supabase.from("page_views").insert({
             path: path.slice(0, 500),
             post_slug: post_slug || null,
@@ -29,6 +35,10 @@ export async function POST(request: NextRequest) {
             user_agent: userAgent.slice(0, 500),
             country: country?.slice(0, 10) || null,
             ip_address: (request.headers.get("x-forwarded-for")?.split(',')[0] || "unknown").slice(0, 45),
+            device_type: deviceType,
+            utm_source: utm_source?.slice(0, 100),
+            utm_medium: utm_medium?.slice(0, 100),
+            utm_campaign: utm_campaign?.slice(0, 100),
         });
 
         return NextResponse.json({ ok: true });

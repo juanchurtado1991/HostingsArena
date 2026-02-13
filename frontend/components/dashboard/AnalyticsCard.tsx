@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus, Users } from "lucide-react";
+import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus, Users, MousePointerClick, Smartphone, Laptop, Tablet } from "lucide-react";
 
 interface AnalyticsData {
     summary: { today: number; week: number; month: number };
@@ -11,7 +11,7 @@ interface AnalyticsData {
     dailyTraffic: { day: string; views: number }[];
     topReferrers: { referrer: string; views: number }[];
     topCountries: { country: string; views: number }[];
-    recentVisitors: { ip_address: string; country: string; path: string; referrer: string; created_at: string }[];
+    recentActivity: { type: 'view' | 'click'; ip_address: string; country: string; detail: string; source: string; created_at: string; device_type: string }[];
 }
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
@@ -103,7 +103,7 @@ export function AnalyticsCard() {
         { label: "pages", title: "Top Pages", icon: <Eye className="w-3.5 h-3.5" /> },
         { label: "referrers", title: "Referrers", icon: <ExternalLink className="w-3.5 h-3.5" /> },
         { label: "countries", title: "Countries", icon: <Globe className="w-3.5 h-3.5" /> },
-        { label: "visitors", title: "Live Visitors", icon: <Users className="w-3.5 h-3.5" /> },
+        { label: "visitors", title: "Activity Feed", icon: <Users className="w-3.5 h-3.5" /> },
     ] as const;
 
     return (
@@ -230,48 +230,60 @@ export function AnalyticsCard() {
                 )}
 
                 {activeView === "visitors" && (
-                    data.recentVisitors?.length > 0 ? (
+                    data.recentActivity?.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead className="text-xs text-muted-foreground border-b border-border/50">
                                     <tr>
                                         <th className="px-4 py-2 font-medium">Time</th>
-                                        <th className="px-4 py-2 font-medium">IP Address</th>
-                                        <th className="px-4 py-2 font-medium">Country</th>
-                                        <th className="px-4 py-2 font-medium">Path</th>
-                                        <th className="px-4 py-2 font-medium">Referrer</th>
+                                        <th className="px-4 py-2 font-medium">Action</th>
+                                        <th className="px-4 py-2 font-medium">Device</th>
+                                        <th className="px-4 py-2 font-medium">Location</th>
+                                        <th className="px-4 py-2 font-medium">Details</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/30">
-                                    {data.recentVisitors.map((v, i) => (
+                                    {data.recentActivity.map((v, i) => (
                                         <tr key={i} className="hover:bg-muted/30 transition-colors">
                                             <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
                                                 {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </td>
-                                            <td className="px-4 py-2.5 font-mono text-xs">{v.ip_address || "—"}</td>
+                                            <td className="px-4 py-2.5">
+                                                <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>
+                                                    {v.type === 'click' ? <MousePointerClick className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    {v.type === 'click' ? "Click" : "View"}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-2.5 text-muted-foreground">
+                                                {v.device_type === 'mobile' ? <Smartphone className="w-3.5 h-3.5" title="Mobile" /> :
+                                                    v.device_type === 'tablet' ? <Tablet className="w-3.5 h-3.5" title="Tablet" /> :
+                                                        <Laptop className="w-3.5 h-3.5" title="Desktop" />}
+                                            </td>
                                             <td className="px-4 py-2.5">
                                                 {v.country ? (
-                                                    <span className="flex items-center gap-1.5">
+                                                    <span className="flex items-center gap-1.5 cursor-help" title={v.ip_address || "Unknown IP"}>
                                                         <img
                                                             src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`}
                                                             alt={v.country}
                                                             className="w-4 h-3 object-cover rounded-[1px]"
                                                             onError={(e) => e.currentTarget.style.display = 'none'}
                                                         />
-                                                        <span className="truncate max-w-[100px]">{getCountryName(v.country)}</span>
+                                                        <span className="truncate max-w-[100px] text-xs">{getCountryName(v.country)}</span>
                                                     </span>
-                                                ) : <span className="text-muted-foreground">—</span>}
+                                                ) : <span className="text-muted-foreground text-xs">—</span>}
                                             </td>
-                                            <td className="px-4 py-2.5 max-w-[150px] truncate text-muted-foreground" title={v.path}>{v.path}</td>
-                                            <td className="px-4 py-2.5 max-w-[150px] truncate text-muted-foreground" title={v.referrer || ""}>
-                                                {v.referrer ? new URL(v.referrer).hostname : "—"}
+                                            <td className="px-4 py-2.5 text-xs">
+                                                <div className="flex flex-col max-w-[200px]">
+                                                    <span className="truncate font-medium" title={v.detail}>{v.detail}</span>
+                                                    {v.source && <span className="text-muted-foreground truncate" title={v.source}>via {v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}</span>}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    ) : <p className="text-sm text-muted-foreground text-center py-6">No recent visitors tracked.</p>
+                    ) : <p className="text-sm text-muted-foreground text-center py-6">No recent activity tracked.</p>
                 )}
             </div>
         </GlassCard>

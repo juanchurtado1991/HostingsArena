@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
         const { data: topCountries } = await supabase.rpc("get_top_countries", { days_back: 30 });
 
-        const { data: recentVisitors } = await supabase.rpc("get_recent_visitors", { limit_count: 50 });
+        const { data: recentActivity } = await supabase.rpc("get_recent_activity", { limit_count: 50 });
 
         return NextResponse.json({
             summary: {
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
             dailyTraffic: dailyTraffic || [],
             topReferrers: topReferrers || [],
             topCountries: topCountries || [],
-            recentVisitors: recentVisitors || [],
+            recentActivity: recentActivity || [],
         });
     } catch (err) {
         console.error("Analytics API error:", err);

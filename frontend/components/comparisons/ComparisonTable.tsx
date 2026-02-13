@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, Shield, Server, Zap, Globe, Cpu, HardDrive, Mail, Cloud, ShieldCheck, Trophy, Lock, Swords } from "lucide-react";
 import Link from "next/link";
+import { trackAffiliateClick } from "@/lib/analytics";
 
 interface ComparisonTableProps {
   data: (HostingProvider | VPNProvider)[];
@@ -328,7 +329,12 @@ export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTab
               {data.map((p, i) => (
                 <td key={i} className="p-8 text-center border-l border-border/50 bg-muted/5">
                   <Button className="w-full h-12 rounded-full font-black text-lg shadow-xl hover:scale-105 transition-transform" asChild>
-                    <a href={p.website_url || "#"} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={p.website_url || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackAffiliateClick(p.provider_name, p.website_url || "#", "comparison_table_final")}
+                    >
                       Get Offer <ChevronRight className="ml-1 w-5 h-5" />
                     </a>
                   </Button>

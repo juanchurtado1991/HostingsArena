@@ -4,6 +4,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Trophy, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { trackAffiliateClick } from "@/lib/analytics";
 
 const TOP_PROVIDERS = [
     {
@@ -117,8 +118,16 @@ export function TopProviders({ dict, lang = 'en' }: { dict?: any, lang?: string 
                                     className={`w-full font-bold text-lg h-12 rounded-xl shadow-lg transition-all
                         ${provider.rank === 1 ? 'bg-primary hover:bg-primary/90 hover:shadow-primary/25' : 'bg-white/5 hover:bg-white/10 text-foreground border border-white/10'}
                     `}
+                                    asChild
                                 >
-                                    {dict?.view_deal || "View Deal"} {provider.rank === 1 && '⚡️'}
+                                    <a
+                                        href={provider.affiliateLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => trackAffiliateClick(provider.name, provider.affiliateLink, "top_providers_card")}
+                                    >
+                                        {dict?.view_deal || "View Deal"} {provider.rank === 1 && '⚡️'}
+                                    </a>
                                 </Button>
                                 <Link href={`/${lang}/hosting/${provider.slug}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
                                     {dict?.read_review?.replace("{provider}", "") || "Read detailed review"}
