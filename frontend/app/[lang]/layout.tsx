@@ -7,7 +7,7 @@ import { getDictionary } from "../../get-dictionary";
 import type { Locale } from "../../i18n-config";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"),
   title: {
     default: "HostingArena | Real Data Comparisons",
     template: "%s | HostingArena"
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_SITE_URL!,
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com",
     siteName: 'HostingsArena',
     images: [
       {
