@@ -6,21 +6,26 @@ import { i18n } from './i18n-config';
 
 // 1. Get locale function
 function getLocale(request: NextRequest): string {
-    // Negotiator expects plain object so we need to transform headers
-    const negotiatorHeaders: Record<string, string> = {};
-    request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
+    try {
+        // Negotiator expects plain object so we need to transform headers
+        const negotiatorHeaders: Record<string, string> = {};
+        request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
 
-    // @ts-ignore locales are readonly
-    const locales: string[] = i18n.locales;
+        // @ts-ignore locales are readonly
+        const locales: string[] = i18n.locales;
 
-    // Use negotiator and intl-localematcher to get best locale
-    let languages = new Negotiator({ headers: negotiatorHeaders }).languages(
-        locales
-    );
+        // Use negotiator and intl-localematcher to get best locale
+        let languages = new Negotiator({ headers: negotiatorHeaders }).languages(
+            locales
+        );
 
-    const locale = matchLocale(languages, locales, i18n.defaultLocale);
+        const locale = matchLocale(languages, locales, i18n.defaultLocale);
 
-    return locale;
+        return locale;
+    } catch (error) {
+        console.error("Middleware getLocale error:", error);
+        return i18n.defaultLocale;
+    }
 }
 
 export async function middleware(request: NextRequest) {
@@ -44,13 +49,24 @@ export async function middleware(request: NextRequest) {
     const isAdminApiPath = pathname.startsWith('/api/admin');
 
     if (isDashboardPath || isAdminApiPath) {
+        // SAFEGUARD: Check for Supabase Env Vars
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+            console.error("CRITICAL: Missing Supabase Environment Variables in Middleware");
+            // If in admin API, return JSON error
+            if (isAdminApiPath) {
+                return NextResponse.json({ error: 'Server Configuration Error: Missing Env Vars' }, { status: 500 });
+            }
+            // If in dashboard, redirect to home or show error (for now redirect to home to avoid loop)
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+
         let supabaseResponse = NextResponse.next({
             request,
         });
 
         const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
             {
                 cookies: {
                     getAll() {
