@@ -255,9 +255,9 @@ export function AnalyticsCard() {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-2.5 text-muted-foreground">
-                                                {v.device_type === 'mobile' ? <Smartphone className="w-3.5 h-3.5" title="Mobile" /> :
-                                                    v.device_type === 'tablet' ? <Tablet className="w-3.5 h-3.5" title="Tablet" /> :
-                                                        <Laptop className="w-3.5 h-3.5" title="Desktop" />}
+                                                {v.device_type === 'mobile' ? <span title="Mobile"><Smartphone className="w-3.5 h-3.5" /></span> :
+                                                    v.device_type === 'tablet' ? <span title="Tablet"><Tablet className="w-3.5 h-3.5" /></span> :
+                                                        <span title="Desktop"><Laptop className="w-3.5 h-3.5" /></span>}
                                             </td>
                                             <td className="px-4 py-2.5">
                                                 {v.country ? (
