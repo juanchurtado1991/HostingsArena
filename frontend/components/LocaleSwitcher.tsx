@@ -11,7 +11,7 @@ const languages = [
     { value: "es", label: "Español", flag: "🇪🇸" },
 ];
 
-export function LanguageSelector() {
+export function LocaleSwitcher() {
     const [open, setOpen] = React.useState(false);
     const pathname = usePathname();
     const router = useRouter();

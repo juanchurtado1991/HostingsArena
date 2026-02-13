@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Menu, X, LayoutDashboard, LogOut, User as UserIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { GlobalSearch } from "./GlobalSearch";
-import { LanguageSelector } from "./LanguageSelector";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
@@ -135,7 +135,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
 
           <div className="hidden md:flex items-center gap-4">
             <GlobalSearch />
-            <LanguageSelector />
+            <LocaleSwitcher />
 
             {user ? (
               <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             <div className="mb-4 flex flex-col gap-4">
               <GlobalSearch />
               <div className="flex justify-start px-2">
-                <LanguageSelector />
+                <LocaleSwitcher />
               </div>
             </div>
             {navLinks.map((link) => (
