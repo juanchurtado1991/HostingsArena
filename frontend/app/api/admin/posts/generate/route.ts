@@ -216,6 +216,7 @@ export async function POST(request: NextRequest) {
                             4. **Social Media Ready**:
                                 - Twitter: Short, punchy, curiosity-inducing (max 280 chars).
                                 - LinkedIn: Professional, value-driven, industry insight.
+                                - Facebook: Friendly, engaging, story-oriented or community-focused.
                                 - Hashtags: 3-5 relevant tags.
                             
                             Return JSON:
@@ -227,6 +228,7 @@ export async function POST(request: NextRequest) {
                                 "image_prompt": "Cinematic 8k photography, futuristic server room, neon cyan and blue accents, depth of field",
                                 "social_tw_text": "Twitter post content (strings)",
                                 "social_li_text": "LinkedIn post content (string)",
+                                "social_fb_text": "Facebook post content (string)",
                                 "social_hashtags": ["tag1", "tag2"],
                                 "rating_score": 90
                             }`
@@ -249,6 +251,7 @@ export async function POST(request: NextRequest) {
                     image_prompt: "server room tech",
                     social_tw_text: `Is ${provider.provider_name} the best host in ${currentYear}? We tested it. 👇`,
                     social_li_text: `We just completed our deep dive review of ${provider.provider_name}. Here is what the data says about their performance and pricing.`,
+                    social_fb_text: `Looking for a new host? We just put ${provider.provider_name} to the test. Check out our findings!`,
                     social_hashtags: ["webhosting", "techreview", "server"],
                     rating_score: 80
                 };
@@ -280,6 +283,7 @@ export async function POST(request: NextRequest) {
                 related_provider_name: provider.provider_name,
                 image_prompt: meta.image_prompt,
                 social_tw_text: meta.social_tw_text,
+                social_fb_text: meta.social_fb_text,
                 social_li_text: meta.social_li_text,
                 social_hashtags: meta.social_hashtags,
                 updated_at: new Date().toISOString(),

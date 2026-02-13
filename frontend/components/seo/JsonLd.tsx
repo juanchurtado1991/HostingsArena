@@ -16,15 +16,15 @@ export function JsonLd({ post, url }: JsonLdProps) {
         "dateModified": post.updated_at ? new Date(post.updated_at).toISOString() : new Date(post.created_at).toISOString(),
         "author": [{
             "@type": "Person",
-            "name": "HostingArena Team",
-            "url": "https://hostingarena.com/about"
+            "name": "HostingsArena Team",
+            "url": "https://hostingsarena.com/about"
         }],
         "publisher": {
             "@type": "Organization",
-            "name": "HostingArena",
+            "name": "HostingsArena",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://hostingarena.com/logo.png"
+                "url": "https://hostingsarena.com/logo.png"
             }
         },
         "mainEntityOfPage": {

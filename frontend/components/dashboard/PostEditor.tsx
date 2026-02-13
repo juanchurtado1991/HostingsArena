@@ -47,6 +47,7 @@ export interface Post {
     published_at: string | null;
     created_at: string;
     social_tw_text: string | null;
+    social_fb_text: string | null;
     social_li_text: string | null;
     social_hashtags: string[] | null;
     updated_at?: string;
@@ -337,6 +338,7 @@ function PostEditorModal({
     const [activeSection, setActiveSection] = useState<"content" | "seo" | "social" | "image">("content");
     const [coverImageUrl, setCoverImageUrl] = useState(post?.cover_image_url || "");
     const [socialTw, setSocialTw] = useState(post?.social_tw_text || "");
+    const [socialFb, setSocialFb] = useState(post?.social_fb_text || "");
     const [socialLi, setSocialLi] = useState(post?.social_li_text || "");
     const [socialTags, setSocialTags] = useState(post?.social_hashtags?.join(" ") || "");
     const [uploading, setUploading] = useState(false);
@@ -347,7 +349,6 @@ function PostEditorModal({
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [publishStatus, setPublishStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [publishError, setPublishError] = useState<string | undefined>(undefined);
-    const [socialLinks, setSocialLinks] = useState<{ x_url?: string; li_url?: string } | undefined>(undefined);
 
 
     const editor = useEditor({
@@ -400,6 +401,7 @@ function PostEditorModal({
             setRelatedProvider(post.related_provider_name || "");
             setCoverImageUrl(post.cover_image_url || "");
             setSocialTw(post.social_tw_text || "");
+            setSocialFb(post.social_fb_text || "");
             setSocialLi(post.social_li_text || "");
             setSocialTags(post.social_hashtags?.join(" ") || "");
             editor?.commands.setContent(post.content);
@@ -489,11 +491,10 @@ function PostEditorModal({
             setShowPublishModal(true);
             setPublishStatus('loading');
             setPublishError(undefined);
-            setSocialLinks(undefined);
         }
 
         try {
-            await onSave({
+            const savedPost = await onSave({
                 id: post?.id,
                 title,
                 slug,
@@ -508,37 +509,39 @@ function PostEditorModal({
                 image_prompt: imagePrompt || null,
                 cover_image_url: coverImageUrl || null,
                 social_tw_text: socialTw || null,
+                social_fb_text: socialFb || null,
                 social_li_text: socialLi || null,
                 social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
             });
 
-            if (publish) {
-                // 1. Trigger Webhook (Synchronous)
-                const webhookRes = await fetch("/api/admin/posts/publish-webhook", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: post?.id })
-                });
+            // Auto-append URL to Twitter if missing and publishing
+            const livePostUrl = `https://hostingsarena.com/news/${slug}`;
+            let finalSocialTw = socialTw;
+            if (publish && finalSocialTw && !finalSocialTw.includes('hostingsarena.com/news/')) {
+                finalSocialTw = `${finalSocialTw}\n\n${livePostUrl}`;
+                // We update the local state too so it shows in the editor and is saved
+                setSocialTw(finalSocialTw);
+                // We need to re-save if we updated the text to ensure the webhook gets the latest
+                await onSave({ id: post?.id || (savedPost as any)?.post?.id, social_tw_text: finalSocialTw });
+            }
 
-                if (!webhookRes.ok) {
-                    const errorData = await webhookRes.json();
-                    throw new Error(errorData.details || errorData.error || "Distribution failed");
+            // If it was a new post, onSave should return the data with the new ID
+            // The API returns { post: data }
+            const postId = (savedPost as any)?.post?.id || post?.id;
+
+            if (publish && postId) {
+                // Trigger Google Indexing
+                try {
+                    await fetch("/api/admin/posts/index-google", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
+                    });
+                } catch (idxErr) {
+                    console.error("Google Indexing trigger failed:", idxErr);
+                    // We don't fail the whole publish for indexing, as the post is already live
                 }
 
-                const webhookData = await webhookRes.json();
-
-                // 2. Trigger Google Indexing (Mock)
-                await fetch("/api/admin/posts/index-google", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ url: `https://hostingarena.com/news/${slug}` })
-                });
-
-                // Success!
-                setSocialLinks({
-                    x_url: webhookData.data?.x_url,
-                    li_url: webhookData.data?.li_url
-                });
                 setPublishStatus('success');
             }
         } catch (err) {
@@ -552,33 +555,6 @@ function PostEditorModal({
         }
     };
 
-    const handleRetryDistribution = async () => {
-        setPublishStatus('loading');
-        setPublishError(undefined);
-        try {
-            const webhookRes = await fetch("/api/admin/posts/publish-webhook", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: post?.id })
-            });
-
-            if (!webhookRes.ok) {
-                const errorData = await webhookRes.json();
-                throw new Error(errorData.details || errorData.error || "Distribution failed");
-            }
-
-            const webhookData = await webhookRes.json();
-
-            setSocialLinks({
-                x_url: webhookData.data?.x_url,
-                li_url: webhookData.data?.li_url
-            });
-            setPublishStatus('success');
-        } catch (err) {
-            setPublishStatus('error');
-            setPublishError(err instanceof Error ? err.message : "Retry failed");
-        }
-    };
 
     const INPUT_CLASS = "w-full px-4 py-3 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-200 placeholder:text-muted-foreground/50";
 
@@ -723,7 +699,7 @@ function PostEditorModal({
                                     </p>
                                     <p className="text-sm font-semibold text-blue-300 mt-2 line-clamp-1">{seoTitle || title || "Page Title"}</p>
                                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{seoDesc || excerpt || "Meta description will appear here..."}</p>
-                                    <p className="text-[10px] text-emerald-400 mt-1 font-mono">hostingarena.com/news/{slug || "slug"}</p>
+                                    <p className="text-[10px] text-emerald-400 mt-1 font-mono">hostingsarena.com/news/{slug || "slug"}</p>
                                 </div>
 
                                 <div>
@@ -799,6 +775,46 @@ function PostEditorModal({
 
                                 <div className="h-px bg-border/50" />
 
+                                {/* Facebook */}
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
+                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#1877F2]" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                                        Facebook Post
+                                    </label>
+
+                                    {/* Preview Card */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
+                                        <div className="flex gap-2 mb-3">
+                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-blue-600">HostingsArena</p>
+                                                <p className="text-xs text-muted-foreground">Just now · 🌍</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{socialFb || "What's on your mind? Share this with your friends..."}</p>
+                                        {coverImageUrl && (
+                                            <div className="rounded-lg overflow-hidden border border-border/50 bg-muted/20">
+                                                <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
+                                                <div className="p-3 bg-muted/30 border-t border-border/50">
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">HOSTINGSARENA.COM</p>
+                                                    <p className="text-sm font-bold text-foreground mt-1">{title || "Article Title"}</p>
+                                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{seoDesc || excerpt || "Read the full article..."}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mt-3">{socialTags}</p>
+                                    </div>
+
+                                    <textarea
+                                        value={socialFb}
+                                        onChange={(e) => setSocialFb(e.target.value)}
+                                        placeholder="What's on your mind?"
+                                        className={`${INPUT_CLASS} h-32 resize-none`}
+                                    />
+                                </div>
+
+                                <div className="h-px bg-border/50" />
+
                                 {/* LinkedIn */}
                                 <div className="space-y-4">
                                     <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
@@ -811,7 +827,7 @@ function PostEditorModal({
                                         <div className="flex gap-2 mb-3">
                                             <div className="w-10 h-10 rounded-sm bg-primary/10 flex-shrink-0" />
                                             <div>
-                                                <p className="text-sm font-semibold">HostingArena</p>
+                                                <p className="text-sm font-semibold">HostingsArena</p>
                                                 <p className="text-xs text-muted-foreground">redefining verified benchmarks.</p>
                                             </div>
                                         </div>
@@ -1000,6 +1016,20 @@ function PostEditorModal({
                     </div>
                 </div>
             </div>
+
+            <PublishSummaryModal
+                isOpen={showPublishModal}
+                onClose={() => setShowPublishModal(false)}
+                status={publishStatus}
+                postUrl={`https://hostingsarena.com/news/${slug}`}
+                socialContent={{
+                    twitter: socialTw || "",
+                    facebook: socialFb || "",
+                    linkedin: socialLi || "",
+                    hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : undefined
+                }}
+                errorDetails={publishError}
+            />
         </div>
     );
 }
@@ -1236,8 +1266,9 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Failed to save");
-        setEditingPost(null);
+        // We no longer close the modal here to allow the user to see the publish summary or continue editing
         fetchPosts();
+        return result;
     };
 
     const handleDelete = async (id: string) => {

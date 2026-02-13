@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
             title, slug, content, excerpt, category,
             status: postStatus, seo_title, seo_description,
             target_keywords, related_provider_name, image_prompt,
-            is_ai_generated,
+            is_ai_generated, social_tw_text, social_li_text, social_hashtags
         } = body;
 
         if (!title) {
@@ -92,6 +92,9 @@ export async function POST(request: NextRequest) {
                 related_provider_name: related_provider_name || null,
                 image_prompt: image_prompt || null,
                 is_ai_generated: is_ai_generated || false,
+                social_tw_text: social_tw_text || null,
+                social_li_text: social_li_text || null,
+                social_hashtags: social_hashtags || null,
                 published_at: postStatus === 'published' ? new Date().toISOString() : null,
             })
             .select()

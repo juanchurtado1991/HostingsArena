@@ -48,8 +48,8 @@ export async function generateMetadata({ params }: PageProps) {
         openGraph: {
             title: post.seo_title || post.title,
             description: post.seo_description || post.excerpt,
-            url: `https://hostingarena.com/news/${post.slug}`,
-            siteName: 'HostingArena',
+            url: `https://hostingsarena.com/news/${post.slug}`,
+            siteName: 'HostingsArena',
             images: post.cover_image_url ? [
                 {
                     url: post.cover_image_url,
@@ -109,7 +109,7 @@ export default async function NewsPostPage({ params }: PageProps) {
 
     return (
         <div className="min-h-screen pt-24 pb-20 px-6">
-            <JsonLd post={post} url={`https://hostingarena.com/news/${post.slug}`} />
+            <JsonLd post={post} url={`https://hostingsarena.com/news/${post.slug}`} />
             <PageTracker postSlug={post.slug} />
 
             <article className="max-w-4xl mx-auto">
