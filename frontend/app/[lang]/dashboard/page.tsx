@@ -11,7 +11,6 @@ export default async function DashboardPage({
 }) {
     const { lang } = await params;
 
-    // Server-side auth check
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
