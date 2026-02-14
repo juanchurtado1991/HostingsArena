@@ -5,13 +5,22 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus, Users, MousePointerClick, Smartphone, Laptop, Tablet } from "lucide-react";
 
 interface AnalyticsData {
-    summary: { today: number; week: number; month: number };
+    summary: {
+        today: number;
+        week: number;
+        month: number;
+        clicksToday?: number;
+        clicksWeek?: number;
+        clicksMonth?: number;
+    };
     topPages: { path: string; views: number }[];
     topPosts: { post_slug: string; views: number }[];
     dailyTraffic: { day: string; views: number }[];
     topReferrers: { referrer: string; views: number }[];
     topCountries: { country: string; views: number }[];
     recentActivity: { type: 'view' | 'click'; ip_address: string; country: string; detail: string; source: string; created_at: string; device_type: string }[];
+    clicksByProvider: { provider_name: string; click_count: number }[];
+    dailyClicks: { date: string; count: number }[];
 }
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
@@ -56,7 +65,7 @@ function TrendBadge({ current, previous }: { current: number; previous: number }
 export function AnalyticsCard() {
     const [data, setData] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeView, setActiveView] = useState<"posts" | "pages" | "referrers" | "countries" | "visitors">("visitors");
+    const [activeView, setActiveView] = useState<"posts" | "pages" | "referrers" | "countries" | "visitors" | "clicks">("visitors");
 
     useEffect(() => {
         fetch("/api/admin/analytics")
@@ -99,12 +108,17 @@ export function AnalyticsCard() {
     const prevWeekNormalized = Math.round(prevWeek * (7 / 23)); // normalize ~23 remaining days to 7
 
     const views = [
+        { label: "visitors", title: "Activity Feed", icon: <Users className="w-3.5 h-3.5" /> },
+        { label: "clicks", title: "Affiliate Clicks", icon: <MousePointerClick className="w-3.5 h-3.5" /> },
         { label: "posts", title: "Top Posts", icon: <FileText className="w-3.5 h-3.5" /> },
         { label: "pages", title: "Top Pages", icon: <Eye className="w-3.5 h-3.5" /> },
         { label: "referrers", title: "Referrers", icon: <ExternalLink className="w-3.5 h-3.5" /> },
         { label: "countries", title: "Countries", icon: <Globe className="w-3.5 h-3.5" /> },
-        { label: "visitors", title: "Activity Feed", icon: <Users className="w-3.5 h-3.5" /> },
     ] as const;
+
+    const globalCTR = data.summary.month > 0
+        ? ((data.summary.clicksMonth || 0) / data.summary.month * 100).toFixed(2)
+        : "0.00";
 
     return (
         <GlassCard className="p-8 mb-8" hoverEffect={false}>
@@ -115,33 +129,74 @@ export function AnalyticsCard() {
                         <BarChart3 className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold">Site Analytics</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">Page views from tracked traffic</p>
+                        <h3 className="text-xl font-bold">Performance & Analytics</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">Global CTR: <span className="text-primary font-bold">{globalCTR}%</span> across all tracking</p>
                     </div>
                 </div>
-                <TrendBadge current={thisWeek} previous={prevWeekNormalized} />
+                <div className="flex flex-col items-end">
+                    <TrendBadge current={thisWeek} previous={prevWeekNormalized} />
+                    <span className="text-[10px] text-muted-foreground">Views Trend</span>
+                </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-center">
-                    <p className="text-2xl font-bold">{data.summary.today.toLocaleString()}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-1">Today</p>
+            {/* Summary Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Views Summary */}
+                <div className="p-4 rounded-2xl bg-muted/40 border border-border/50">
+                    <div className="flex items-center gap-2 mb-2 text-blue-400">
+                        <Eye className="w-4 h-4" />
+                        <span className="text-[10px] uppercase tracking-widest font-bold">Page Views</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center">
+                            <p className="text-lg font-bold">{data.summary.today.toLocaleString()}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">Today</p>
+                        </div>
+                        <div className="text-center border-x border-border/50">
+                            <p className="text-lg font-bold">{data.summary.week.toLocaleString()}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">7d</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-lg font-bold">{data.summary.month.toLocaleString()}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">30d</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-center">
-                    <p className="text-2xl font-bold">{data.summary.week.toLocaleString()}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-1">Last 7 days</p>
+
+                {/* Clicks Summary */}
+                <div className="p-4 rounded-2xl bg-muted/40 border border-border/50">
+                    <div className="flex items-center gap-2 mb-2 text-green-400">
+                        <MousePointerClick className="w-4 h-4" />
+                        <span className="text-[10px] uppercase tracking-widest font-bold">Affiliate Clicks</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center">
+                            <p className="text-lg font-bold">{data.summary.clicksToday?.toLocaleString() || 0}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">Today</p>
+                        </div>
+                        <div className="text-center border-x border-border/50">
+                            <p className="text-lg font-bold">{data.summary.clicksWeek?.toLocaleString() || 0}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">7d</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-lg font-bold">{data.summary.clicksMonth?.toLocaleString() || 0}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">30d</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 text-center">
-                    <p className="text-2xl font-bold">{data.summary.month.toLocaleString()}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-1">Last 30 days</p>
+
+                {/* Conversion Summary */}
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-primary mb-1" />
+                    <p className="text-2xl font-black text-primary">{globalCTR}%</p>
+                    <p className="text-[10px] uppercase tracking-widest text-primary/70 font-bold">Avg. Conversion Rate</p>
                 </div>
             </div>
 
             {/* Mini Bar Chart */}
             {data.dailyTraffic.length > 0 && (
                 <div className="mb-6">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Daily Traffic (Last 14 Days)</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Traffic Distribution (Views vs Clicks)</p>
                     <div className="p-4 rounded-2xl bg-muted/30 border border-border/50">
                         <MiniBarChart data={data.dailyTraffic} maxViews={maxDailyViews} />
                         <div className="flex justify-between mt-2 text-[9px] text-muted-foreground">
@@ -153,12 +208,12 @@ export function AnalyticsCard() {
             )}
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
                 {views.map(v => (
                     <button
                         key={v.label}
                         onClick={() => setActiveView(v.label)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${activeView === v.label
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${activeView === v.label
                             ? "bg-primary/15 text-primary border border-primary/20"
                             : "text-muted-foreground hover:bg-muted/50 border border-transparent"
                             }`}
@@ -227,6 +282,30 @@ export function AnalyticsCard() {
                             <span className="text-sm font-semibold tabular-nums">{c.views.toLocaleString()}</span>
                         </div>
                     )) : <p className="text-sm text-muted-foreground text-center py-6">No country data yet.</p>
+                )}
+
+                {activeView === "clicks" && (
+                    data.clicksByProvider?.length > 0 ? (
+                        <div className="space-y-3">
+                            {data.clicksByProvider.map((c, i) => (
+                                <div key={i} className="flex items-center justify-between px-4 py-3 rounded-2xl bg-muted/20 border border-border/30 hover:bg-muted/40 transition-all group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs ring-1 ring-primary/20">
+                                            {c.provider_name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold">{c.provider_name}</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-tight">Top conversion channel</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black tabular-nums">{c.click_count.toLocaleString()}</p>
+                                        <p className="text-[10px] text-green-500 font-bold">Clicks</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : <p className="text-sm text-muted-foreground text-center py-6">No clicks recorded yet.</p>
                 )}
 
                 {activeView === "visitors" && (

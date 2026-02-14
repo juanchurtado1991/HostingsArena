@@ -2,7 +2,7 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
@@ -101,6 +101,11 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
         projectedRevenue: number;
     }>({ activeAffiliates: 0, totalPosts: 0, projectedRevenue: 0 });
 
+    const [analyticsSummary, setAnalyticsSummary] = useState<{
+        clicksToday: number;
+        clicksMonth: number;
+    }>({ clicksToday: 0, clicksMonth: 0 });
+
     useEffect(() => {
         if (activeTab === "workflows") {
             fetchWorkflows();
@@ -108,6 +113,7 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
         if (activeTab === "overview") {
             fetchScraperStatus();
             fetchRevenueData();
+            fetchAnalyticsSummary();
         }
         if (activeTab === "tasks") {
             fetchTasks();
@@ -298,6 +304,21 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
         }
     };
 
+    const fetchAnalyticsSummary = async () => {
+        try {
+            const res = await fetch('/api/admin/analytics');
+            const data = await res.json();
+            if (data.summary) {
+                setAnalyticsSummary({
+                    clicksToday: data.summary.clicksToday || 0,
+                    clicksMonth: data.summary.clicksMonth || 0
+                });
+            }
+        } catch (e) {
+            logger.error('Failed to fetch analytics summary', e);
+        }
+    };
+
     const activeProviders = scraperStatuses.length;
     const successCount = scraperStatuses.filter(s => s.status === 'success').length;
     const errorCount = scraperStatuses.filter(s => s.status === 'error').length;
@@ -419,12 +440,15 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
                             <GlassCard className="p-6">
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
-                                        <Clock className="w-6 h-6" />
+                                    <div className="p-3 bg-green-500/10 rounded-xl text-green-500">
+                                        <MousePointerClick className="w-6 h-6" />
                                     </div>
+                                    <span className="text-[10px] font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded-lg">
+                                        {analyticsSummary.clicksToday} today
+                                    </span>
                                 </div>
-                                <div className="text-3xl font-bold mb-1">{avgDuration.toFixed(2)}s</div>
-                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.avg_duration}</div>
+                                <div className="text-3xl font-bold mb-1">{analyticsSummary.clicksMonth}</div>
+                                <div className="text-sm text-muted-foreground">Affiliate Clicks (30d)</div>
                             </GlassCard>
 
                             <GlassCard className="p-6 relative group">

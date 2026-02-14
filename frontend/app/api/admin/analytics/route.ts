@@ -37,11 +37,20 @@ export async function GET(request: NextRequest) {
 
         const { data: recentActivity } = await supabase.rpc("get_recent_activity", { limit_count: 50 });
 
+        // Affiliate Clicks Data
+        const { data: clickSummary } = await supabase.rpc("get_affiliate_click_summary", { days_back: 30 });
+        const { data: clicksByProvider } = await supabase.rpc("get_clicks_by_provider", { days_back: 30 });
+        const { data: dailyClicks } = await supabase.rpc("get_daily_clicks", { days_back: 30 });
+
         return NextResponse.json({
             summary: {
                 today: todayViews.count || 0,
                 week: weekViews.count || 0,
                 month: monthViews.count || 0,
+                // New Affiliate metrics
+                clicksToday: clickSummary?.[0]?.today_clicks || 0,
+                clicksWeek: clickSummary?.[0]?.week_clicks || 0,
+                clicksMonth: clickSummary?.[0]?.month_clicks || 0,
             },
             topPages: topPages || [],
             topPosts: topPosts || [],
@@ -49,6 +58,9 @@ export async function GET(request: NextRequest) {
             topReferrers: topReferrers || [],
             topCountries: topCountries || [],
             recentActivity: recentActivity || [],
+            // New Affiliate data sections
+            clicksByProvider: clicksByProvider || [],
+            dailyClicks: dailyClicks || [],
         });
     } catch (err) {
         console.error("Analytics API error:", err);
