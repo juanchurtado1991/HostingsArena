@@ -109,7 +109,7 @@ export function AffiliateManager() {
 
     // Extract unique networks for filter
     const uniqueNetworks = useMemo(() => {
-        const networks = new Set(affiliates.map(a => a.network).filter(Boolean));
+        const networks = new Set(affiliates.map(a => a.network).filter((n): n is string => !!n));
         return Array.from(networks).sort();
     }, [affiliates]);
 
@@ -498,8 +498,8 @@ export function AffiliateManager() {
                                     {/* Reminder Alert */}
                                     {aff.reminder_at && (
                                         <div className={`mb-4 flex items-start gap-2 p-2.5 rounded-xl border ${new Date(aff.reminder_at) <= new Date()
-                                                ? "bg-amber-500/10 border-amber-500/20"
-                                                : "bg-blue-500/5 border-blue-500/10"
+                                            ? "bg-amber-500/10 border-amber-500/20"
+                                            : "bg-blue-500/5 border-blue-500/10"
                                             }`}>
                                             <Clock className={`w-4 h-4 mt-0.5 flex-shrink-0 ${new Date(aff.reminder_at) <= new Date() ? "text-amber-500" : "text-blue-400"
                                                 }`} />
