@@ -311,32 +311,57 @@ function EditorToolbar({
                     </select>
                 </div>
                 <div className="relative">
-                    <ToolbarBtn onClick={() => setShowColorPicker(!showColorPicker)} title="Text Color" active={showColorPicker}>
+                    <ToolbarBtn onClick={() => setShowColorPicker(true)} title="Text Color" active={showColorPicker}>
                         <Palette className="w-4 h-4" />
                     </ToolbarBtn>
                     {showColorPicker && (
-                        <>
-                            <div className="fixed inset-0 z-[70]" onClick={() => setShowColorPicker(false)} />
-                            <div className="absolute top-full left-0 mt-2 p-3 rounded-2xl glass-panel shadow-2xl z-[80] flex gap-1.5 flex-wrap w-44 bg-card border border-border">
-                                <p className="w-full text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Presets</p>
-                                {colors.map(c => (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowColorPicker(false)} />
+                            <div className="w-full max-w-[240px] p-5 bg-background border border-border rounded-3xl shadow-2xl z-50 animate-in zoom-in-95 duration-200 relative">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                                        <Palette className="w-3.5 h-3.5" />
+                                        Text Colors
+                                    </h4>
+                                    <button onClick={() => setShowColorPicker(false)} className="text-muted-foreground hover:text-foreground">
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {colors.map(c => (
+                                        <button
+                                            key={c}
+                                            type="button"
+                                            onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(false); }}
+                                            className="w-8 h-8 rounded-full border border-border hover:scale-125 transition-all duration-200 shadow-sm ring-offset-2 hover:ring-2 hover:ring-primary/20"
+                                            style={{ backgroundColor: c }}
+                                            title={c}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div className="space-y-3 pt-3 border-t border-border/50">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Custom Color</label>
+                                        <input
+                                            type="color"
+                                            className="w-8 h-8 p-0 border-0 rounded-full cursor-pointer bg-transparent"
+                                            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                                            title="Pick Custom Color"
+                                        />
+                                    </div>
                                     <button
-                                        key={c}
                                         type="button"
-                                        onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(false); }}
-                                        className="w-7 h-7 rounded-lg border border-border hover:scale-125 transition-all duration-200 shadow-sm"
-                                        style={{ backgroundColor: c }}
-                                    />
-                                ))}
-                                <button
-                                    type="button"
-                                    onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
-                                    className="w-full text-[10px] text-muted-foreground hover:text-foreground mt-1.5 py-1 rounded-lg hover:bg-accent transition-colors"
-                                >
-                                    ↩ Reset Color
-                                </button>
+                                        onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
+                                        className="w-full text-[10px] font-bold text-muted-foreground hover:text-foreground py-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Undo2 className="w-3 h-3" />
+                                        RESET COLOR
+                                    </button>
+                                </div>
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleHighlight({ color: "#fbbf24" }).run()} active={editor.isActive("highlight")} title="Highlight">

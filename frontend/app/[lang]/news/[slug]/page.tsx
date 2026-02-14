@@ -94,56 +94,50 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
             <PageTracker postSlug={post.slug} />
 
             <article className="container mx-auto lg:max-w-7xl">
-                <Link href={`/${lang}/news`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors group">
-                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    {lang === 'es' ? 'Volver a Noticias' : 'Back to News'}
-                </Link>
-
-                {/* Header */}
-                <header className="mb-10 text-center">
-                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
-                        {post.category && (
-                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                                <Tag className="w-3.5 h-3.5" />
-                                {post.category}
-                            </span>
-                        )}
-                        <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {new Date(post.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5" />
-                            {estimateReadTime(post.content || "")}
-                        </span>
-                    </div>
-
-                    <h1 className="hero-title mb-4 py-2">
-                        {post.title}
-                    </h1>
-
-                    {post.seo_description && (
-                        <p className="text-xl text-muted-foreground/60 max-w-3xl mx-auto mb-8 font-medium italic leading-relaxed">
-                            {post.seo_description}
-                        </p>
-                    )}
-                </header>
-
-                {/* Cover Image */}
-                {post.cover_image_url && (
-                    <div className="relative aspect-video w-full lg:max-w-[60%] mx-auto rounded-3xl overflow-hidden mb-16 shadow-2xl shadow-primary/5 ring-1 ring-white/10">
-                        <Image
-                            src={post.cover_image_url}
-                            alt={post.title}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                )}
-
-                {/* Content */}
                 <GlassCard className="p-8 md:p-12 mb-12">
+                    {/* Header */}
+                    <header className="mb-10 text-center">
+                        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
+                            {post.category && (
+                                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                                    <Tag className="w-3.5 h-3.5" />
+                                    {post.category}
+                                </span>
+                            )}
+                            <span className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {new Date(post.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
+                                {estimateReadTime(post.content || "")}
+                            </span>
+                        </div>
+
+                        <h1 className="hero-title mb-4 py-2">
+                            {post.title}
+                        </h1>
+
+                        {post.seo_description && (
+                            <p className="text-xl text-muted-foreground/60 max-w-3xl mx-auto mb-8 font-medium italic leading-relaxed">
+                                {post.seo_description}
+                            </p>
+                        )}
+                    </header>
+
+                    {/* Cover Image */}
+                    {post.cover_image_url && (
+                        <div className="relative aspect-[3/1] w-full rounded-3xl overflow-hidden mb-16 shadow-2xl shadow-primary/5 ring-1 ring-white/10">
+                            <Image
+                                src={post.cover_image_url}
+                                alt={post.title}
+                                fill
+                                className="object-cover"
+                                priority
+                            />
+                        </div>
+                    )}
+
                     <ArticleContent content={post.content || ""} />
 
                     <SocialShare
@@ -152,7 +146,7 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
                         dict={dict.news}
                     />
 
-                    <div className="mt-12 pt-12 border-t border-white/10">
+                    <div className="mt-6 pt-6 border-t border-white/10">
                         <Suspense fallback={<div className="h-20 animate-pulse bg-white/5 rounded-2xl" />}>
                             <NewsConversionButtons
                                 relatedProvider={post.related_provider_name}
@@ -200,13 +194,14 @@ async function NewsConversionButtons({
 
     // 1. Fetch Related Provider ID & Affiliate Info
     const table = type === 'vpn' ? 'vpn_providers' : 'hosting_providers';
-    const { data: providerData } = await supabase
+    const { data: providerData, error } = await supabase
         .from(table)
         .select('id, provider_name, website_url')
         .ilike('provider_name', relatedProvider)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
-    if (!providerData) return null;
+    if (error || !providerData) return null;
 
     // 2. Get Affiliate URL
     const affiliateUrl = await getAffiliateUrl(providerData.provider_name, providerData.website_url);
@@ -228,7 +223,9 @@ async function NewsConversionButtons({
                 className="w-full sm:w-auto h-14 px-8 text-base shadow-xl shadow-primary/20"
                 variant="default"
             >
-                {lang === 'es' ? 'Ver Oferta de' : 'Visit'} {providerData.provider_name}
+                {lang === 'es'
+                    ? `Cámbiate a ${providerData.provider_name}`
+                    : `Switch to ${providerData.provider_name}`}
             </AffiliateButton>
 
             <Link
