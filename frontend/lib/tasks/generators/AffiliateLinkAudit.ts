@@ -88,6 +88,7 @@ export class AffiliateLinkAudit implements TaskGenerator {
                     : isPaused
                         ? `El enlace de afiliado para ${providerName} está pausado. Verifica y reactiva.`
                         : `No hay enlace de afiliado configurado para ${providerName}. Cada día sin link = dinero perdido.`,
+                status: 'pending',
                 metadata: {
                     provider_id: provider.id,
                     provider_name: providerName,

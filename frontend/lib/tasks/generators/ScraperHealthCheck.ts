@@ -103,6 +103,7 @@ export class ScraperHealthCheck implements TaskGenerator {
                     : isWarning
                         ? `El scraper de ${scraper.provider_name} tiene advertencias: "${scraper.error_message || 'Datos parciales'}". Revisa los datos extraídos.`
                         : `El scraper de ${scraper.provider_name} no ha corrido en ${this.STALE_THRESHOLD_DAYS}+ días. Última ejecución: ${lastRun?.toLocaleDateString() || 'Nunca'}.`,
+                status: 'pending',
                 metadata: {
                     provider_name: scraper.provider_name,
                     provider_type: scraper.provider_type,

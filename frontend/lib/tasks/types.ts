@@ -48,7 +48,7 @@ export interface ScraperStatus {
     id: string;
     provider_name: string;
     provider_type: 'hosting' | 'vpn';
-    status: 'success' | 'error' | 'warning';
+    status: 'success' | 'error' | 'warning' | 'stale';
     last_run: string;
     duration_seconds: number;
     error_message: string | null;

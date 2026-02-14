@@ -1,7 +1,7 @@
 "use client";
 
 import { GlassCard } from "@/components/ui/GlassCard";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
@@ -10,7 +10,22 @@ import { createClient } from "@/lib/supabase/client";
 import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
-import type { AdminTask, TaskType, TaskPriority } from "@/lib/tasks/types";
+import type { AdminTask, TaskType, TaskPriority, ScraperStatus } from "@/lib/tasks/types";
+
+const SCRAPER_STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; ribbon: string; label: string }> = {
+    success: { icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", ribbon: "from-emerald-500 to-green-400", label: "Online" },
+    warning: { icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", ribbon: "from-amber-500 to-orange-400", label: "Warning" },
+    error: { icon: AlertCircle, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", ribbon: "from-red-500 to-rose-400", label: "Error" },
+    stale: { icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", ribbon: "from-blue-500 to-indigo-400", label: "Stale" },
+};
+
+interface ScraperMetrics {
+    total: number;
+    online: number;
+    failing: number;
+    stale: number;
+    syncCount: number;
+}
 
 const TASKS_PER_PAGE = 15;
 export default function DashboardClient({ dict, lang }: { dict: any; lang: string }) {
@@ -79,7 +94,15 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
     const [activeTab, setActiveTab] = useState("overview");
     const [workflowRuns, setWorkflowRuns] = useState<any[]>([]);
-    const [scraperStatuses, setScraperStatuses] = useState<any[]>([]);
+    const [scraperStatuses, setScraperStatuses] = useState<ScraperStatus[]>([]);
+    const [scraperFilter, setScraperFilter] = useState<'all' | 'online' | 'failing' | 'stale'>('all');
+    const [scraperMetrics, setScraperMetrics] = useState<ScraperMetrics>({
+        total: 0,
+        online: 0,
+        failing: 0,
+        stale: 0,
+        syncCount: 0
+    });
     const [loadingWorkflows, setLoadingWorkflows] = useState(false);
     const [loadingScrapers, setLoadingScrapers] = useState(false);
     const [triggering, setTriggering] = useState(false);
@@ -139,13 +162,18 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
         try {
             const res = await fetch('/api/admin/tasks/generate', { method: 'POST' });
             const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || 'Error generating tasks');
+            }
+
             if (data.created > 0) {
                 fetchTasks();
             }
-            alert(data.message);
+            alert(data.message || `Scan completed: ${data.created || 0} tasks found`);
         } catch (error) {
             logger.error("Failed to generate tasks", error);
-            alert("Error generating tasks");
+            alert(error instanceof Error ? error.message : "Error generating tasks");
         } finally {
             setGeneratingTasks(false);
         }
@@ -182,64 +210,45 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
     const fetchScraperStatus = async () => {
         setLoadingScrapers(true);
-        logger.log('SYSTEM', "Fetching scraper statuses...", {
-            url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-            keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 5)
-        });
         try {
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Request timed out: Check your Supabase connection or Table Policies')), 15000)
-            );
-
-            const fetchPromise = supabase
+            const { data, error } = await supabase
                 .from('scraper_status')
                 .select('*')
                 .order('last_run', { ascending: false });
 
-            // @ts-ignore
-            const result = await Promise.race([fetchPromise, timeoutPromise]);
-            const { data, error } = result as any;
+            if (error) throw error;
 
-            if (error) {
-                logger.error("Supabase Error fetching scrapers", error);
-                logger.error("Scraper fetch error:", error.message);
-                throw error;
-            }
+            if (data) {
+                const now = new Date();
+                const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
 
-            logger.log('SYSTEM', `Data received: ${data?.length} rows`, data);
-            if (data) setScraperStatuses(data);
-            if (data?.length === 0) {
-                logger.log('SYSTEM', "Received 0 rows. Check RLS or Table content.");
+                const enrichedData: ScraperStatus[] = data.map((item: any) => {
+                    const lastRunDate = new Date(item.last_run);
+                    const isStale = lastRunDate < threeDaysAgo;
+
+                    return {
+                        ...item,
+                        status: isStale ? 'stale' : item.status
+                    };
+                });
+
+                // Calculate Metrics
+                const metrics: ScraperMetrics = enrichedData.reduce((acc, curr) => {
+                    acc.total++;
+                    if (curr.status === 'success') acc.online++;
+                    if (curr.status === 'error' || curr.status === 'warning') acc.failing++;
+                    if (curr.status === 'stale') acc.stale++;
+                    acc.syncCount += (curr.items_synced || 0);
+                    return acc;
+                }, { total: 0, online: 0, failing: 0, stale: 0, syncCount: 0 });
+
+                setScraperStatuses(enrichedData);
+                setScraperMetrics(metrics);
+                logger.log('SYSTEM', `Scraper data enriched: ${enrichedData.length} rows`);
             }
         } catch (error) {
-            const err = error as Error;
-            logger.error("Exception fetching scrapers", err);
-
-            if (err.message && err.message.includes('timed out')) {
-                logger.log('SYSTEM', "⚠️ Trying direct FETCH fallback...");
-                try {
-                    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/scraper_status?select=*&order=last_run.desc`;
-                    const res = await fetch(url, {
-                        headers: {
-                            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
-                        }
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        logger.log('SYSTEM', `✅ Fallback fetch success: ${data.length} rows`);
-                        setScraperStatuses(data);
-                        return; // Success!
-                    } else {
-                        const text = await res.text();
-                        logger.error("Fallback fetch failed", { status: res.status, body: text });
-                    }
-                } catch (fallbackError: any) {
-                    logger.error("Fallback fetch exception", fallbackError);
-                }
-            }
-
-            alert(`Error fetching scrapers: ${err.message || 'Unknown error'}`);
+            logger.error("Error fetching scrapers", error);
+            alert(`Error fetching scrapers: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setLoadingScrapers(false);
         }
@@ -416,82 +425,94 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
                 {activeTab === "overview" && (
                     <>
-                        {/* Metrics Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                            <GlassCard className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
-                                        <Server className="w-6 h-6" />
+                        {/* Executive Summary Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            {[
+                                { label: "Clicks (30d)", value: analyticsSummary.clicksMonth, icon: MousePointerClick, color: "text-blue-400", bg: "bg-blue-500/10", subtitle: `${analyticsSummary.clicksToday} today` },
+                                { label: dict.dashboard.metrics.est_revenue, value: formatCurrency(revenueData.projectedRevenue), icon: DollarSign, color: "text-emerald-400", bg: "bg-emerald-500/10", subtitle: `${new Date().toLocaleDateString('en-US', { month: 'short' })} est` },
+                                { label: dict.dashboard.metrics.success_rate, value: `${successRate.toFixed(1)}%`, icon: Activity, color: successRate > 90 ? "text-emerald-400" : "text-amber-400", bg: successRate > 90 ? "bg-emerald-500/10" : "bg-amber-500/10", subtitle: `${successCount} OK / ${errorCount} ERR` },
+                                { label: dict.dashboard.metrics.monitored_scrapers, value: scraperMetrics.total, icon: Server, color: "text-indigo-400", bg: "bg-indigo-500/10" },
+                            ].map((stat, i) => (
+                                <GlassCard key={i} className="p-4 flex items-center gap-4 border-white/[0.05]">
+                                    <div className={cn("p-2.5 rounded-xl flex-shrink-0", stat.bg, stat.color)}>
+                                        <stat.icon className="w-5 h-5" />
                                     </div>
-                                </div>
-                                <div className="text-3xl font-bold mb-1">{activeProviders}</div>
-                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.monitored_scrapers}</div>
-                            </GlassCard>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex justify-between items-baseline gap-2">
+                                            <div className="text-xl font-bold leading-tight truncate">{stat.value}</div>
+                                            {stat.subtitle && <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap opacity-60">{stat.subtitle}</span>}
+                                        </div>
+                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold truncate">{stat.label}</div>
+                                    </div>
+                                </GlassCard>
+                            ))}
+                        </div>
 
-                            <GlassCard className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`p-3 rounded-xl ${successRate > 90 ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
-                                        <Activity className="w-6 h-6" />
+                        {/* Technical Health Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+                            {[
+                                { label: "Online", value: scraperMetrics.online, icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                                { label: "Failing", value: scraperMetrics.failing, icon: AlertCircle, color: "text-red-400", bg: "bg-red-500/10" },
+                                { label: "Stale (>3d)", value: scraperMetrics.stale, icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10" },
+                                { label: "Items Synced", value: scraperMetrics.syncCount, icon: RefreshCw, color: "text-purple-400", bg: "bg-purple-500/10" },
+                            ].map((stat, i) => (
+                                <GlassCard key={i} className="p-4 flex items-center gap-4 border-white/[0.05]">
+                                    <div className={cn("p-2.5 rounded-xl flex-shrink-0", stat.bg, stat.color)}>
+                                        <stat.icon className="w-5 h-5" />
                                     </div>
-                                    <span className="text-xs font-medium text-muted-foreground">{successCount} Success / {errorCount} Fail</span>
-                                </div>
-                                <div className="text-3xl font-bold mb-1">{successRate.toFixed(1)}%</div>
-                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.success_rate}</div>
-                            </GlassCard>
-
-                            <GlassCard className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-green-500/10 rounded-xl text-green-500">
-                                        <MousePointerClick className="w-6 h-6" />
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-xl font-bold leading-tight truncate">{stat.value}</div>
+                                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold truncate">{stat.label}</div>
                                     </div>
-                                    <span className="text-[10px] font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded-lg">
-                                        {analyticsSummary.clicksToday} today
-                                    </span>
-                                </div>
-                                <div className="text-3xl font-bold mb-1">{analyticsSummary.clicksMonth}</div>
-                                <div className="text-sm text-muted-foreground">Affiliate Clicks (30d)</div>
-                            </GlassCard>
-
-                            <GlassCard className="p-6 relative group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-green-500/10 rounded-xl text-green-500">
-                                        <DollarSign className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[10px] font-medium text-muted-foreground bg-white/5 px-2 py-1 rounded-lg">
-                                        {new Date().toLocaleDateString('en-US', { month: 'short' })} estimate
-                                    </span>
-                                </div>
-                                <div className="text-3xl font-bold mb-1">
-                                    {formatCurrency(revenueData.projectedRevenue)}
-                                </div>
-                                <div className="text-sm text-muted-foreground">{dict.dashboard.metrics.est_revenue}</div>
-                                <div className="mt-3 flex gap-2 text-[10px] text-muted-foreground">
-                                    <span className="bg-white/5 px-1.5 py-0.5 rounded">{revenueData.activeAffiliates} affiliates</span>
-                                    <span className="bg-white/5 px-1.5 py-0.5 rounded">{revenueData.totalPosts} posts</span>
-                                    <span className="bg-white/5 px-1.5 py-0.5 rounded">0.8% CVR</span>
-                                </div>
-                            </GlassCard>
+                                </GlassCard>
+                            ))}
                         </div>
 
                         {/* Analytics Card */}
                         <AnalyticsCard />
 
                         {/* Status Table */}
-                        <GlassCard className="p-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold">{dict.dashboard.scrapers.title}</h3>
-                                <div className="flex gap-2">
-                                    <Button size="sm" variant="outline" onClick={() => {
+                        <GlassCard className="p-8 border-white/[0.05] relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/20 via-primary/20 to-purple-500/20" />
+
+                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+                                <div>
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <Activity className="w-5 h-5 text-primary" />
+                                        {dict.dashboard.scrapers.title}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground mt-1">Real-time health monitoring for provider data extraction.</p>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {/* Filter Controls */}
+                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10 mr-2">
+                                        {['all', 'online', 'failing', 'stale'].map((f) => (
+                                            <button
+                                                key={f}
+                                                onClick={() => setScraperFilter(f as any)}
+                                                className={cn(
+                                                    "px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all",
+                                                    scraperFilter === f
+                                                        ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                                        : "text-muted-foreground hover:text-white"
+                                                )}
+                                            >
+                                                {f}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => {
                                         const report = scraperStatuses.map(s =>
                                             `[${s.status.toUpperCase()}] ${s.provider_name} (${s.items_synced} items) - ${s.duration_seconds}s - ${s.error_message || 'OK'}`
                                         ).join('\n');
                                         navigator.clipboard.writeText(report);
                                         alert("Report copied to clipboard!");
                                     }}>
-                                        {dict.dashboard.scrapers.copy_report}
+                                        <span className="text-[11px] font-bold uppercase tracking-wider">{dict.dashboard.scrapers.copy_report}</span>
                                     </Button>
-                                    <Button size="sm" variant="outline" onClick={fetchScraperStatus}>
-                                        {dict.dashboard.scrapers.refresh}
+                                    <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={fetchScraperStatus}>
+                                        <RefreshCw className={cn("w-3.5 h-3.5 mr-2", loadingScrapers && "animate-spin")} />
+                                        <span className="text-[11px] font-bold uppercase tracking-wider">{dict.dashboard.scrapers.refresh}</span>
                                     </Button>
                                 </div>
                             </div>
@@ -513,39 +534,56 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/5">
-                                            {scraperStatuses.map((item) => (
-                                                <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                                                    <td className="py-3 pl-4 font-medium">{item.provider_name}</td>
-                                                    <td className="py-3 text-muted-foreground capitalize">{item.provider_type}</td>
-                                                    <td className="py-3">
-                                                        {item.status === "success" && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
-                                                                <CheckCircle className="w-3 h-3" /> Online
-                                                            </span>
-                                                        )}
-                                                        {item.status === "warning" && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500">
-                                                                <AlertCircle className="w-3 h-3" /> Warning
-                                                            </span>
-                                                        )}
-                                                        {item.status === "error" && (
-                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500">
-                                                                <AlertTriangle className="w-3 h-3" /> Error
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-3 text-center w-24">
-                                                        <span className="font-mono bg-white/5 px-2 py-1 rounded text-xs">{item.items_synced}</span>
-                                                    </td>
-                                                    <td className="py-3 font-mono text-xs text-muted-foreground">{item.duration_seconds}s</td>
-                                                    <td className="py-3 text-muted-foreground text-xs">
-                                                        {new Date(item.last_run).toLocaleTimeString()}
-                                                    </td>
-                                                    <td className="py-3 text-xs text-red-400 truncate max-w-[200px]" title={item.error_message}>
-                                                        {item.error_message || "-"}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {scraperStatuses
+                                                .filter(s => {
+                                                    if (scraperFilter === 'all') return true;
+                                                    if (scraperFilter === 'online') return s.status === 'success';
+                                                    if (scraperFilter === 'failing') return s.status === 'error' || s.status === 'warning';
+                                                    if (scraperFilter === 'stale') return s.status === 'stale';
+                                                    return true;
+                                                })
+                                                .map((item) => {
+                                                    const cfg = SCRAPER_STATUS_CONFIG[item.status] || SCRAPER_STATUS_CONFIG.success;
+                                                    const StatusIcon = cfg.icon;
+                                                    return (
+                                                        <tr key={item.id} className="hover:bg-white/5 transition-colors group">
+                                                            <td className="py-4 pl-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[10px] font-bold text-muted-foreground group-hover:text-white transition-colors">
+                                                                        {item.provider_name.charAt(0)}
+                                                                    </div>
+                                                                    <span className="font-bold text-sm">{item.provider_name}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">{item.provider_type}</td>
+                                                            <td className="py-4">
+                                                                <span className={cn(
+                                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                                                                    cfg.bg
+                                                                )}>
+                                                                    <StatusIcon className="w-3 h-3" />
+                                                                    {cfg.label}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-4">
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-mono text-xs font-bold">{item.items_synced} items</span>
+                                                                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                                                                        <div className="h-full bg-primary/40 rounded-full" style={{ width: `${Math.min(100, (item.items_synced / 50) * 100)}%` }} />
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4 font-mono text-xs text-muted-foreground">{item.duration_seconds}s</td>
+                                                            <td className="py-4 text-muted-foreground text-[11px] font-medium">
+                                                                {new Date(item.last_run).toLocaleDateString()}
+                                                                <span className="block opacity-40 text-[9px]">{new Date(item.last_run).toLocaleTimeString()}</span>
+                                                            </td>
+                                                            <td className="py-4 text-[10px] text-red-400/80 font-medium truncate max-w-[240px]" title={item.error_message || undefined}>
+                                                                {item.error_message || <span className="text-muted-foreground/20 italic">No issues detected</span>}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                         </tbody>
                                     </table>
                                 </div>

@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { formatCurrency, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
     Search, Plus, Link as LinkIcon, ExternalLink, Edit3, Trash2,
     CheckCircle, XCircle, Pause, RefreshCw, Loader2, Globe,
     TrendingUp, Clock, BarChart3, Copy, Check, BookOpen, ChevronDown,
-    ShieldCheck, Filter
+    ShieldCheck, Filter, AlertTriangle
 } from "lucide-react";
 import { AffiliateFormModal, EMPTY_AFFILIATE_FORM } from "./AffiliateFormModal";
 import type { AffiliateFormData, ProviderOption } from "./AffiliateFormModal";
@@ -39,19 +40,21 @@ interface AffiliateStats {
     active: number;
     paused: number;
     expired: number;
+    processing: number;
+    rejected: number;
 }
 
-const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
-    active: { icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "Active" },
-    paused: { icon: Pause, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", label: "Paused" },
-    expired: { icon: XCircle, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", label: "Expired" },
-    processing_approval: { icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", label: "Processing" },
-    rejected: { icon: XCircle, color: "text-gray-400", bg: "bg-gray-500/10 border-gray-500/20", label: "Rejected" },
+const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; ribbon: string; label: string }> = {
+    active: { icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", ribbon: "from-emerald-500 to-green-400", label: "Active" },
+    paused: { icon: Pause, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", ribbon: "from-amber-500 to-orange-400", label: "Paused" },
+    expired: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", ribbon: "from-red-500 to-rose-400", label: "Expired" },
+    processing_approval: { icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", ribbon: "from-blue-500 to-indigo-400", label: "Processing" },
+    rejected: { icon: XCircle, color: "text-gray-400", bg: "bg-gray-500/10 border-gray-500/20", ribbon: "from-gray-500 to-slate-400", label: "Rejected" },
 };
 
 export function AffiliateManager() {
     const [affiliates, setAffiliates] = useState<AffiliatePartner[]>([]);
-    const [stats, setStats] = useState<AffiliateStats>({ total: 0, active: 0, paused: 0, expired: 0 });
+    const [stats, setStats] = useState<AffiliateStats>({ total: 0, active: 0, paused: 0, expired: 0, processing: 0, rejected: 0 });
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -235,12 +238,14 @@ export function AffiliateManager() {
     return (
         <div className="space-y-8">
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 {[
                     { label: "Total Partners", value: stats.total, icon: Globe, gradient: "from-blue-500/20 to-indigo-500/20", color: "text-blue-400" },
-                    { label: "Active Links", value: stats.active, icon: TrendingUp, gradient: "from-emerald-500/20 to-green-500/20", color: "text-emerald-400" },
+                    { label: "Active", value: stats.active, icon: CheckCircle, gradient: "from-emerald-500/20 to-green-500/20", color: "text-emerald-400" },
                     { label: "Paused", value: stats.paused, icon: Pause, gradient: "from-amber-500/20 to-orange-500/20", color: "text-amber-400" },
-                    { label: "Expired", value: stats.expired, icon: XCircle, gradient: "from-red-500/20 to-rose-500/20", color: "text-red-400" },
+                    { label: "Processing", value: stats.processing, icon: Clock, gradient: "from-sky-500/20 to-blue-500/20", color: "text-sky-400" },
+                    { label: "Rejected", value: stats.rejected, icon: XCircle, gradient: "from-gray-500/20 to-slate-500/20", color: "text-gray-400" },
+                    { label: "Expired", value: stats.expired, icon: AlertTriangle, gradient: "from-red-500/20 to-rose-500/20", color: "text-red-400" },
                 ].map((stat) => (
                     <div
                         key={stat.label}
@@ -250,7 +255,7 @@ export function AffiliateManager() {
                             <stat.icon className={`w-5 h-5 ${stat.color}`} />
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</span>
                         </div>
-                        <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
+                        <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
                     </div>
                 ))}
             </div>
@@ -349,8 +354,8 @@ export function AffiliateManager() {
                     </div>
 
                     {/* Status Filter */}
-                    <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto max-w-[200px] md:max-w-none scrollbar-hide">
-                        {["all", "active", "paused", "processing_approval", "rejected"].map((s) => (
+                    <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto max-w-full scrollbar-hide">
+                        {["all", "active", "paused", "expired", "processing_approval", "rejected"].map((s) => (
                             <button
                                 key={s}
                                 onClick={() => setStatusFilter(s)}
@@ -443,12 +448,8 @@ export function AffiliateManager() {
                                 className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-white/[0.12] hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5"
                             >
                                 {/* Status Ribbon */}
-                                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${aff.status === "active" ? "from-emerald-500 to-green-400" :
-                                    aff.status === "paused" ? "from-amber-500 to-orange-400" :
-                                        aff.status === "processing_approval" ? "from-blue-500 to-indigo-400" :
-                                            aff.status === "rejected" ? "from-gray-500 to-slate-400" :
-                                                "from-red-500 to-rose-400"
-                                    }`} />
+                                {/* Status Ribbon */}
+                                <div className={cn("absolute top-0 left-0 right-0 h-1 bg-gradient-to-r", statusCfg.ribbon)} />
 
                                 <div className="p-5">
                                     {/* Header */}

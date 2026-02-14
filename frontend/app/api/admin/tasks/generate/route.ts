@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
         console.error('[TaskGenerate] Error:', error);
         return NextResponse.json(
             {
+                success: false,
+                message: error.message || 'Failed to generate tasks',
                 error: 'Failed to generate tasks',
                 details: error.message || error.details || String(error)
             },

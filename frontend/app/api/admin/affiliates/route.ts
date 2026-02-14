@@ -84,6 +84,8 @@ export async function GET(request: NextRequest) {
             active: allData?.filter(a => a.status === 'active').length || 0,
             paused: allData?.filter(a => a.status === 'paused').length || 0,
             expired: allData?.filter(a => a.status === 'expired').length || 0,
+            processing: allData?.filter(a => a.status === 'processing_approval').length || 0,
+            rejected: allData?.filter(a => a.status === 'rejected').length || 0,
         };
 
         return NextResponse.json({ affiliates: data || [], stats });
@@ -145,7 +147,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const durationDays = link_duration_days ? parseInt(link_duration_days) : null;
+        const durationDays = (link_duration_days !== undefined && link_duration_days !== "") ? parseInt(link_duration_days) : null;
         let expiresAt: string | null = null;
         if (durationDays && durationDays > 0) {
             const expiry = new Date();
@@ -159,8 +161,8 @@ export async function POST(request: NextRequest) {
                 provider_name,
                 affiliate_link,
                 network: network || null,
-                commission_rate: commission_rate || null,
-                cookie_days: cookie_days ? parseInt(cookie_days) : null,
+                commission_rate: (commission_rate !== undefined && commission_rate !== "") ? parseFloat(commission_rate) : null,
+                cookie_days: (cookie_days !== undefined && cookie_days !== "") ? parseInt(cookie_days) : null,
                 link_duration_days: durationDays,
                 expires_at: expiresAt,
                 status: status || 'active',
@@ -169,7 +171,7 @@ export async function POST(request: NextRequest) {
                 dashboard_url: dashboard_url || null,
                 account_phone: account_phone || null,
                 payment_method: payment_method || null,
-                minimum_payout_amount: minimum_payout_amount ? parseFloat(minimum_payout_amount) : null,
+                minimum_payout_amount: (minimum_payout_amount !== undefined && minimum_payout_amount !== "") ? parseFloat(minimum_payout_amount) : null,
                 minimum_payout_currency: minimum_payout_currency || 'USD',
                 reminder_at: reminder_at || null,
                 reminder_note: reminder_note || null,
@@ -221,16 +223,20 @@ export async function PATCH(request: NextRequest) {
             }
         }
 
-        if (updates.cookie_days) {
-            updates.cookie_days = parseInt(updates.cookie_days);
+        if (updates.cookie_days !== undefined) {
+            updates.cookie_days = updates.cookie_days === "" ? null : parseInt(updates.cookie_days);
         }
 
-        if (updates.minimum_payout_amount) {
-            updates.minimum_payout_amount = parseFloat(updates.minimum_payout_amount);
+        if (updates.minimum_payout_amount !== undefined) {
+            updates.minimum_payout_amount = updates.minimum_payout_amount === "" ? null : parseFloat(updates.minimum_payout_amount);
+        }
+
+        if (updates.commission_rate !== undefined) {
+            updates.commission_rate = updates.commission_rate === "" ? null : parseFloat(updates.commission_rate);
         }
 
         if (updates.link_duration_days !== undefined) {
-            const durationDays = updates.link_duration_days ? parseInt(updates.link_duration_days) : null;
+            const durationDays = (updates.link_duration_days !== "" && updates.link_duration_days !== null) ? parseInt(updates.link_duration_days) : null;
             updates.link_duration_days = durationDays;
             if (durationDays && durationDays > 0) {
                 const expiry = new Date();
@@ -243,7 +249,7 @@ export async function PATCH(request: NextRequest) {
 
         // Sanitize updates: convert empty strings to null for optional fields
         const fieldsToNullify = [
-            'network', 'commission_rate', 'account_email', 'account_password',
+            'network', 'account_email', 'account_password',
             'dashboard_url', 'account_phone', 'payment_method', 'reminder_at',
             'reminder_note', 'minimum_payout_currency'
         ];
