@@ -118,7 +118,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             </span>
           </Link>
 
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden lg:flex items-center lg:gap-3 xl:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -133,7 +133,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             ))}
           </div>
 
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center lg:gap-2 xl:gap-4">
             <GlobalSearch />
             <LocaleSwitcher />
 
