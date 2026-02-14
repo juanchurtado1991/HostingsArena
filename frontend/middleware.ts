@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 import { i18n } from './i18n-config';
 
 // 1. Get locale function
@@ -31,14 +30,25 @@ function getLocale(request: NextRequest): string {
     }
 }
 
-export async function proxy(request: NextRequest) {
+/**
+ * Check if the user has a valid Supabase session cookie.
+ * This is a LIGHTWEIGHT check (no Supabase client, no network calls).
+ * The real auth validation happens server-side in the dashboard/API routes.
+ */
+function hasSupabaseSession(request: NextRequest): boolean {
+    const cookies = request.cookies.getAll();
+    // Supabase stores auth tokens in cookies with names like:
+    // sb-<project-ref>-auth-token or sb-<project-ref>-auth-token.0, .1, etc.
+    return cookies.some(cookie =>
+        cookie.name.includes('-auth-token') && cookie.value.length > 0
+    );
+}
+
+export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
-    const timestamp = new Date().toISOString();
 
     try {
-        console.log(`[Proxy][${timestamp}] Start: ${pathname}`);
-
-        // 0. EXCLUSIONS: Identify static assets, API, and Dashboard (Admin) routes
+        // 0. EXCLUSIONS: Identify static assets, API (non-admin), and auth routes
         const isExcluded =
             pathname.startsWith('/api') && !pathname.startsWith('/api/admin') ||
             pathname.startsWith('/_next') ||
@@ -48,56 +58,22 @@ export async function proxy(request: NextRequest) {
             pathname === '/favicon.ico';
 
         if (isExcluded) {
-            console.log(`[Proxy] Excluded: ${pathname}`);
             return NextResponse.next();
         }
 
         // --------------------------------------------------------------------------
         // AUTH LOGIC (Only for protected routes: /dashboard, /api/admin)
+        // Lightweight cookie check — no Supabase client, no __dirname issues
         // --------------------------------------------------------------------------
         const isDashboardPath = pathname === '/dashboard' || pathname.startsWith('/dashboard/') ||
             /^\/(en|es)\/dashboard(\/.*)?$/.test(pathname);
         const isAdminApiPath = pathname.startsWith('/api/admin');
 
         if (isDashboardPath || isAdminApiPath) {
-            console.log(`[Proxy] Auth Check for: ${pathname}`);
+            const hasSession = hasSupabaseSession(request);
 
-            if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-                console.error("[Proxy] CRITICAL: Missing Supabase Env Vars");
+            if (!hasSession) {
                 if (isAdminApiPath) {
-                    return NextResponse.json({ error: 'Configuration Error' }, { status: 500 });
-                }
-                return NextResponse.redirect(new URL('/', request.url));
-            }
-
-            let supabaseResponse = NextResponse.next({ request });
-
-            const supabase = createServerClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-                {
-                    cookies: {
-                        getAll() {
-                            return request.cookies.getAll();
-                        },
-                        setAll(cookiesToSet) {
-                            cookiesToSet.forEach(({ name, value }) =>
-                                request.cookies.set(name, value)
-                            );
-                            supabaseResponse = NextResponse.next({ request });
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                supabaseResponse.cookies.set(name, value, options)
-                            );
-                        },
-                    },
-                }
-            );
-
-            const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-            if (authError || !user) {
-                console.log(`[Proxy] Unauthorized access to: ${pathname}`);
-                if (pathname.startsWith('/api/admin')) {
                     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
                 }
                 const url = request.nextUrl.clone();
@@ -105,24 +81,9 @@ export async function proxy(request: NextRequest) {
                 return NextResponse.redirect(url);
             }
 
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            if (profile?.role !== 'admin') {
-                console.log(`[Proxy] Forbidden access (non-admin) to: ${pathname}`);
-                if (pathname.startsWith('/api/admin')) {
-                    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-                }
-                const url = request.nextUrl.clone();
-                url.pathname = '/';
-                return NextResponse.redirect(url);
-            }
-
-            console.log(`[Proxy] Auth Success: ${pathname}`);
-            return supabaseResponse;
+            // User has a session cookie — let them through.
+            // Server-side components/API routes will do full auth validation.
+            return NextResponse.next();
         }
 
         // --------------------------------------------------------------------------
@@ -134,19 +95,15 @@ export async function proxy(request: NextRequest) {
 
         if (pathnameIsMissingLocale) {
             const locale = getLocale(request);
-            console.log(`[Proxy] Redirecting to locale [${locale}]: ${pathname}`);
             return NextResponse.redirect(
                 new URL(`/${locale}${pathname.startsWith('/') ? '' : '/'}${pathname}`, request.url)
             );
         }
 
-        // IMPORTANT FIX: Return NextResponse.next() for localized paths that passed all checks
-        console.log(`[Proxy] Finished: ${pathname} -> Proceeding`);
         return NextResponse.next();
 
     } catch (error) {
         console.error(`🔥 [Proxy] CRITICAL ERROR [${pathname}]:`, error);
-        // Fallback to avoid breaking the site if possible
         return NextResponse.next();
     }
 }
