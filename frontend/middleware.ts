@@ -31,7 +31,7 @@ function getLocale(request: NextRequest): string {
     }
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const timestamp = new Date().toISOString();
 
