@@ -170,9 +170,9 @@
 }
 
 /* Paragraphs & Text */
-.tiptap p,
-.article-body p {
-  @apply mb-5 leading-8;
+.tiptap p:last-child,
+.article-body p:last-child {
+  @apply mb-0;
 }
 
 .tiptap strong,

@@ -61,54 +61,81 @@ export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTab
   const renewalWinner = getWinner('renewal_price', true);
 
   return (
-    <div className="w-full overflow-hidden rounded-3xl border border-border shadow-2xl bg-card">
-      <div className="p-6 border-b border-border/50 flex items-center gap-3 bg-muted/5">
-        <div className="p-2 bg-primary/10 rounded-xl">
-          <Swords className="w-6 h-6 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">{title || (type === 'hosting' ? 'Hosting Comparison' : 'VPN Comparison')}</h2>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Side-by-Side Analysis</p>
+    <div className="w-full overflow-hidden rounded-[2.5rem] border border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] bg-background/20 backdrop-blur-3xl relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+
+      <div className="p-8 border-b border-white/5 flex items-center justify-between relative bg-white/5">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/20 rounded-2xl border border-primary/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+            <Swords className="w-6 h-6 text-primary animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">{title || (type === 'hosting' ? 'Verified Comparison' : 'VPN Deep Analysis')}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black">Live Verification Engine</p>
+            </div>
+          </div>
         </div>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-secondary/30 border-b border-border">
-              <th className="p-6 min-w-[200px] font-bold text-lg">Specs Comparison</th>
+            <tr className="bg-white/5 border-b border-white/5">
+              <th className="p-8 min-w-[200px] font-bold text-sm uppercase tracking-widest text-muted-foreground/60">Features Breakdown</th>
               {data.map((p, i) => (
-                <th key={i} className="p-6 min-w-[250px] text-center border-l border-border/50">
-                  <div className="text-2xl font-black tracking-tight text-foreground">{p.provider_name}</div>
-                  <div className="text-sm text-muted-foreground font-medium">{(p as HostingProvider).plan_name || "Premium Plan"}</div>
+                <th key={i} className="p-8 min-w-[280px] text-center border-l border-white/5">
+                  <div className="text-3xl font-black tracking-tighter text-foreground mb-1">{p.provider_name}</div>
+                  <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-tighter">
+                    {(p as HostingProvider).plan_name || "Premium Verified Plan"}
+                  </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/50">
+          <tbody className="divide-y divide-white/5">
             {/* PRICE ROW */}
-            <tr className={getRowClass(0)}>
-              <td className="p-6 font-semibold flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary" /> Monthly Price
+            <tr className="hover:bg-white/[0.02] transition-colors">
+              <td className="p-8 font-bold text-foreground">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-500/10 rounded-lg">
+                    <Zap className="w-4 h-4 text-green-500" />
+                  </div>
+                  <span>Intro Price</span>
+                </div>
               </td>
               {data.map((p, i) => (
-                <td key={i} className={`p-6 text-center border-l border-border/50 ${i === priceWinner ? "bg-green-500/5" : ""}`}>
+                <td key={i} className={`p-8 text-center border-l border-white/5 transition-all relative overflow-hidden ${i === priceWinner ? "bg-green-500/[0.03]" : ""}`}>
+                  {i === priceWinner && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-transparent pointer-events-none" />
+                  )}
                   <div className="relative inline-block">
-                    <div className="text-3xl font-bold text-green-600">${p.pricing_monthly}</div>
+                    <div className={`text-4xl font-black ${(i === priceWinner) ? "text-green-500 drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]" : "text-foreground"}`}>
+                      ${p.pricing_monthly}
+                      <span className="text-sm font-medium text-muted-foreground ml-1">/mo</span>
+                    </div>
                     {i === priceWinner && (
-                      <Badge className="absolute -top-6 -right-8 bg-green-500 hover:bg-green-500 scale-75 border-none">
-                        <Trophy className="w-3 h-3 mr-1" /> Best Value
-                      </Badge>
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-green-500 hover:bg-green-500 text-[9px] font-black uppercase tracking-tighter py-0 px-2 rounded-sm ring-2 ring-background">
+                          <Trophy className="w-2.5 h-2.5 mr-1" /> Overwhelming Winner
+                        </Badge>
+                      </div>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">Starting term</div>
                 </td>
               ))}
             </tr>
 
             {/* RENEWAL ROW */}
-            <tr className={getRowClass(1)}>
-              <td className="p-6 font-semibold flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-500" /> Renewal Price
+            <tr className="hover:bg-white/[0.02] transition-colors">
+              <td className="p-8 font-bold text-foreground">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/10 rounded-lg">
+                    <Shield className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <span>Renewal Price</span>
+                </div>
               </td>
               {data.map((p, i) => {
                 const hp = p as HostingProvider;
@@ -116,13 +143,13 @@ export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTab
                   ? Math.round(((hp.renewal_price - hp.pricing_monthly) / hp.pricing_monthly) * 100)
                   : 0;
                 return (
-                  <td key={i} className={`p-6 text-center border-l border-border/50 ${i === renewalWinner ? "bg-blue-500/5" : ""}`}>
-                    <div className="text-xl font-bold text-foreground">
+                  <td key={i} className={`p-8 text-center border-l border-white/5 transition-all ${i === renewalWinner ? "bg-blue-500/[0.02]" : ""}`}>
+                    <div className="text-2xl font-black text-foreground">
                       {hp.renewal_price ? `$${hp.renewal_price}` : "N/A"}
                     </div>
                     {hike > 0 && (
-                      <div className="text-[10px] font-bold text-destructive uppercase tracking-widest mt-1">
-                        +{hike}% Price Hike
+                      <div className="inline-block mt-2 px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[9px] font-black text-red-500 uppercase tracking-widest">
+                        +{hike}% Jump
                       </div>
                     )}
                   </td>
@@ -133,108 +160,51 @@ export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTab
             {type === "hosting" ? (
               <>
                 {/* WEB SERVER */}
-                <tr className={getRowClass(0)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Server className="w-4 h-4 text-purple-500" /> Web Server
-                  </td>
+                <tr className="hover:bg-white/[0.02] transition-colors">
+                  <td className="p-8 font-medium text-muted-foreground">Web Server</td>
                   {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="font-bold flex items-center justify-center gap-2">
-                        {(p as HostingProvider).web_server?.includes("LiteSpeed") && <Zap className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                    <td key={i} className="p-8 text-center border-l border-white/5">
+                      <div className="font-black text-foreground flex items-center justify-center gap-2">
+                        {(p as HostingProvider).web_server?.includes("LiteSpeed") && <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
                         {(p as HostingProvider).web_server || "Apache"}
                       </div>
                     </td>
                   ))}
                 </tr>
-                {/* CONTROL PANEL */}
-                <tr className={getRowClass(1)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-amber-500" /> Control Panel
-                  </td>
+                {/* STORAGE */}
+                <tr className="hover:bg-white/[0.02] transition-colors">
+                  <td className="p-8 font-medium text-muted-foreground">Disk Space</td>
                   {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="font-bold">{(p as HostingProvider).control_panel || "cPanel"}</div>
+                    <td key={i} className="p-8 text-center border-l border-white/5">
+                      <div className="text-xl font-black text-foreground">{(p as HostingProvider).storage_gb} GB</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{(p as HostingProvider).storage_type || "SSD"}</div>
                     </td>
                   ))}
                 </tr>
                 {/* UPTIME */}
-                <tr className={getRowClass(0)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" /> Uptime SLA
-                  </td>
+                <tr className="hover:bg-white/[0.02] transition-colors">
+                  <td className="p-8 font-medium text-muted-foreground">Market Uptime</td>
                   {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="font-bold">{(p as HostingProvider).uptime_guarantee ? `${(p as HostingProvider).uptime_guarantee}%` : "99.9%"}</div>
-                    </td>
-                  ))}
-                </tr>
-                {/* BACKUPS */}
-                <tr className={getRowClass(1)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Cloud className="w-4 h-4 text-sky-500" /> Backup Sync
-                  </td>
-                  {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="font-bold text-xs">{(p as HostingProvider).backup_frequency || "Daily"}</div>
-                    </td>
-                  ))}
-                </tr>
-                {/* STORAGE TYPE */}
-                <tr className={getRowClass(1)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-indigo-500" /> Storage
-                  </td>
-                  {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="font-bold">{(p as HostingProvider).storage_gb} GB</div>
-                      <div className="text-[10px] text-muted-foreground uppercase">{(p as HostingProvider).storage_type || "SSD"}</div>
+                    <td key={i} className="p-8 text-center border-l border-white/5">
+                      <div className="text-xl font-black text-foreground">{(p as HostingProvider).uptime_guarantee ? `${(p as HostingProvider).uptime_guarantee}%` : "99.9%"}</div>
+                      <div className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Verified</div>
                     </td>
                   ))}
                 </tr>
                 {/* WORDPRESS */}
-                <tr className={getRowClass(0)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-blue-400" /> WordPress Support
-                  </td>
+                <tr className="hover:bg-white/[0.02] transition-colors">
+                  <td className="p-8 font-medium text-muted-foreground">WordPress Ready</td>
                   {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
+                    <td key={i} className="p-8 text-center border-l border-white/5">
                       {renderFeature((p as HostingProvider).features?.wordpress_support ?? true)}
                     </td>
                   ))}
                 </tr>
-                {/* EMAILS */}
-                <tr className={getRowClass(1)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-pink-500" /> Email Accounts
-                  </td>
+                {/* FREE MIGRATION */}
+                <tr className="hover:bg-white/[0.02] transition-colors">
+                  <td className="p-8 font-medium text-muted-foreground">Free Migration</td>
                   {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="font-bold">{String((p as HostingProvider).features?.email_accounts || "Included")}</div>
-                    </td>
-                  ))}
-                </tr>
-                {/* PHP */}
-                <tr className={getRowClass(0)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-slate-500" /> PHP Versions
-                  </td>
-                  {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
-                      <div className="flex flex-wrap justify-center gap-1">
-                        {(p as HostingProvider).php_versions?.slice(0, 3).map((v: string) => (
-                          <Badge key={v} variant="outline" className="text-[9px] px-1 py-0">{v}</Badge>
-                        ))}
-                      </div>
-                    </td>
-                  ))}
-                </tr>
-                {/* MIGRATION */}
-                <tr className={getRowClass(1)}>
-                  <td className="p-6 font-semibold flex items-center gap-2">
-                    <Cloud className="w-4 h-4 text-cyan-500" /> Free Migration
-                  </td>
-                  {data.map((p, i) => (
-                    <td key={i} className="p-6 text-center border-l border-border/50">
+                    <td key={i} className="p-8 text-center border-l border-white/5">
                       {renderFeature((p as HostingProvider).features?.free_migration)}
                     </td>
                   ))}
@@ -321,23 +291,28 @@ export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTab
             )}
 
             {/* FINAL CTA ROW */}
-            <tr>
-              <td className="p-6 bg-muted/5 font-bold text-center flex flex-col items-center justify-center gap-2">
-                <Swords className="w-5 h-5 text-primary/50" />
-                <span>Final Decision</span>
+            <tr className="bg-white/5">
+              <td className="p-10 font-bold text-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-primary/5 -z-10" />
+                <div className="flex flex-col items-center gap-3">
+                  <Swords className="w-8 h-8 text-primary/30" />
+                  <span className="text-sm uppercase tracking-[0.3em] font-black text-muted-foreground/60">Final Decision</span>
+                </div>
               </td>
               {data.map((p, i) => (
-                <td key={i} className="p-8 text-center border-l border-border/50 bg-muted/5">
+                <td key={i} className="p-10 text-center border-l border-white/5 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <AffiliateButton
-                    className="w-full h-12 text-lg shadow-xl hover:scale-105 transition-transform"
+                    className="w-full h-14 text-xl font-black rounded-2xl shadow-[0_20px_40px_-10px_rgba(59,130,246,0.3)] hover:scale-[1.02] transition-all"
                     providerName={p.provider_name}
                     visitUrl={p.website_url || "#"}
                     position="comparison_table_final"
                   >
-                    Get Offer <ChevronRight className="ml-1 w-5 h-5" />
+                    Get Verified Offer <ChevronRight className="ml-2 w-6 h-6" />
                   </AffiliateButton>
-                  <div className="mt-3 text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
-                    Verified by HostingArena
+                  <div className="mt-4 text-[9px] text-muted-foreground uppercase font-black tracking-widest flex items-center justify-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-primary" />
+                    Trusted Verification Seal
                   </div>
                 </td>
               ))}

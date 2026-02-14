@@ -29,7 +29,10 @@ export async function GET(request: Request) {
             .select('*')
             .order('provider_name', { ascending: true });
 
-        if (search) {
+        if (searchParams.get('id')) {
+            const id = searchParams.get('id');
+            query = query.eq('id', id);
+        } else if (search) {
             query = query.ilike('provider_name', `%${search}%`);
         } else {
             query = query.limit(50);

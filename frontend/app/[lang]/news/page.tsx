@@ -81,20 +81,7 @@ export default async function NewsPage({
             <div className="absolute top-[20%] -right-20 w-80 h-80 bg-blue-500/5 blur-[100px] rounded-full pointer-events-none -z-10" />
 
             <div className="container mx-auto lg:max-w-7xl">
-                <div className="text-center mb-20 relative">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6 animate-fade-in">
-                        <Sparkles className="w-3 h-3" />
-                        {lang === 'es' ? 'NOTICIAS EN TIEMPO REAL' : 'REAL-TIME NEWS'}
-                    </div>
-
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight hero-title py-2">
-                        {dict.news.title_part1} <span className="text-primary">{dict.news.title_part2}</span>
-                    </h1>
-
-                    <p className="text-muted-foreground text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
-                        {dict.news.subtitle}
-                    </p>
-
+                <div className="text-center mb-10 relative">
                     <div className="max-w-3xl mx-auto">
                         <NewsFilters
                             categories={categories}
@@ -120,6 +107,11 @@ export default async function NewsPage({
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {await Promise.all(posts.map(async (post) => {
+                            const isEs = lang === 'es';
+                            const displayTitle = (isEs && post.title_es) ? post.title_es : post.title;
+                            const displayExcerpt = (isEs && post.excerpt_es) ? post.excerpt_es : (post.excerpt || post.seo_description || "");
+                            const displayContent = (isEs && post.content_es) ? post.content_es : (post.content || "");
+
                             const affiliateLink = post.related_provider_name
                                 ? await getAffiliateUrl(post.related_provider_name, `https://www.google.com/search?q=${post.related_provider_name}`)
                                 : null;
@@ -132,7 +124,7 @@ export default async function NewsPage({
                                             {post.cover_image_url ? (
                                                 <Image
                                                     src={post.cover_image_url}
-                                                    alt={post.title}
+                                                    alt={displayTitle}
                                                     fill
                                                     className="object-cover"
                                                 />
@@ -142,7 +134,7 @@ export default async function NewsPage({
                                                     <div className="text-center relative z-10">
                                                         <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
                                                         <p className="text-[11px] text-muted-foreground/40 line-clamp-3">
-                                                            {post.image_prompt || post.related_provider_name || "News article"}
+                                                            {post.image_prompt || post.related_provider_name || (isEs ? "Noticia" : "News article")}
                                                         </p>
                                                     </div>
                                                 </>
@@ -156,13 +148,13 @@ export default async function NewsPage({
                                                 </span>
                                             )}
                                             <span className="flex items-center gap-1 text-muted-foreground">
-                                                <Clock className="w-3 h-3" /> {estimateReadTime(post.content || "")}
+                                                <Clock className="w-3 h-3" /> {estimateReadTime(displayContent)}
                                             </span>
                                         </div>
 
-                                        <h3 className="text-xl font-bold mb-3 leading-tight group-hover/link:text-primary transition-colors">{post.title}</h3>
+                                        <h3 className="text-xl font-bold mb-3 leading-tight group-hover/link:text-primary transition-colors">{displayTitle}</h3>
                                         <p className="text-muted-foreground text-sm line-clamp-3 mb-6">
-                                            {post.excerpt || post.seo_description || ""}
+                                            {displayExcerpt}
                                         </p>
                                     </Link>
                                     <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-center text-xs text-muted-foreground">

@@ -175,6 +175,12 @@ export async function POST(request: NextRequest) {
                 };
             }
 
+            // Fallback for empty social fields
+            if (!meta.social_tw_text) meta.social_tw_text = `${meta.title} 👇 #hosting #review`;
+            if (!meta.social_fb_text) meta.social_fb_text = `Check out our latest review: ${meta.title}. Is it worth it? Read more here!`;
+            if (!meta.social_li_text) meta.social_li_text = `New Industry Review: ${meta.title}. We analyze the performance, pricing, and true value proposition.`;
+            if (!meta.social_hashtags || meta.social_hashtags.length === 0) meta.social_hashtags = ["hosting", "tech", "review"];
+
             const randomSuffix = Math.random().toString(36).substring(2, 6);
             const cleanSlug = meta.title
                 .toLowerCase()

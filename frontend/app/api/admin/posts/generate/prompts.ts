@@ -79,6 +79,8 @@ Generate metadata that is:
     - LinkedIn: Professional, value-driven, industry insight.
     - Facebook: Friendly, engaging, story-oriented or community-focused.
     - Hashtags: 3-5 relevant tags.
+    
+    CRITICAL: NEVER return empty strings for social fields. If unsure, generate generic promotional content based on the title.
 
 Return JSON:
 {

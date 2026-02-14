@@ -54,6 +54,16 @@ export interface Post {
     social_li_text: string | null;
     social_hashtags: string[] | null;
     updated_at?: string;
+    // Multi-language fields
+    title_es?: string | null;
+    content_es?: string | null;
+    excerpt_es?: string | null;
+    seo_title_es?: string | null;
+    seo_description_es?: string | null;
+    social_tw_text_es?: string | null;
+    social_fb_text_es?: string | null;
+    social_li_text_es?: string | null;
+    social_hashtags_es?: string[] | null;
 }
 
 interface AffiliateLink {
@@ -695,11 +705,165 @@ function PostEditorModal({
     const [dragOver, setDragOver] = useState(false);
     const [tick, setTick] = useState(0); // Used to force re-render on editor updates
 
+    const [editLang, setEditLang] = useState<'en' | 'es'>('en');
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    // EN Fields
+    const [contentEn, setContentEn] = useState(post?.content || "");
+    // ES Fields
+    const [titleEs, setTitleEs] = useState(post?.title_es || "");
+    const [contentEs, setContentEs] = useState(post?.content_es || "");
+    const [excerptEs, setExcerptEs] = useState(post?.excerpt_es || "");
+    const [seoTitleEs, setSeoTitleEs] = useState(post?.seo_title_es || "");
+    const [seoDescEs, setSeoDescEs] = useState(post?.seo_description_es || "");
+    const [socialTwEs, setSocialTwEs] = useState(post?.social_tw_text_es || "");
+    const [socialFbEs, setSocialFbEs] = useState(post?.social_fb_text_es || "");
+    const [socialLiEs, setSocialLiEs] = useState(post?.social_li_text_es || "");
+    const [socialTagsEs, setSocialTagsEs] = useState(post?.social_hashtags_es?.join(" ") || "");
+
+    const handleLangSwitch = (targetLang: 'en' | 'es') => {
+        if (targetLang === editLang) return;
+
+        // Save current editor content to state before switching
+        if (editor) {
+            const currentHTML = editor.getHTML();
+            if (editLang === 'en') {
+                setContentEn(currentHTML);
+            } else {
+                setContentEs(currentHTML);
+            }
+
+            // Set new content
+            const nextHTML = targetLang === 'en' ? contentEn : contentEs;
+            // Only update if different to avoid cursor jumps / re-renders if content happens to be same
+            if (editor.getHTML() !== nextHTML) {
+                editor.commands.setContent(nextHTML);
+            }
+        }
+
+        setEditLang(targetLang);
+    };
+
+    const handleTranslate = async () => {
+        if (isTranslating) return;
+        try {
+            setIsTranslating(true);
+            setError(null);
+            const currentHTML = editor?.getHTML() || "";
+            let enContent = contentEn;
+            if (editLang === 'en') enContent = currentHTML;
+
+            const res = await fetch('/api/admin/posts/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    content: enContent,
+                    excerpt,
+                    seo_title: seoTitle,
+                    seo_description: seoDesc,
+                    social_tw_text: socialTw,
+                    social_fb_text: socialFb,
+                    social_li_text: socialLi,
+                    social_hashtags: socialTags ? socialTags.split(" ") : [],
+                    from: 'en',
+                    to: 'es'
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Translation failed');
+
+            const { translated } = data;
+            setTitleEs(translated.title);
+            setContentEs(translated.content);
+            setExcerptEs(translated.excerpt);
+            setSeoTitleEs(translated.seo_title);
+            setSeoDescEs(translated.seo_description);
+            // Optionally update social fields too if you want them localized in the DB 
+            // Our DB schema currently only has _es for main fields, 
+            // but the user might want _es for social too. 
+            // For now, let's stick to the schema and maybe just update the social states 
+            // if we are in the ES tab, but wait, we only have one set of social states.
+            // If the user wants separate social for ES, we'd need more columns.
+            setSocialTwEs(translated.social_tw_text || "");
+            setSocialFbEs(translated.social_fb_text || "");
+            setSocialLiEs(translated.social_li_text || "");
+            if (translated.social_hashtags) {
+                setSocialTagsEs(Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : translated.social_hashtags);
+            }
+            console.log("Translation applied to ES fields:", translated);
+
+            if (editLang === 'es') {
+                editor?.commands.setContent(translated.content);
+            }
+        } catch (err: any) {
+            console.error("Translation error:", err);
+            setError(err.message);
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
+    const handleGenerateSocial = async () => {
+        if (isTranslating) return;
+        try {
+            setIsTranslating(true); // Reuse translating state for loading UI
+            setError(null);
+
+            // Determine content to send
+            const contentToSend = editLang === 'en'
+                ? (editor?.getHTML() || contentEn)
+                : (contentEs || editor?.getHTML() || "");
+
+            const titleToSend = editLang === 'en' ? title : titleEs;
+
+            const res = await fetch('/api/admin/posts/generate-social', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: contentToSend,
+                    title: titleToSend,
+                    language: editLang,
+                    platform: 'all'
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Generation failed');
+
+            const { generated } = data;
+
+            if (editLang === 'en') {
+                setSocialTw(generated.twitter || "");
+                setSocialFb(generated.facebook || "");
+                setSocialLi(generated.linkedin || "");
+                if (generated.hashtags) {
+                    setSocialTags(Array.isArray(generated.hashtags) ? generated.hashtags.join(" ") : generated.hashtags);
+                }
+            } else {
+                setSocialTwEs(generated.twitter || "");
+                setSocialFbEs(generated.facebook || "");
+                setSocialLiEs(generated.linkedin || "");
+                if (generated.hashtags) {
+                    setSocialTagsEs(Array.isArray(generated.hashtags) ? generated.hashtags.join(" ") : generated.hashtags);
+                }
+            }
+
+        } catch (err: any) {
+            console.error("Social generation error:", err);
+            setError(err.message);
+        } finally {
+            setIsTranslating(false);
+        }
+    };
+
     // Publish Modal State
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [publishStatus, setPublishStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [publishError, setPublishError] = useState<string | undefined>(undefined);
     const [indexingStatus, setIndexingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [shouldIndexGoogle, setShouldIndexGoogle] = useState(true); // New state for Google Indexing toggle
 
 
     const editor = useEditor({
@@ -777,6 +941,7 @@ function PostEditorModal({
     });
 
     // Update state when post changes (e.g. after AI generation)
+    // 1. Load initial data from post (EXCLUDING editor content syncing)
     useEffect(() => {
         if (post) {
             setTitle(post.title);
@@ -794,11 +959,61 @@ function PostEditorModal({
             setSocialFb(post.social_fb_text || "");
             setSocialLi(post.social_li_text || "");
             setSocialTags(post.social_hashtags?.join(" ") || "");
-            if (editor && post.content && editor.getHTML() !== post.content) {
-                editor.commands.setContent(post.content);
+            // Multi-language fields
+            setTitleEs(post.title_es || "");
+            setExcerptEs(post.excerpt_es || "");
+            setSeoTitleEs(post.seo_title_es || "");
+            setSeoDescEs(post.seo_description_es || "");
+            setSocialTwEs(post.social_tw_text_es || "");
+            setSocialFbEs(post.social_fb_text_es || "");
+            setSocialLiEs(post.social_li_text_es || "");
+            setSocialTagsEs(post.social_hashtags_es?.join(" ") || "");
+        }
+    }, [post]); // Only re-run if post object changes (e.g. initial load or save)
+
+    // 2. Sync editor content when language changes
+    useEffect(() => {
+        if (post && editor) {
+            // We only want to set content if it matches the SAVED content for that language
+            // OR if we are switching languages and want to load the other language's content.
+            // But we must be careful not to overwrite unsaved changes if we just switched back and forth.
+            // Actually, the editor instance preserves content? No, we setContent.
+
+            // Allow the editor to maintain its own state if we are just switching tabs? 
+            // The issue is that we have ONE editor instance for both languages.
+            // So we MUST swap content when editLang changes.
+
+            // To prevent overwriting unsaved changes during a session:
+            // We should store the "current" editor content into the state variables (contentEn/contentEs) 
+            // BEFORE switching. But `handleLangSwitch` does that?
+
+            // Let's check handleLangSwitch. 
+            // If handleLangSwitch handles the saving of current content to state, 
+            // then this useEffect should ONLY initially load content or safeguard.
+
+            // Wait, this useEffect logic:
+            // const contentToSet = editLang === 'en' ? post.content : post.content_es;
+            // This clearly resets to POST (saved) content. This is the bug.
+
+            // We should remove this useEffect logic entirely and rely on handleLangSwitch 
+            // to swap content between `contentEn` and `contentEs` state variables.
+            // But we need to initialize the editor with the correct language content on mount.
+
+            // So: ONLY run this if editor is empty? Or on mount?
+            // Better: only set content if it's the FIRST load.
+
+            // Actually, let's look at `handleLangSwitch`. 
+            // For now, I will remove the editor syncing from here and trust handleLangSwitch?
+            // No, on initial load `editLang` is 'en', we need to load `post.content`.
+
+            // I'll leave a minimized version that only runs if editor is empty.
+            const contentToSet = editLang === 'en' ? (contentEn || post.content) : (contentEs || post.content_es);
+            if (contentToSet && editor.getText().trim() === "" && editor.getHTML() === "<p></p>") {
+                editor.commands.setContent(contentToSet);
             }
         }
-    }, [post?.content, editor]);
+    }, [editor, post]); // Remove editLang from here to stop auto-reset. 
+    // Handled by handleLangSwitch instead.
 
     const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
     const charCount = editor?.getText()?.length || 0;
@@ -889,8 +1104,12 @@ function PostEditorModal({
     };
 
     const handleSave = async (publish = false) => {
-        if (!title.trim()) {
-            setError("Title is required");
+        if (!title.trim() && editLang === 'en') {
+            setError("English Title is required");
+            return;
+        }
+        if (!titleEs.trim() && editLang === 'es') {
+            setError("Spanish Title is required");
             return;
         }
         setError(null);
@@ -903,11 +1122,15 @@ function PostEditorModal({
         }
 
         try {
+            const currentHTML = editor?.getHTML() || "";
+            const finalContentEn = editLang === 'en' ? currentHTML : contentEn;
+            const finalContentEs = editLang === 'es' ? currentHTML : contentEs;
+
             const savedPost = await onSave({
                 id: post?.id,
                 title,
                 slug,
-                content: editor?.getHTML() || "",
+                content: finalContentEn,
                 excerpt,
                 category: category || null,
                 status: publish ? 'published' : (status || 'draft'),
@@ -921,17 +1144,35 @@ function PostEditorModal({
                 social_fb_text: socialFb || null,
                 social_li_text: socialLi || null,
                 social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
+                // Multi-language fields
+                title_es: titleEs || null,
+                content_es: finalContentEs || null,
+                excerpt_es: excerptEs || null,
+                seo_title_es: seoTitleEs || null,
+                seo_description_es: seoDescEs || null,
+                social_tw_text_es: socialTwEs || null,
+                social_fb_text_es: socialFbEs || null,
+                social_li_text_es: socialLiEs || null,
+                social_hashtags_es: socialTagsEs ? socialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
             });
 
             // Auto-append URL to Twitter if missing and publishing
-            const livePostUrl = `https://hostingsarena.com/news/${slug}`;
-            let finalSocialTw = socialTw;
-            if (publish && finalSocialTw && !finalSocialTw.includes('hostingsarena.com/news/')) {
+            const localePrefix = editLang === 'es' ? '/es' : '/en';
+            const livePostUrl = `https://hostingsarena.com${localePrefix}/news/${slug}`;
+
+            let finalSocialTw = editLang === 'en' ? socialTw : socialTwEs;
+
+            if (publish && finalSocialTw && !finalSocialTw.includes('hostingsarena.com')) {
                 finalSocialTw = `${finalSocialTw}\n\n${livePostUrl}`;
-                // We update the local state too so it shows in the editor and is saved
-                setSocialTw(finalSocialTw);
-                // We need to re-save if we updated the text to ensure the webhook gets the latest
-                await onSave({ id: post?.id || (savedPost as any)?.post?.id, social_tw_text: finalSocialTw });
+
+                // Update local state and save payload based on language
+                if (editLang === 'en') {
+                    setSocialTw(finalSocialTw);
+                    await onSave({ id: post?.id || (savedPost as any)?.post?.id, social_tw_text: finalSocialTw });
+                } else {
+                    setSocialTwEs(finalSocialTw);
+                    await onSave({ id: post?.id || (savedPost as any)?.post?.id, social_tw_text_es: finalSocialTw });
+                }
             }
 
             // If it was a new post, onSave should return the data with the new ID
@@ -939,29 +1180,33 @@ function PostEditorModal({
             const postId = (savedPost as any)?.post?.id || post?.id;
 
             if (publish && postId) {
-                // Trigger Google Indexing
-                setIndexingStatus('loading');
-                try {
-                    const idxRes = await fetch("/api/admin/posts/index-google", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
-                    });
+                // Trigger Google Indexing only if enabled
+                if (shouldIndexGoogle) {
+                    setIndexingStatus('loading');
+                    try {
+                        const idxRes = await fetch("/api/admin/posts/index-google", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
+                        });
 
-                    const idxData = await idxRes.json();
+                        const idxData = await idxRes.json();
 
-                    if (idxRes.ok && idxData.success) {
-                        setIndexingStatus('success');
-                    } else {
-                        console.error("Google Indexing failed:", idxData.message || idxData.error);
+                        if (idxRes.ok && idxData.success) {
+                            setIndexingStatus('success');
+                        } else {
+                            console.error("Google Indexing failed:", idxData.message || idxData.error);
+                            setIndexingStatus('error');
+                            // Store the error in state if we want to show it in the summary modal
+                            setPublishError(idxData.message || idxData.error);
+                        }
+                    } catch (idxErr) {
+                        console.error("Google Indexing trigger failed:", idxErr);
                         setIndexingStatus('error');
-                        // Store the error in state if we want to show it in the summary modal
-                        setPublishError(idxData.message || idxData.error);
+                        // We don't fail the whole publish for indexing, as the post is already live
                     }
-                } catch (idxErr) {
-                    console.error("Google Indexing trigger failed:", idxErr);
-                    setIndexingStatus('error');
-                    // We don't fail the whole publish for indexing, as the post is already live
+                } else {
+                    setIndexingStatus('idle'); // Ensure it stays idle if not enabled
                 }
 
                 setPublishStatus('success');
@@ -1031,12 +1276,24 @@ function PostEditorModal({
                                 <option value="published">✅ Published</option>
                             </select>
                         </div>
+
+                        {/* Google Indexing Toggle */}
+                        <div
+                            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-muted/50 border border-border cursor-pointer hover:bg-muted/80 transition-colors"
+                            onClick={() => setShouldIndexGoogle(!shouldIndexGoogle)}
+                            title="Toggle Google Indexing on Publish"
+                        >
+                            <span className={`w-3 h-3 rounded-full ${shouldIndexGoogle ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500/50'}`} />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-bold">
+                                G-Index
+                            </span>
+                        </div>
                         {/* Save */}
                         <div className="flex gap-2">
                             <Button
                                 onClick={() => handleSave()}
                                 className="rounded-2xl bg-muted hover:bg-muted/80 text-foreground border border-border shadow-sm text-sm font-semibold px-4 transition-all duration-200"
-                                disabled={saving || !title.trim()}
+                                disabled={saving || (!title.trim() && editLang === 'en') || (!titleEs.trim() && editLang === 'es')}
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-1.5" /> Save Draft</>}
                             </Button>
@@ -1044,7 +1301,7 @@ function PostEditorModal({
                             <Button
                                 onClick={() => handleSave(true)}
                                 className="rounded-2xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 text-sm font-semibold px-6 transition-all duration-200 hover:scale-105"
-                                disabled={saving || !title.trim()}
+                                disabled={saving || (!title.trim() && editLang === 'en') || (!titleEs.trim() && editLang === 'es')}
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-1.5" /> Publish & Share</>}
                             </Button>
@@ -1064,8 +1321,8 @@ function PostEditorModal({
                         <div className="px-8 pt-6 pb-4 border-b border-border/50">
                             <input
                                 type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                value={editLang === 'es' ? titleEs : title}
+                                onChange={(e) => editLang === 'es' ? setTitleEs(e.target.value) : setTitle(e.target.value)}
                                 placeholder="Your article title..."
                                 className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/20 tracking-tight"
                             />
@@ -1101,6 +1358,59 @@ function PostEditorModal({
                         {/* Content Area */}
                         {activeSection === "content" && (
                             <div className="flex flex-col flex-1 overflow-hidden">
+                                <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border/50 bg-muted/20 overflow-x-auto no-scrollbar justify-between">
+                                    <div className="flex flex-wrap items-center gap-1">
+                                        {/* Language Tabs */}
+                                        <div className="flex items-center gap-1 p-1 bg-background/50 border border-border rounded-xl mr-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleLangSwitch('en')}
+                                                className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${editLang === 'en' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                                            >
+                                                EN
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleLangSwitch('es')}
+                                                className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${editLang === 'es' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                                            >
+                                                ES
+                                            </button>
+                                        </div>
+
+                                        {/* History Group */}
+                                        <ToolbarGroup>
+                                            <ToolbarBtn onClick={() => editor?.chain().focus().undo().run()} title="Undo (⌘Z)">
+                                                <Undo2 className="w-4 h-4" />
+                                            </ToolbarBtn>
+                                            <ToolbarBtn onClick={() => editor?.chain().focus().redo().run()} title="Redo (⌘⇧Z)">
+                                                <Redo2 className="w-4 h-4" />
+                                            </ToolbarBtn>
+                                        </ToolbarGroup>
+
+                                        <ToolbarDivider />
+
+                                        {/* Magic Translate Button */}
+                                        {editLang === 'en' && (
+                                            <button
+                                                type="button"
+                                                onClick={handleTranslate}
+                                                disabled={isTranslating}
+                                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:scale-105 transition-all disabled:opacity-50 disabled:grayscale"
+                                            >
+                                                {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                                                MAGIC TRANSLATE TO ES
+                                            </button>
+                                        )}
+                                        {editLang === 'es' && (
+                                            <div className="px-3 py-1.5 rounded-xl text-[10px] font-bold border border-primary/20 text-primary bg-primary/5 flex items-center gap-2">
+                                                <CheckCircle className="w-3 h-3" />
+                                                EDITING SPANISH VERSION
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <EditorToolbar
                                     editor={editor}
                                     affiliateLinks={affiliateLinks}
@@ -1187,25 +1497,42 @@ function PostEditorModal({
                                     <p className="text-xs font-bold text-blue-400 mb-1 flex items-center gap-1.5">
                                         <Search className="w-3.5 h-3.5" /> SEO Preview
                                     </p>
-                                    <p className="text-sm font-semibold text-blue-300 mt-2 line-clamp-1">{seoTitle || title || "Page Title"}</p>
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{seoDesc || excerpt || "Meta description will appear here..."}</p>
+                                    <p className="text-sm font-semibold text-blue-300 mt-2 line-clamp-1">{editLang === 'es' ? seoTitleEs || titleEs : seoTitle || title || "Page Title"}</p>
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{editLang === 'es' ? seoDescEs || excerptEs : seoDesc || excerpt || "Meta description will appear here..."}</p>
                                     <p className="text-[10px] text-emerald-400 mt-1 font-mono">hostingsarena.com/news/{slug || "slug"}</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">SEO Title</label>
-                                    <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} placeholder="SEO-optimized title" className={INPUT_CLASS} maxLength={60} />
+                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">SEO Title {editLang === 'es' ? '(ES)' : '(EN)'}</label>
+                                    <input
+                                        type="text"
+                                        value={editLang === 'es' ? seoTitleEs : seoTitle}
+                                        onChange={(e) => editLang === 'es' ? setSeoTitleEs(e.target.value) : setSeoTitle(e.target.value)}
+                                        placeholder="SEO-optimized title"
+                                        className={INPUT_CLASS}
+                                        maxLength={60}
+                                    />
                                     <div className="flex justify-between mt-1.5">
                                         <p className="text-[10px] text-muted-foreground">Recommended: 50-60 characters</p>
-                                        <p className={`text-[10px] font-mono ${seoTitle.length > 60 ? "text-red-400" : seoTitle.length > 50 ? "text-emerald-400" : "text-muted-foreground"}`}>{seoTitle.length}/60</p>
+                                        <p className={`text-[10px] font-mono ${(editLang === 'es' ? seoTitleEs : seoTitle).length > 60 ? "text-red-400" : (editLang === 'es' ? seoTitleEs : seoTitle).length > 50 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                            {(editLang === 'es' ? seoTitleEs : seoTitle).length}/60
+                                        </p>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Meta Description</label>
-                                    <textarea value={seoDesc} onChange={(e) => setSeoDesc(e.target.value)} placeholder="Compelling description for search results" className={`${INPUT_CLASS} h-24 resize-none`} maxLength={155} />
+                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Meta Description {editLang === 'es' ? '(ES)' : '(EN)'}</label>
+                                    <textarea
+                                        value={editLang === 'es' ? seoDescEs : seoDesc}
+                                        onChange={(e) => editLang === 'es' ? setSeoDescEs(e.target.value) : setSeoDesc(e.target.value)}
+                                        placeholder="Compelling description for search results"
+                                        className={`${INPUT_CLASS} h-24 resize-none`}
+                                        maxLength={155}
+                                    />
                                     <div className="flex justify-between mt-1.5">
                                         <p className="text-[10px] text-muted-foreground">Recommended: 120-155 characters</p>
-                                        <p className={`text-[10px] font-mono ${seoDesc.length > 155 ? "text-red-400" : seoDesc.length > 120 ? "text-emerald-400" : "text-muted-foreground"}`}>{seoDesc.length}/155</p>
+                                        <p className={`text-[10px] font-mono ${(editLang === 'es' ? seoDescEs : seoDesc).length > 155 ? "text-red-400" : (editLang === 'es' ? seoDescEs : seoDesc).length > 120 ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                            {(editLang === 'es' ? seoDescEs : seoDesc).length}/155
+                                        </p>
                                     </div>
                                 </div>
                                 <div>
@@ -1226,14 +1553,29 @@ function PostEditorModal({
 
                         {activeSection === "social" && (
                             <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                                {/* Header with Regenerate Button */}
+                                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl border border-blue-500/10 mb-6">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-foreground">Social Media Content ({editLang.toUpperCase()})</h3>
+                                        <p className="text-xs text-muted-foreground mt-1">Customize your social posts for {editLang === 'en' ? 'English' : 'Spanish'} audiences.</p>
+                                    </div>
+                                    <button
+                                        onClick={handleGenerateSocial}
+                                        disabled={isTranslating}
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-white dark:bg-zinc-800 border border-border/50 shadow-sm hover:scale-105 transition-all disabled:opacity-50"
+                                    >
+                                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin text-primary" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                                        REGENERATE SOCIAL (AI)
+                                    </button>
+                                </div>
                                 {/* Twitter / X */}
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
                                             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-foreground" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-                                            Twitter Post
+                                            Twitter Post ({editLang.toUpperCase()})
                                         </label>
-                                        <span className={`text-[10px] font-mono ${socialTw.length > 280 ? "text-red-400" : "text-muted-foreground"}`}>{socialTw.length}/280</span>
+                                        <span className={`text-[10px] font-mono ${(editLang === 'es' ? socialTwEs : socialTw).length > 280 ? "text-red-400" : "text-muted-foreground"}`}>{(editLang === 'es' ? socialTwEs : socialTw).length}/280</span>
                                     </div>
 
                                     {/* Preview Card */}
@@ -1256,8 +1598,8 @@ function PostEditorModal({
                                     </div>
 
                                     <textarea
-                                        value={socialTw}
-                                        onChange={(e) => setSocialTw(e.target.value)}
+                                        value={editLang === 'es' ? socialTwEs : socialTw}
+                                        onChange={(e) => editLang === 'es' ? setSocialTwEs(e.target.value) : setSocialTw(e.target.value)}
                                         placeholder="What's happening?"
                                         className={`${INPUT_CLASS} h-24 resize-none font-medium`}
                                     />
@@ -1268,8 +1610,8 @@ function PostEditorModal({
                                 {/* Facebook */}
                                 <div className="space-y-4">
                                     <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#1877F2]" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                                        Facebook Post
+                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-foreground" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"></path></svg>
+                                        Facebook Post ({editLang.toUpperCase()})
                                     </label>
 
                                     {/* Preview Card */}
@@ -1281,25 +1623,25 @@ function PostEditorModal({
                                                 <p className="text-xs text-muted-foreground">Just now · 🌍</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{socialFb || "What's on your mind? Share this with your friends..."}</p>
+                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialFbEs || "What's on your mind? Share this with your friends..." : socialFb || "What's on your mind? Share this with your friends..."}</p>
                                         {coverImageUrl && (
                                             <div className="rounded-lg overflow-hidden border border-border/50 bg-muted/20">
                                                 <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
                                                 <div className="p-3 bg-muted/30 border-t border-border/50">
                                                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">HOSTINGSARENA.COM</p>
-                                                    <p className="text-sm font-bold text-foreground mt-1">{title || "Article Title"}</p>
-                                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{seoDesc || excerpt || "Read the full article..."}</p>
+                                                    <p className="text-sm font-bold text-foreground mt-1">{editLang === 'es' ? titleEs || "Article Title" : title || "Article Title"}</p>
+                                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{editLang === 'es' ? seoDescEs || excerptEs : seoDesc || excerpt || "Read the full article..."}</p>
                                                 </div>
                                             </div>
                                         )}
-                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mt-3">{socialTags}</p>
+                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mt-3">{editLang === 'es' ? socialTagsEs : socialTags}</p>
                                     </div>
 
                                     <textarea
-                                        value={socialFb}
-                                        onChange={(e) => setSocialFb(e.target.value)}
-                                        placeholder="What's on your mind?"
-                                        className={`${INPUT_CLASS} h-32 resize-none`}
+                                        value={editLang === 'es' ? socialFbEs : socialFb}
+                                        onChange={(e) => editLang === 'es' ? setSocialFbEs(e.target.value) : setSocialFb(e.target.value)}
+                                        placeholder="Share on Facebook..."
+                                        className={`${INPUT_CLASS} h-24 resize-none font-medium`}
                                     />
                                 </div>
 
@@ -1309,7 +1651,7 @@ function PostEditorModal({
                                 <div className="space-y-4">
                                     <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
                                         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#0077b5]" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
-                                        LinkedIn Post
+                                        LinkedIn Post ({editLang.toUpperCase()})
                                     </label>
 
                                     {/* Preview Card */}
@@ -1321,13 +1663,13 @@ function PostEditorModal({
                                                 <p className="text-xs text-muted-foreground">redefining verified benchmarks.</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{socialLi || "Share your professional insights..."}</p>
-                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mb-3">{socialTags}</p>
+                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialLiEs || "Share your professional insights..." : socialLi || "Share your professional insights..."}</p>
+                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mb-3">{editLang === 'es' ? socialTagsEs : socialTags}</p>
                                         {coverImageUrl && (
                                             <div className="rounded-sm overflow-hidden border border-border/50 bg-muted/20">
                                                 <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
                                                 <div className="p-2 bg-muted/30">
-                                                    <p className="text-xs font-semibold">{seoTitle || title || "Article Title"}</p>
+                                                    <p className="text-xs font-semibold">{editLang === 'es' ? seoTitleEs || titleEs || "Article Title" : seoTitle || title || "Article Title"}</p>
                                                     <p className="text-[10px] text-muted-foreground">hostingarena.com</p>
                                                 </div>
                                             </div>
@@ -1335,9 +1677,9 @@ function PostEditorModal({
                                     </div>
 
                                     <textarea
-                                        value={socialLi}
-                                        onChange={(e) => setSocialLi(e.target.value)}
-                                        placeholder="Share your insights..."
+                                        value={editLang === 'es' ? socialLiEs : socialLi}
+                                        onChange={(e) => editLang === 'es' ? setSocialLiEs(e.target.value) : setSocialLi(e.target.value)}
+                                        placeholder="Share on LinkedIn..."
                                         className={`${INPUT_CLASS} h-32 resize-none`}
                                     />
                                 </div>
@@ -1517,6 +1859,12 @@ function PostEditorModal({
                     facebook: socialFb || "",
                     linkedin: socialLi || "",
                     hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : undefined
+                }}
+                socialContentEs={{
+                    twitter: socialTwEs || "",
+                    facebook: socialFbEs || "",
+                    linkedin: socialLiEs || "",
+                    hashtags: socialTagsEs ? socialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : undefined
                 }}
                 errorDetails={publishError}
                 indexingStatus={indexingStatus}

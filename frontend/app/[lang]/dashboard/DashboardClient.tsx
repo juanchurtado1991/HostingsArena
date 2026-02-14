@@ -2,7 +2,7 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
@@ -118,6 +118,7 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
     const [taskPage, setTaskPage] = useState(1);
     const [deletingAll, setDeletingAll] = useState(false);
     const [tutorialSearch, setTutorialSearch] = useState("");
+    const [migratingTranslations, setMigratingTranslations] = useState(false);
 
     const [revenueData, setRevenueData] = useState<{
         activeAffiliates: number;
@@ -326,6 +327,26 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
             }
         } catch (e) {
             logger.error('Failed to fetch analytics summary', e);
+        }
+    };
+
+    const handleMigrateTranslations = async () => {
+        if (!confirm(lang === 'es' ? "¿Deseas traducir los posts antiguos automáticamente? (Gasta créditos de OpenAI)" : "Do you want to automatically translate old posts? (Requires OpenAI API credits)")) return;
+        setMigratingTranslations(true);
+        try {
+            const res = await fetch('/api/admin/posts/migrate-translations', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message || 'Migration processed successfully.');
+                fetchRevenueData(); // Refresh post count stats
+            } else {
+                alert('Migration failed: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            logger.error('Migration error:', e);
+            alert('Err: ' + (e instanceof Error ? e.message : 'Unknown'));
+        } finally {
+            setMigratingTranslations(false);
         }
     };
 
@@ -846,7 +867,20 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                 )}
 
                 {activeTab === "newsroom" && (
-                    <PostEditor onNavigateToAffiliates={() => setActiveTab("affiliates")} />
+                    <div className="space-y-6">
+                        <div className="flex justify-end mb-4">
+                            <Button
+                                onClick={handleMigrateTranslations}
+                                disabled={migratingTranslations}
+                                variant="outline"
+                                className="flex items-center gap-2 border-primary/20 hover:bg-primary/10"
+                            >
+                                {migratingTranslations ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
+                                {migratingTranslations ? (lang === 'es' ? 'Traduciendo...' : 'Translating...') : (lang === 'es' ? 'Traducir Posts Antiguos (Auto)' : 'Translate Old Posts (Auto)')}
+                            </Button>
+                        </div>
+                        <PostEditor onNavigateToAffiliates={() => setActiveTab("affiliates")} />
+                    </div>
                 )}
 
                 {activeTab === "workflows" && (

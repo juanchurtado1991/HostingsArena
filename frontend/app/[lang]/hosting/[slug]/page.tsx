@@ -44,9 +44,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
 }
 
-export default async function HostingDetailPage({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams: Promise<{ plan?: string }> }) {
+export default async function HostingDetailPage({ params, searchParams }: { params: Promise<{ slug: string; lang: string }>, searchParams: Promise<{ plan?: string }> }) {
     const supabase = await createClient();
-    const { slug } = await params;
+    const { slug, lang } = await params;
     const { plan: planId } = await searchParams;
     const nameQuery = slug.replace(/-/g, ' ');
 
@@ -121,7 +121,7 @@ export default async function HostingDetailPage({ params, searchParams }: { para
             />
 
             {/* HERO SECTION */}
-            <div className="relative pt-32 pb-16 overflow-hidden">
+            <div className="relative pt-16 pb-16 overflow-hidden">
                 {/* Immersive Background */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10" />
                 <div className="absolute top-20 left-[10%] w-72 h-72 bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse" />
@@ -149,7 +149,7 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                             )}
                         </div>
 
-                        <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 text-foreground text-balance">
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-foreground text-balance">
                             {provider.provider_name} <span className="text-muted-foreground font-light">Review</span>
                         </h1>
 
@@ -348,7 +348,7 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                                 <h3 className="text-2xl font-bold tracking-tight">User Feedback</h3>
                                 <Badge variant="outline" className="font-mono">{provider.provider_name.toUpperCase()} FEEDBACK LOOP</Badge>
                             </div>
-                            <CommentSection providerType="hosting" providerSlug={slug} />
+                            <CommentSection type="hosting" slug={slug} lang={lang} />
                         </section>
                     </div>
 

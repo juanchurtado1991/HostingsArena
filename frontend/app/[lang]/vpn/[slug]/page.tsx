@@ -15,20 +15,20 @@ import { PerformanceBadge } from "@/components/ui/PerformanceBadge";
 import { ProsConsSection } from "@/components/ui/ProsConsSection";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; lang: string }> }) {
+    const { slug, lang } = await params;
     const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
     return {
         title: `${title} VPN Review & Privacy Analysis ${new Date().getFullYear()} | HostingArena`,
         description: `Detailed review, speed tests, and privacy analysis for ${title}. See why it's a top choice for security.`,
         alternates: {
-            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/vpn/${slug}`,
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/vpn/${slug}`,
         },
         openGraph: {
             title: `${title} VPN Review - Speed & Privacy Tested`,
             description: `We tested ${title}'s speed, security, and streaming capabilities. Is it safe for ${new Date().getFullYear()}?`,
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/vpn/${slug}`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/vpn/${slug}`,
             siteName: 'HostingsArena',
             images: [
                 {
@@ -43,9 +43,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
 }
 
-export default async function VpnDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function VpnDetailPage({ params }: { params: Promise<{ slug: string; lang: string }> }) {
     const supabase = await createClient();
-    const { slug } = await params;
+    const { slug, lang } = await params;
     const nameQuery = slug.replace(/-/g, ' ');
 
     const { data: providers, error } = await supabase
@@ -117,7 +117,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
             />
 
             {/* HERO SECTION */}
-            <div className="relative pt-32 pb-16 overflow-hidden">
+            <div className="relative pt-16 pb-16 overflow-hidden">
                 {/* Immersive Background */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-blue-500/5 via-transparent to-transparent -z-10" />
                 <div className="absolute top-20 left-[10%] w-72 h-72 bg-blue-500/10 rounded-full blur-[120px] -z-10 animate-pulse" />
@@ -137,7 +137,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                             Privacy Verified Review
                         </Badge>
 
-                        <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 text-foreground text-balance">
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-foreground text-balance">
                             {provider.provider_name} <span className="text-muted-foreground font-light">VPN</span>
                         </h1>
 
@@ -283,7 +283,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
 
                         {/* COMMENTS */}
                         <div className="pt-8 border-t border-border/30">
-                            <CommentSection providerType="vpn" providerSlug={slug} />
+                            <CommentSection type="vpn" slug={slug} lang={lang} />
                         </div>
                     </div>
 

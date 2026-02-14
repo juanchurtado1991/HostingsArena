@@ -111,7 +111,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
-        <div className="flex h-16 items-center justify-between rounded-full border border-border/40 bg-background/70 px-6 shadow-sm backdrop-blur-xl mt-4 supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 items-center justify-between rounded-full border border-border/40 bg-background/70 px-6 shadow-sm backdrop-blur-xl mt-2 supports-[backdrop-filter]:bg-background/60">
           <Link href={`/${lang}`} className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-foreground">
               Hostings<span className="text-primary">Arena</span>
@@ -182,7 +182,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="absolute top-24 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl xl:hidden animate-in fade-in slide-in-from-top-4 z-40">
+        <div className="absolute top-20 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl xl:hidden animate-in fade-in slide-in-from-top-4 z-40">
           <div className="flex flex-col gap-4">
             <div className="mb-4 flex flex-col gap-4">
               <GlobalSearch />

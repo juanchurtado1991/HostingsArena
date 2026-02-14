@@ -22,3 +22,12 @@ export function calculateMonthlyCost(monthly: number, renewal: number | undefine
     if (!renewal) return monthly;
     return renewal;
 }
+
+export function formatDate(date: string | Date, locale: string = 'en') {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}

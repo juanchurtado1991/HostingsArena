@@ -43,7 +43,7 @@ export function NewsFilters({ categories, lang, dict }: NewsFiltersProps) {
     }, [debouncedSearch]);
 
     return (
-        <div className="space-y-8 mb-12">
+        <div className="space-y-6 mb-4">
             {/* Search Bar */}
             <div className="relative max-w-2xl mx-auto">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -52,7 +52,7 @@ export function NewsFilters({ categories, lang, dict }: NewsFiltersProps) {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder={dict.searchPlaceholder}
-                    className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-lg"
+                    className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 border border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-lg"
                 />
                 {search && (
                     <button

@@ -1,19 +1,25 @@
-
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { PageTracker } from "@/components/tracking/PageTracker";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Clock, Tag, ExternalLink, Calendar, User, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { GlassCard } from '@/components/ui/GlassCard';
+import { Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { formatDate } from '@/lib/utils';
+import { getDictionary } from '@/get-dictionary';
+import { Suspense } from 'react';
+import { Locale } from "@/i18n-config";
+import { JsonLd } from '@/components/seo/JsonLd';
+import { PageTracker } from '@/components/tracking/PageTracker';
+import { ArticleContent } from '@/components/news/ArticleContent';
+import { SocialShare } from '@/components/news/SocialShare';
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import { getAffiliateUrl } from "@/lib/affiliates";
-import Image from "next/image";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { ArticleContent } from "@/components/news/ArticleContent";
+import CommentSection from '@/components/comments/CommentSection';
 
 export const revalidate = 300; // ISR: 5 minutes
 
 interface PageProps {
-    params: Promise<{ slug: string }>;
+    params: Promise<{ slug: string; lang: Locale }>;
 }
 
 async function getPost(slug: string) {
@@ -22,7 +28,7 @@ async function getPost(slug: string) {
         .from("posts")
         .select(`
             *,
-            author:author_id(full_name, avatar_url)
+            author: author_id(full_name, avatar_url)
         `)
         .eq("slug", slug)
         .eq("status", "published")
@@ -32,52 +38,44 @@ async function getPost(slug: string) {
     return post;
 }
 
-function estimateReadTime(content: string): string {
-    const wordCount = content?.replace(/<[^>]*>/g, '').split(/\s+/).length || 0;
-    const minutes = Math.max(1, Math.ceil(wordCount / 200));
-    return `${minutes} min read`;
-}
-
 export async function generateMetadata({ params }: PageProps) {
-    const { slug } = await params;
+    const { slug, lang } = await params;
     const post = await getPost(slug);
     if (!post) return { title: "Post Not Found" };
 
+    const isEs = lang === 'es';
+    const title = (isEs && post.title_es) ? post.title_es : post.title;
+    const description = (isEs && post.seo_description_es) ? post.seo_description_es : (post.seo_description || post.excerpt);
+
     return {
-        title: post.seo_title || post.title,
-        description: post.seo_description || post.excerpt,
+        title: title,
+        description: description,
         openGraph: {
-            title: post.seo_title || post.title,
-            description: post.seo_description || post.excerpt,
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/news/${post.slug}`,
+            title: title,
+            description: description,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/news/${post.slug}`,
             siteName: 'HostingsArena',
-            images: post.cover_image_url ? [
-                {
-                    url: post.cover_image_url,
-                    width: 1200,
-                    height: 630,
-                    alt: post.title,
-                }
-            ] : [],
-            locale: 'en_US',
+            images: post.cover_image_url ? [{ url: post.cover_image_url, width: 1200, height: 630, alt: title }] : [],
+            locale: lang === 'es' ? 'es_ES' : 'en_US',
             type: 'article',
+        },
+        alternates: {
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/news/${post.slug}`,
+            languages: {
+                'en-US': `${process.env.NEXT_PUBLIC_SITE_URL}/en/news/${post.slug}`,
+                'es-ES': `${process.env.NEXT_PUBLIC_SITE_URL}/es/news/${post.slug}`,
+            },
         },
         twitter: {
             card: 'summary_large_image',
-            title: post.seo_title || post.title,
-            description: post.seo_description || post.excerpt,
+            title: title,
+            description: description,
             images: post.cover_image_url ? [post.cover_image_url] : [],
         },
     };
 }
 
-import { Suspense } from "react";
-
-import { getDictionary } from "@/get-dictionary";
-import { Locale } from "@/i18n-config";
-import { SocialShare } from "@/components/news/SocialShare";
-
-export default async function NewsPostPage({ params }: { params: Promise<{ slug: string; lang: Locale }> }) {
+export default async function NewsPostPage({ params }: PageProps) {
     const { slug, lang } = await params;
     const dict = await getDictionary(lang);
     const post = await getPost(slug);
@@ -87,85 +85,99 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
     }
 
     const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://hostingsarena.com'}/${lang}/news/${post.slug}`;
+    const isEs = lang === 'es';
+
+    const displayTitle = (isEs && post.title_es) ? post.title_es : post.title;
+    const displayContent = (isEs && post.content_es) ? post.content_es : post.content;
+    const displayExcerpt = (isEs && post.excerpt_es) ? post.excerpt_es : post.excerpt;
 
     return (
-        <div className="min-h-screen pt-24 pb-20 px-4">
-            <JsonLd post={post} url={shareUrl} />
+        <div className="min-h-screen pt-16 pb-20 px-4">
+            <JsonLd post={post} url={shareUrl} lang={lang} />
             <PageTracker postSlug={post.slug} />
 
-            <article className="container mx-auto lg:max-w-7xl">
-                <GlassCard className="p-8 md:p-12 mb-12">
-                    {/* Header */}
-                    <header className="mb-10 text-center">
-                        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
-                            {post.category && (
-                                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                                    <Tag className="w-3.5 h-3.5" />
-                                    {post.category}
-                                </span>
-                            )}
-                            <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {new Date(post.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
+            <article className="container mx-auto max-w-5xl">
+                <GlassCard className="p-8 md:p-14 lg:p-16 shadow-2xl border-white/10 rounded-[2.5rem] mb-12 mt-3">
+                    <header className="mb-10">
+                        <div className="flex flex-wrap items-center gap-4 mb-8">
+                            <Link
+                                href={`/${lang}/news`}
+                                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-all hover:translate-x-[-2px]"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                {lang === 'es' ? 'Noticias' : 'News'}
+                            </Link>
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                            <span className="px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase bg-primary/10 text-primary border border-primary/20 backdrop-blur-md">
+                                {post.category || "General"}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5" />
-                                {estimateReadTime(post.content || "")}
-                            </span>
+                            <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-tighter bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                                <Calendar className="w-3 h-3" />
+                                {formatDate(post.published_at || post.created_at, lang)}
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-tighter bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                                <Clock className="w-3 h-3" />
+                                {Math.ceil((displayContent?.length || 0) / 1000)} {isEs ? "min de lectura" : "min read"}
+                            </div>
                         </div>
 
-                        <h1 className="hero-title mb-4 py-2">
-                            {post.title}
+                        <h1 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight text-gradient leading-[1.15] text-balance">
+                            {displayTitle}
                         </h1>
 
-                        {post.seo_description && (
-                            <p className="text-xl text-muted-foreground/60 max-w-3xl mx-auto mb-8 font-medium italic leading-relaxed">
-                                {post.seo_description}
+                        {displayExcerpt && (
+                            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-4xl font-medium tracking-tight mb-12 text-balance">
+                                {displayExcerpt}
                             </p>
+                        )}
+
+                        {post.cover_image_url && (
+                            <div className="relative aspect-[21/9] w-full rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 ring-1 ring-white/10 mb-12">
+                                <Image
+                                    src={post.cover_image_url}
+                                    alt={displayTitle}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                />
+                            </div>
                         )}
                     </header>
 
-                    {/* Cover Image */}
-                    {post.cover_image_url && (
-                        <div className="relative aspect-[3/1] w-full rounded-3xl overflow-hidden mb-16 shadow-2xl shadow-primary/5 ring-1 ring-white/10">
-                            <Image
-                                src={post.cover_image_url}
-                                alt={post.title}
-                                fill
-                                className="object-cover"
-                                priority
+                    <div className="max-w-4xl mx-auto">
+                        <ArticleContent content={displayContent} className="prose-layout" />
+
+                        <div className="mt-1 pt-0 border-t border-white/5">
+                            <SocialShare
+                                url={shareUrl}
+                                title={displayTitle}
+                                dict={dict.news}
                             />
                         </div>
-                    )}
 
-                    <ArticleContent content={post.content || ""} />
-
-                    <SocialShare
-                        title={post.title}
-                        url={shareUrl}
-                        dict={dict.news}
-                    />
-
-                    <div className="mt-6 pt-6 border-t border-white/10">
-                        <Suspense fallback={<div className="h-20 animate-pulse bg-white/5 rounded-2xl" />}>
-                            <NewsConversionButtons
-                                relatedProvider={post.related_provider_name}
-                                category={post.category}
-                                lang={lang}
-                            />
-                        </Suspense>
                     </div>
                 </GlassCard>
+
+                {/* Conversion Buttons (Prominent) */}
+                <div className="mt-8 mb-4">
+                    <Suspense fallback={<div className="h-24 animate-pulse bg-white/5 rounded-[2.5rem]" />}>
+                        <NewsConversionButtons
+                            relatedProvider={post.related_provider_name}
+                            category={post.category}
+                            lang={lang}
+                        />
+                    </Suspense>
+                </div>
+
+                <div className="pt-0 mb-20">
+                    <CommentSection type="post" slug={post.slug} lang={lang} />
+                </div>
             </article>
         </div>
     );
 }
 
-// --- Dynamic Conversion Components ---
-
-import { AffiliateButton } from "@/components/conversion/AffiliateButton";
-
-// Popular providers to compare against (Top tier)
+// Popular rivals for conversion
 const POPULAR_HOSTING = [
     { name: "Hostinger", id: "d587e19c-679a-4cd0-8daf-0c5329920a54" },
     { name: "Bluehost", id: "b42366e0-8cf0-4408-8139-5fe45c0d3ec9" },
@@ -187,55 +199,87 @@ async function NewsConversionButtons({
     category: string | null;
     lang: string;
 }) {
-    if (!relatedProvider) return null;
+    const isEs = lang === 'es';
+    const type = (category?.toLowerCase().includes('vpn')) ? 'vpn' : 'hosting';
+    const rivals = type === 'vpn' ? POPULAR_VPN : POPULAR_HOSTING;
+    const targetProviderName = relatedProvider || (type === 'vpn' ? "NordVPN" : "Hostinger");
 
     const supabase = await createClient();
-    const type = (category?.toLowerCase().includes('vpn')) ? 'vpn' : 'hosting';
-
-    // 1. Fetch Related Provider ID & Affiliate Info
     const table = type === 'vpn' ? 'vpn_providers' : 'hosting_providers';
-    const { data: providerData, error } = await supabase
+
+    // Try to find the specific provider
+    const { data: providerData } = await supabase
         .from(table)
         .select('id, provider_name, website_url')
-        .ilike('provider_name', relatedProvider)
+        .ilike('provider_name', targetProviderName)
         .limit(1)
         .maybeSingle();
 
-    if (error || !providerData) return null;
+    // Fallback if provider not in DB (highly unlikely for top ones, but just in case)
+    const provider = providerData || {
+        id: type === 'vpn' ? POPULAR_VPN[0].id : POPULAR_HOSTING[0].id,
+        provider_name: targetProviderName,
+        website_url: targetProviderName.toLowerCase().includes('hostinger') ? 'https://www.hostinger.com' : 'https://nordvpn.com'
+    };
 
-    // 2. Get Affiliate URL
-    const affiliateUrl = await getAffiliateUrl(providerData.provider_name, providerData.website_url);
+    const affiliateUrl = await getAffiliateUrl(provider.provider_name, provider.website_url);
+    // Intelligent Comparison Logic:
+    // 1. Challenger vs Champion: Compare current provider against category leader (Hostinger/NordVPN).
+    // 2. Champion vs Contender: If looking at leader, compare against top runner-up.
+    let rival;
+    const isHostinger = provider.provider_name.toLowerCase().includes('hostinger');
+    const isNord = provider.provider_name.toLowerCase().includes('nordvpn');
 
-    // 3. Pick random popular rival (not same as current)
-    const rivals = type === 'vpn' ? POPULAR_VPN : POPULAR_HOSTING;
-    const availableRivals = rivals.filter(r => r.name.toLowerCase() !== relatedProvider.toLowerCase());
-    const randomRival = availableRivals[Math.floor(Math.random() * availableRivals.length)] || rivals[0];
+    if (type === 'vpn') {
+        // VPN Leader: NordVPN -> Backup: ExpressVPN
+        const express = POPULAR_VPN.find(p => p.name === 'ExpressVPN') || POPULAR_VPN[1];
+        const nord = POPULAR_VPN.find(p => p.name === 'NordVPN') || POPULAR_VPN[0];
+        rival = isNord ? express : nord;
+    } else {
+        // Hosting Leader: Hostinger -> Backup: Bluehost
+        const bluehost = POPULAR_HOSTING.find(p => p.name === 'Bluehost') || POPULAR_HOSTING[1];
+        const hostinger = POPULAR_HOSTING.find(p => p.name === 'Hostinger') || POPULAR_HOSTING[0];
+        rival = isHostinger ? bluehost : hostinger;
+    }
 
-    // 4. Build Comparison Link (using versus logic)
-    const compareLink = `/${lang}/compare?a=${providerData.id}&b=${randomRival.id}&cat=${type}`;
+    const compareLink = `/${lang}/compare?a=${provider.id}&b=${rival.id}&cat=${type}`;
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <AffiliateButton
-                providerName={providerData.provider_name}
-                visitUrl={affiliateUrl}
-                position="news_bottom_cta"
-                className="w-full sm:w-auto h-14 px-8 text-base shadow-xl shadow-primary/20"
-                variant="default"
-            >
-                {lang === 'es'
-                    ? `Cámbiate a ${providerData.provider_name}`
-                    : `Switch to ${providerData.provider_name}`}
-            </AffiliateButton>
+        <GlassCard className="p-8 md:p-10 border-primary/10 shadow-2xl shadow-primary/5 rounded-[2.5rem]">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+                        {isEs ? "¿Listo para empezar?" : "Ready to get started?"}
+                    </h3>
+                    <p className="text-muted-foreground font-medium">
+                        {isEs
+                            ? `Obtén la mejor oferta en ${provider.provider_name} hoy.`
+                            : `Get the best deal on ${provider.provider_name} today.`}
+                    </p>
+                </div>
 
-            <Link
-                href={compareLink}
-                className="w-full sm:w-auto h-14 px-8 flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 font-bold transition-all"
-            >
-                {lang === 'es' ? 'Comparar contra' : 'Compare vs'} {randomRival.name}
-                <ChevronLeft className="w-4 h-4 rotate-180" />
-            </Link>
-        </div>
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    <AffiliateButton
+                        providerName={provider.provider_name}
+                        visitUrl={affiliateUrl}
+                        position="news_bottom_cta"
+                        className="w-full sm:w-auto h-16 px-10 text-lg shadow-xl shadow-primary/20 rounded-full font-black"
+                        variant="default"
+                    >
+                        {isEs
+                            ? `Ir a ${provider.provider_name}`
+                            : `Go to ${provider.provider_name}`}
+                    </AffiliateButton>
+
+                    <Link
+                        href={compareLink}
+                        className="w-full sm:w-auto h-16 px-8 flex items-center justify-center gap-2 rounded-full border border-border bg-background/50 hover:bg-secondary/50 font-bold transition-all group"
+                    >
+                        {isEs ? 'Versus' : 'Versus'} {rival.name}
+                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                </div>
+            </div>
+        </GlassCard>
     );
 }
-

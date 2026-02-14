@@ -113,11 +113,6 @@ export function GlobalSearch({
                         </span>
                         {variant === "default" && <span className="xl:hidden">Search...</span>}
                     </span>
-                    {variant === "default" && (
-                        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                            <span className="text-xs">⌘</span>K
-                        </kbd>
-                    )}
                     {variant === "hero" && (
                         <div className="flex items-center gap-2 text-xs font-bold text-primary/40 uppercase tracking-widest hidden sm:flex">
                             {placeholder.includes("Hosting") ? "Hosting" : "Search"}
