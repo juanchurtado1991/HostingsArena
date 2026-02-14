@@ -28,7 +28,10 @@ export async function requireAuth(): Promise<NextResponse | null> {
             .eq('id', user.id)
             .single();
 
+        console.log(`[AuthGuard] User: ${user.email}, Role: ${profile?.role}`);
+
         if (profile?.role !== 'admin') {
+            console.warn(`[AuthGuard] Forbidden access attempt by ${user.email} (role: ${profile?.role})`);
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
