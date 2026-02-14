@@ -9,7 +9,7 @@ import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 
 export const metadata: Metadata = {
   title: "Best Web Hosting 2024 (Verified Data) | HostingArena",
-  description: "We tested 120+ hosting providers. See the real winners for speed, uptime, and support. No fake reviews, just data.",
+  description: "We tested 50+ hosting providers. See the real winners for speed, uptime, and support. No fake reviews, just data.",
   alternates: {
     canonical: process.env.NEXT_PUBLIC_SITE_URL!,
   }

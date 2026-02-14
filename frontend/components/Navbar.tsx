@@ -118,7 +118,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             </span>
           </Link>
 
-          <div className="hidden lg:flex items-center lg:gap-3 xl:gap-8">
+          <div className="hidden xl:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -133,7 +133,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             ))}
           </div>
 
-          <div className="hidden lg:flex items-center lg:gap-2 xl:gap-4">
+          <div className="hidden xl:flex items-center gap-4">
             <GlobalSearch />
             <LocaleSwitcher />
 
@@ -173,7 +173,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           </div>
 
           <button
-            className="lg:hidden p-2 text-muted-foreground"
+            className="xl:hidden p-2 text-muted-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
@@ -182,7 +182,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="absolute top-24 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl lg:hidden animate-in fade-in slide-in-from-top-4 z-40">
+        <div className="absolute top-24 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl xl:hidden animate-in fade-in slide-in-from-top-4 z-40">
           <div className="flex flex-col gap-4">
             <div className="mb-4 flex flex-col gap-4">
               <GlobalSearch />

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
         default: "HostingArena | Real Data Comparisons",
         template: "%s | HostingArena"
     },
-    description: "Stop relying on fake reviews. We verified 120+ providers with deep data extraction. Real uptime, real speeds, real hidden fees revealed.",
+    description: "Stop relying on fake reviews. We verified 50+ providers with deep data extraction. Real uptime, real speeds, real hidden fees revealed.",
     icons: {
         icon: "/swords-icon.svg",
         apple: "/apple-icon.png",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'HostingArena | Real Data Comparisons',
-        description: 'Stop relying on fake reviews. We verified 120+ providers with deep data extraction.',
+        description: 'Stop relying on fake reviews. We verified 50+ providers with deep data extraction.',
         images: [`${process.env.NEXT_PUBLIC_SITE_URL}/logo-wide.jpg`],
         creator: '@HostingsArena',
     },

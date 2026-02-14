@@ -49,7 +49,7 @@ export function HeroSection({ dict, lang = 'en' }: { dict?: any, lang?: string }
           transition={{ duration: 0.5, delay: 0.1 }}
           className="hero-subtitle mb-8"
         >
-          {dict?.subtitle || "Stop relying on fake reviews. We verified 120+ providers with deep data extraction."}
+          {dict?.subtitle || "Stop relying on fake reviews. We verified 50+ providers with deep data extraction."}
         </motion.p>
 
         {/* Hero Search */}
