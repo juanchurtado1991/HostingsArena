@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { GlassCard } from "./ui/GlassCard";
 import { ArrowRight, Shield, Zap, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { GlobalSearch } from "./GlobalSearch";
 
 export function HeroSection({ dict, lang = 'en' }: { dict?: any, lang?: string }) {
   return (
@@ -46,17 +47,30 @@ export function HeroSection({ dict, lang = 'en' }: { dict?: any, lang?: string }
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="hero-subtitle mb-10"
+          className="hero-subtitle mb-8"
         >
           {dict?.subtitle || "Stop relying on fake reviews. We verified 120+ providers with deep data extraction."}
         </motion.p>
+
+        {/* Hero Search */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.12 }}
+          className="flex justify-center mb-10 w-full px-4"
+        >
+          <GlobalSearch
+            variant="hero"
+            placeholder={lang === 'es' ? "Buscar proveedores (ej. Bluehost, NordVPN)..." : "Search providers (e.g. Bluehost, NordVPN)..."}
+          />
+        </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
         >
           <Link href={`/${lang}/compare`} className="h-12 px-8 rounded-full bg-foreground text-background font-semibold flex items-center gap-2 hover:scale-105 transition-transform">
             {dict?.cta_compare || "Start Comparing"} <ArrowRight className="w-4 h-4" />

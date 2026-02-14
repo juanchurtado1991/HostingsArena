@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, FormEvent, ChangeEvent } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import { Extension } from "@tiptap/core";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -13,6 +14,7 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PublishSummaryModal } from "./PublishSummaryModal";
 import {
@@ -96,6 +98,111 @@ function ToolbarDivider() {
     return <div className="w-px h-10 bg-gradient-to-b from-transparent via-border to-transparent mx-2" />;
 }
 
+const ResizableImage = (props: any) => {
+    const { node, updateAttributes, selected } = props;
+    const imgRef = useRef<HTMLImageElement>(null);
+    const [resizing, setResizing] = useState(false);
+
+    const { align = 'center', width = '100%' } = node.attrs;
+
+    const onMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setResizing(true);
+
+        const startX = e.clientX;
+        const startWidth = imgRef.current?.width || 0;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            const currentX = moveEvent.clientX;
+            const diffX = currentX - startX;
+            const newWidth = Math.max(50, startWidth + diffX);
+            updateAttributes({ width: `${newWidth}px` });
+        };
+
+        const onMouseUp = () => {
+            setResizing(false);
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseUp);
+        };
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    };
+
+    const containerStyle: React.CSSProperties = {
+        width: width,
+        float: align === 'left' ? 'left' : align === 'right' ? 'right' : 'none',
+        margin: align === 'left' ? '0 1rem 0.5rem 0' : align === 'right' ? '0 0 0.5rem 1rem' : '1.5rem auto',
+        display: align === 'center' ? 'block' : 'inline-block',
+        clear: align === 'center' ? 'both' : 'none',
+    };
+
+    return (
+        <NodeViewWrapper style={containerStyle} className="relative leading-none transition-all group">
+            <img
+                ref={imgRef}
+                src={node.attrs.src}
+                alt={node.attrs.alt}
+                style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    cursor: resizing ? 'nwse-resize' : 'default',
+                }}
+                className={`rounded-lg transition-shadow ${selected ? 'ring-2 ring-primary shadow-xl' : 'shadow-sm'}`}
+            />
+            {selected && (
+                <div
+                    onMouseDown={onMouseDown}
+                    className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full cursor-nwse-resize border-2 border-white shadow-lg z-10 hover:scale-125 transition-transform"
+                    title="Drag to resize"
+                />
+            )}
+        </NodeViewWrapper>
+    );
+};
+
+// Custom Font Size Extension
+const FontSize = Extension.create({
+    name: 'fontSize',
+    addGlobalAttributes() {
+        return [
+            {
+                types: ['textStyle'],
+                attributes: {
+                    fontSize: {
+                        default: null,
+                        parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
+                        renderHTML: attributes => {
+                            if (!attributes.fontSize) {
+                                return {}
+                            }
+                            return {
+                                style: `font-size: ${attributes.fontSize}`,
+                            }
+                        },
+                    },
+                },
+            },
+        ]
+    },
+    addCommands() {
+        return {
+            setFontSize: (fontSize: string) => ({ chain }: any) => {
+                return chain()
+                    .setMark('textStyle', { fontSize })
+                    .run()
+            },
+            unsetFontSize: () => ({ chain }: any) => {
+                return chain()
+                    .setMark('textStyle', { fontSize: null })
+                    .removeEmptyTextStyle()
+                    .run()
+            },
+        }
+    },
+})
+
 function EditorToolbar({
     editor,
     affiliateLinks,
@@ -109,14 +216,40 @@ function EditorToolbar({
 }) {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showAffiliateMenu, setShowAffiliateMenu] = useState(false);
+    const [showVsMenu, setShowVsMenu] = useState(false);
+    const [vsCategory, setVsCategory] = useState<"hosting" | "vpn">("hosting");
+    const [vsProviders, setVsProviders] = useState<any[]>([]);
+    const [vsLoading, setVsLoading] = useState(false);
+    const [vsA, setVsA] = useState("");
+    const [vsB, setVsB] = useState("");
     const [affSearch, setAffSearch] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (showVsMenu) {
+            const fetchVsProviders = async () => {
+                setVsLoading(true);
+                try {
+                    const res = await fetch(`/api/providers?type=${vsCategory}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setVsProviders(data || []);
+                    }
+                } catch (e) {
+                    console.error("Error fetching vs providers:", e);
+                } finally {
+                    setVsLoading(false);
+                }
+            };
+            fetchVsProviders();
+        }
+    }, [showVsMenu, vsCategory]);
 
     if (!editor) return null;
 
     const colors = [
-        "#ffffff", "#ef4444", "#f97316", "#eab308", "#22c55e",
-        "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#6b7280",
+        "#ffffff", "#000000", "#ef4444", "#f97316", "#eab308", "#22c55e",
+        "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#6b7280", "#1e293b",
     ];
 
     const filteredLinks = affiliateLinks.filter(a =>
@@ -155,6 +288,31 @@ function EditorToolbar({
                         }
                     }}
                 />
+            </ToolbarGroup>
+
+            <ToolbarDivider />
+
+            {/* Font Size */}
+            <ToolbarGroup label="Size">
+                <div className="flex items-center gap-1 bg-background/50 rounded-xl px-2 h-10 ring-1 ring-border/50">
+                    <Type className="w-3.5 h-3.5 text-muted-foreground" />
+                    <select
+                        className="bg-transparent text-[11px] font-bold border-none focus:ring-0 cursor-pointer min-w-[50px] outline-none"
+                        onChange={(e) => {
+                            if (e.target.value === "auto") {
+                                editor.chain().focus().unsetFontSize().run();
+                            } else {
+                                editor.chain().focus().setFontSize(`${e.target.value}px`).run();
+                            }
+                        }}
+                        value={editor.getAttributes('textStyle').fontSize?.replace('px', '') || "auto"}
+                    >
+                        <option value="auto">Auto</option>
+                        {[10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 32, 48].map(size => (
+                            <option key={size} value={size}>{size}px</option>
+                        ))}
+                    </select>
+                </div>
             </ToolbarGroup>
 
             <ToolbarDivider />
@@ -259,6 +417,111 @@ function EditorToolbar({
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleHighlight({ color: "#fbbf24" }).run()} active={editor.isActive("highlight")} title="Highlight">
                     <Highlighter className="w-4 h-4" />
                 </ToolbarBtn>
+            </ToolbarGroup>
+
+            <ToolbarDivider />
+
+            {/* Versus Links */}
+            <ToolbarGroup label="Versus">
+                <div className="relative">
+                    <ToolbarBtn onClick={() => setShowVsMenu(!showVsMenu)} title="Insert Versus Comparison">
+                        <div className="flex items-center gap-0.5">
+                            <span className="text-[10px] font-black">VS</span>
+                        </div>
+                    </ToolbarBtn>
+
+                    {showVsMenu && (
+                        <div className="absolute top-full left-0 mt-2 w-72 p-4 bg-background border border-border rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Insert Comparison</h4>
+                                    <button onClick={() => setShowVsMenu(false)} className="text-muted-foreground hover:text-foreground" type="button">
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="flex p-1 bg-muted/50 rounded-xl mb-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setVsCategory("hosting")}
+                                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "hosting" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                                    >
+                                        HOSTING
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setVsCategory("vpn")}
+                                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "vpn" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                                    >
+                                        VPN
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] uppercase font-bold text-muted-foreground px-1">Provider A</label>
+                                        <select
+                                            value={vsA}
+                                            onChange={(e) => setVsA(e.target.value)}
+                                            className="w-full bg-muted/50 rounded-xl px-3 py-2 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none"
+                                            disabled={vsLoading}
+                                        >
+                                            <option value="">{vsLoading ? 'Loading...' : 'Select Provider...'}</option>
+                                            {vsProviders.map(a => (
+                                                <option key={a.id} value={a.id}>
+                                                    {a.provider_name} ({formatCurrency(a.pricing_monthly)})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex justify-center">
+                                        <div className="w-px h-4 bg-border/50" />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] uppercase font-bold text-muted-foreground px-1">Provider B</label>
+                                        <select
+                                            value={vsB}
+                                            onChange={(e) => setVsB(e.target.value)}
+                                            className="w-full bg-muted/50 rounded-xl px-3 py-2 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none"
+                                            disabled={vsLoading}
+                                        >
+                                            <option value="">{vsLoading ? 'Loading...' : 'Select Provider...'}</option>
+                                            {vsProviders.map(a => (
+                                                <option key={a.id} value={a.id}>
+                                                    {a.provider_name} ({formatCurrency(a.pricing_monthly)})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    className="w-full rounded-xl py-5 font-bold shadow-lg shadow-primary/20"
+                                    disabled={!vsA || !vsB || vsA === vsB || vsLoading}
+                                    type="button"
+                                    onClick={() => {
+                                        const lang = window.location.pathname.split('/')[1] || 'en';
+                                        const finalLang = lang === 'dashboard' || lang === 'news' ? 'en' : lang;
+                                        const url = `/${finalLang}/compare?a=${vsA}&b=${vsB}&cat=${vsCategory}`;
+
+                                        const providerA = vsProviders.find(p => p.id === vsA);
+                                        const providerB = vsProviders.find(p => p.id === vsB);
+                                        const label = `${providerA?.provider_name || 'Provider A'} vs ${providerB?.provider_name || 'Provider B'}`;
+
+                                        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).insertContent(label).run();
+                                        setShowVsMenu(false);
+                                        setVsA("");
+                                        setVsB("");
+                                    }}
+                                >
+                                    Insert Versus Link
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </ToolbarGroup>
 
             <ToolbarDivider />
@@ -407,20 +670,43 @@ function PostEditorModal({
                 addAttributes() {
                     return {
                         ...this.parent?.(),
-                        width: { default: null },
+                        width: {
+                            default: '100%',
+                            parseHTML: element => element.getAttribute('width'),
+                            renderHTML: attributes => {
+                                if (!attributes.width) return {};
+                                return {
+                                    width: attributes.width,
+                                };
+                            },
+                        },
+                        align: {
+                            default: 'center',
+                            parseHTML: element => element.getAttribute('data-align') || 'center',
+                            renderHTML: attributes => ({
+                                'data-align': attributes.align,
+                                style: `
+                                    width: ${attributes.width || '100%'};
+                                    float: ${attributes.align === 'left' ? 'left' : attributes.align === 'right' ? 'right' : 'none'};
+                                    margin: ${attributes.align === 'left' ? '0 1rem 0.5rem 0' : attributes.align === 'right' ? '0 0 0.5rem 1rem' : '1.5rem auto'};
+                                    display: ${attributes.align === 'center' ? 'block' : 'inline-block'};
+                                    clear: ${attributes.align === 'center' ? 'both' : 'none'};
+                                `,
+                            }),
+                        },
                         style: { default: null },
                     }
-                }
+                },
+                addNodeView() {
+                    return ReactNodeViewRenderer(ResizableImage)
+                },
             }),
+            FontSize,
             Placeholder.configure({
                 placeholder: "Start writing your article here... Use the toolbar above to format text, add headings, or insert affiliate links.",
             }),
         ],
         content: post?.content || "",
-        onTransaction: () => {
-            // Force re-render so toolbar active states update
-            setTick(t => t + 1);
-        },
         editorProps: {
             attributes: {
                 class: "tiptap focus:outline-none min-h-[500px] px-8 py-6",
@@ -446,9 +732,11 @@ function PostEditorModal({
             setSocialFb(post.social_fb_text || "");
             setSocialLi(post.social_li_text || "");
             setSocialTags(post.social_hashtags?.join(" ") || "");
-            editor?.commands.setContent(post.content);
+            if (editor && post.content && editor.getHTML() !== post.content) {
+                editor.commands.setContent(post.content);
+            }
         }
-    }, [post, editor]);
+    }, [post?.content, editor]);
 
     const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
     const charCount = editor?.getText()?.length || 0;
@@ -464,7 +752,24 @@ function PostEditorModal({
         editor
             .chain()
             .focus()
-            .insertContent(`<a href="${link.affiliate_link}" target="_blank" rel="noopener noreferrer">${link.provider_name}</a> `)
+            .insertContent({
+                type: 'text',
+                text: link.provider_name,
+                marks: [
+                    {
+                        type: 'link',
+                        attrs: {
+                            href: link.affiliate_link,
+                            target: '_blank',
+                            rel: 'noopener noreferrer',
+                            class: 'affiliate-link text-primary font-semibold',
+                            'data-provider': link.provider_name,
+                            'data-affiliate': 'true',
+                        },
+                    },
+                ],
+            })
+            .insertContent(" ") // Add a space after
             .run();
     };
 
@@ -767,9 +1072,39 @@ function PostEditorModal({
                                                     variant="ghost"
                                                     size="sm"
                                                     className="h-8 w-8 p-0 text-xs"
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%', style: 'width: 100%; height: auto;' }).run()}
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%', align: 'center' }).run()}
                                                 >
                                                     100%
+                                                </Button>
+
+                                                <div className="w-px h-4 bg-border mx-1" />
+
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`h-8 w-8 p-0 ${editor.isActive('image', { align: 'left' }) ? 'bg-primary/20 text-primary' : ''}`}
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { align: 'left', width: editor.getAttributes('image').width === '100%' ? '40%' : editor.getAttributes('image').width }).run()}
+                                                    title="Align Left (Text Wrap)"
+                                                >
+                                                    <AlignLeft className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`h-8 w-8 p-0 ${editor.isActive('image', { align: 'center' }) ? 'bg-primary/20 text-primary' : ''}`}
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center' }).run()}
+                                                    title="Align Center"
+                                                >
+                                                    <AlignCenter className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`h-8 w-8 p-0 ${editor.isActive('image', { align: 'right' }) ? 'bg-primary/20 text-primary' : ''}`}
+                                                    onClick={() => editor.chain().focus().updateAttributes('image', { align: 'right', width: editor.getAttributes('image').width === '100%' ? '40%' : editor.getAttributes('image').width }).run()}
+                                                    title="Align Right (Text Wrap)"
+                                                >
+                                                    <AlignRight className="w-3.5 h-3.5" />
                                                 </Button>
                                             </div>
                                         </BubbleMenu>

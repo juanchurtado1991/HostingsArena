@@ -19,8 +19,8 @@ interface CalculatorClientProps {
 export default function CalculatorClient({ dict, lang }: CalculatorClientProps) {
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
     const [years, setYears] = useState(3);
-    const [provider1, setProvider1] = useState({ name: "Bluehost", initial: 2.95, renewal: 10.99, promo: 12 });
-    const [provider2, setProvider2] = useState({ name: "FastComet", initial: 2.95, renewal: 2.95, promo: 12 });
+    const [provider1, setProvider1] = useState({ id: "", provider_name: "Bluehost", initial: 2.95, renewal: 10.99, promo: 12 });
+    const [provider2, setProvider2] = useState({ id: "", provider_name: "FastComet", initial: 2.95, renewal: 2.95, promo: 12 });
     useTrackPageView();
 
     const data = [];
@@ -40,15 +40,15 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
         if (i % step === 0 || i === totalMonths) {
             data.push({
                 month: i,
-                [provider1.name]: parseFloat(p1Total.toFixed(2)),
-                [provider2.name]: parseFloat(p2Total.toFixed(2)),
+                [provider1.provider_name]: parseFloat(p1Total.toFixed(2)),
+                [provider2.provider_name]: parseFloat(p2Total.toFixed(2)),
             });
         }
     }
 
     const diff = Math.abs(p1Total - p2Total);
-    const winner = p1Total < p2Total ? provider1.name : provider2.name;
-    const loser = p1Total < p2Total ? provider2.name : provider1.name;
+    const winner = p1Total < p2Total ? provider1.provider_name : provider2.provider_name;
+    const loser = p1Total < p2Total ? provider2.provider_name : provider1.provider_name;
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6">
@@ -100,13 +100,14 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                 <div className="space-y-4">
                                     <ProviderSelector
                                         type="hosting"
-                                        selectedProviderName={provider1.name}
+                                        selectedProvider={provider1}
                                         onSelect={(p) => {
                                             if (p) {
                                                 const renewalPrice = p.renewal_price || p.renewal_price_monthly || (p.pricing_monthly * 2) || 0;
                                                 setProvider1({
                                                     ...provider1,
-                                                    name: p.provider_name,
+                                                    id: p.id,
+                                                    provider_name: p.provider_name,
                                                     initial: Number(p.pricing_monthly) || 0,
                                                     renewal: Number(renewalPrice)
                                                 });
@@ -134,13 +135,14 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                 <div className="space-y-4">
                                     <ProviderSelector
                                         type={category}
-                                        selectedProviderName={provider2.name}
+                                        selectedProvider={provider2}
                                         onSelect={(p) => {
                                             if (p) {
                                                 const renewalPrice = p.renewal_price || p.renewal_price_monthly || (p.pricing_monthly * 2) || 0;
                                                 setProvider2({
                                                     ...provider2,
-                                                    name: p.provider_name,
+                                                    id: p.id,
+                                                    provider_name: p.provider_name,
                                                     initial: Number(p.pricing_monthly) || 0,
                                                     renewal: Number(renewalPrice)
                                                 });
@@ -187,8 +189,8 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                             labelFormatter={(label) => `Month ${label}`}
                                         />
                                         <Legend verticalAlign="top" height={36} />
-                                        <Line name={provider1.name} type="monotone" dataKey={provider1.name} stroke="#ef4444" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                                        <Line name={provider2.name} type="monotone" dataKey={provider2.name} stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                                        <Line name={provider1.provider_name} type="monotone" dataKey={provider1.provider_name} stroke="#ef4444" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                                        <Line name={provider2.provider_name} type="monotone" dataKey={provider2.provider_name} stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>

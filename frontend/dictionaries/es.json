@@ -103,11 +103,15 @@
     "news": {
         "title_part1": "Inteligencia",
         "title_part2": "de la Industria",
-        "subtitle": "Actualizaciones curadas por IA sobre privacidad, cambios de precios e infraestructura verificada por nuestros scrapers.",
+        "subtitle": "Actualizaciones expertas sobre privacidad, cambios de precios e infraestructura verificada por nuestros sistemas de monitoreo.",
         "coming_soon_title": "Próximamente",
         "coming_soon_desc": "Nuestros editores están curando artículos frescos de la industria. Vuelve pronto.",
         "read_time": "{minutes} min de lectura",
-        "check_deal": "Ver Oferta"
+        "check_deal": "Ver Oferta",
+        "share_title": "Compartir este artículo",
+        "share_subtitle": "Ayuda a otros a encontrar las mejores ofertas de hosting y VPN.",
+        "copy_link": "Copiar enlace",
+        "copied": "¡Copiado!"
     },
     "footer": {
         "tagline": "Reseñas basadas en datos para la infraestructura web moderna.",

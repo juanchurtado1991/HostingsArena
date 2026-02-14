@@ -4,23 +4,73 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
 import { Check, X, AlertTriangle, ArrowRight, Shield, Database, Server, Zap, Globe, Coins, Search } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useTrackPageView } from "@/hooks/useTrackPageView";
 import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ComparisonTable } from "@/components/comparisons/ComparisonTable";
+import { useSearchParams } from "next/navigation";
 
 interface CompareClientProps {
     dict: any;
     lang: string;
 }
 
-export default function CompareClient({ dict, lang }: CompareClientProps) {
+function CompareContent({ dict, lang }: CompareClientProps) {
+    const searchParams = useSearchParams();
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
     const [p1, setP1] = useState<any>(null);
     const [p2, setP2] = useState<any>(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
     useTrackPageView();
+
+    useEffect(() => {
+        const preselectProviders = async () => {
+            const providerA = searchParams.get('a');
+            const providerB = searchParams.get('b');
+            const cat = searchParams.get('cat') as "hosting" | "vpn" || "hosting";
+
+            if (cat !== category) {
+                setCategory(cat);
+            }
+
+            if (providerA) {
+                try {
+                    // Try by ID first if it looks like a uuid, otherwise search by name
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(providerA);
+                    const res = await fetch(`/api/providers?type=${cat}${isUuid ? '' : `&search=${providerA}`}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const found = isUuid
+                            ? data.find((p: any) => p.id === providerA)
+                            : data.find((p: any) => p.provider_name.toLowerCase() === providerA.toLowerCase());
+                        if (found) setP1(found);
+                    }
+                } catch (e) { console.error("Error preselecting A:", e); }
+            }
+
+            if (providerB) {
+                try {
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(providerB);
+                    const res = await fetch(`/api/providers?type=${cat}${isUuid ? '' : `&search=${providerB}`}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const found = isUuid
+                            ? data.find((p: any) => p.id === providerB)
+                            : data.find((p: any) => p.provider_name.toLowerCase() === providerB.toLowerCase());
+                        if (found) setP2(found);
+                    }
+                } catch (e) { console.error("Error preselecting B:", e); }
+            }
+            setIsInitialLoad(false);
+        };
+
+        if (isInitialLoad) {
+            preselectProviders();
+        }
+    }, [searchParams, category, isInitialLoad]);
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6">
@@ -60,7 +110,7 @@ export default function CompareClient({ dict, lang }: CompareClientProps) {
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP1}
-                                    selectedProviderName={p1?.provider_name}
+                                    selectedProvider={p1}
                                 />
                             </div>
 
@@ -77,7 +127,7 @@ export default function CompareClient({ dict, lang }: CompareClientProps) {
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP2}
-                                    selectedProviderName={p2?.provider_name}
+                                    selectedProvider={p2}
                                 />
                             </div>
                         </div>
@@ -98,5 +148,17 @@ export default function CompareClient({ dict, lang }: CompareClientProps) {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function CompareClient({ dict, lang }: CompareClientProps) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen pt-24 pb-12 px-6 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <CompareContent dict={dict} lang={lang} />
+        </Suspense>
     );
 }

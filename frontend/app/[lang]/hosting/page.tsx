@@ -1,6 +1,6 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
-import { Check, Server, Database, TrendingUp, Search, ChevronRight, ChevronLeft } from "lucide-react";
+import { Check, Server, Database, TrendingUp, ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -9,6 +9,8 @@ import { getAffiliateUrlBatch } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
+
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export const metadata = {
   title: "Top Hosting Providers - Verified Benchmarks | HostingArena",
@@ -87,16 +89,10 @@ export default async function HostingPage({
 
           {/* Search Bar */}
           <div className="max-w-md mx-auto relative">
-            <form action={`/${lang}/hosting`} method="get">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-              <input
-                type="text"
-                name="q"
-                placeholder={dict.hosting.search_placeholder}
-                defaultValue={query}
-                className="w-full h-12 pl-10 pr-4 rounded-full border border-border bg-black/5 dark:bg-white/5 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-              />
-            </form>
+            <GlobalSearch
+              variant="hero"
+              placeholder={dict.hosting.search_placeholder}
+            />
           </div>
         </div>
 

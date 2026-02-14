@@ -103,11 +103,15 @@
     "news": {
         "title_part1": "Industry",
         "title_part2": "Intelligence",
-        "subtitle": "AI-curated updates on privacy, price changes, and infrastructure verified by our scrapers.",
+        "subtitle": "Expert updates on privacy, price changes, and infrastructure verified by our monitoring systems.",
         "coming_soon_title": "Coming soon",
         "coming_soon_desc": "Our editors are curating fresh industry articles. Check back shortly.",
         "read_time": "{minutes} min read",
-        "check_deal": "Check Deal"
+        "check_deal": "Check Deal",
+        "share_title": "Share this article",
+        "share_subtitle": "Help others find the best hosting & VPN deals.",
+        "copy_link": "Copy link",
+        "copied": "Copied!"
     },
     "footer": {
         "tagline": "Data-driven reviews for the modern web infrastructure stack.",

@@ -49,11 +49,7 @@ export function ArticleContent({ content, className }: ArticleContentProps) {
         <div
             ref={containerRef}
             className={cn(
-                "prose prose-lg dark:prose-invert max-w-none",
-                "prose-headings:font-bold prose-headings:tracking-tight",
-                "prose-a:text-primary prose-a:no-underline hover:prose-a:underline",
-                "prose-img:rounded-2xl prose-img:shadow-lg",
-                "prose-p:leading-relaxed prose-p:text-muted-foreground",
+                "article-body w-full max-w-none",
                 className
             )}
             dangerouslySetInnerHTML={{ __html: content }}

@@ -100,26 +100,87 @@ async function AffiliateCTA({ providerName }: { providerName: string }) {
     }
 }
 
-export default async function NewsPostPage({ params }: PageProps) {
-    const { slug } = await params;
+import { getDictionary } from "@/get-dictionary";
+import { Locale } from "@/i18n-config";
+import { SocialShare } from "@/components/news/SocialShare";
+
+export default async function NewsPostPage({ params }: { params: Promise<{ slug: string; lang: Locale }> }) {
+    const { slug, lang } = await params;
+    const dict = await getDictionary(lang);
     const post = await getPost(slug);
 
     if (!post) {
         notFound();
     }
 
+    const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://hostingsarena.com'}/${lang}/news/${post.slug}`;
+
     return (
-        <div className="min-h-screen pt-24 pb-20 px-6">
-            <JsonLd post={post} url={`https://hostingsarena.com/news/${post.slug}`} />
+        <div className="min-h-screen pt-24 pb-20 px-4">
+            <JsonLd post={post} url={shareUrl} />
             <PageTracker postSlug={post.slug} />
 
-            <article className="max-w-7xl mx-auto">
+            <article className="container mx-auto lg:max-w-7xl">
+                <Link href={`/${lang}/news`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors group">
+                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                    {lang === 'es' ? 'Volver a Noticias' : 'Back to News'}
+                </Link>
+
+                {/* Header */}
+                <header className="mb-10 text-center">
+                    <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-6">
+                        {post.category && (
+                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                                <Tag className="w-3.5 h-3.5" />
+                                {post.category}
+                            </span>
+                        )}
+                        <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(post.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" />
+                            {estimateReadTime(post.content || "")}
+                        </span>
+                    </div>
+
+                    <h1 className="hero-title mb-4 py-2">
+                        {post.title}
+                    </h1>
+
+                    {post.seo_description && (
+                        <p className="text-xl text-muted-foreground/60 max-w-3xl mx-auto mb-8 font-medium italic leading-relaxed">
+                            {post.seo_description}
+                        </p>
+                    )}
+                </header>
+
+                {/* Cover Image */}
+                {post.cover_image_url && (
+                    <div className="relative aspect-video w-full rounded-3xl overflow-hidden mb-16 shadow-2xl shadow-primary/5 ring-1 ring-white/10">
+                        <Image
+                            src={post.cover_image_url}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    </div>
+                )}
+
                 {/* Content */}
                 <GlassCard className="p-8 md:p-12 mb-12">
                     <ArticleContent content={post.content || ""} />
+
+                    <SocialShare
+                        title={post.title}
+                        url={shareUrl}
+                        dict={dict.news}
+                    />
                 </GlassCard>
             </article>
-        </div >
+        </div>
     );
 }
 
