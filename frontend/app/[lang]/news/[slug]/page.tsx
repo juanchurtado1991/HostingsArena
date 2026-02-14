@@ -73,33 +73,6 @@ export async function generateMetadata({ params }: PageProps) {
 
 import { Suspense } from "react";
 
-async function AffiliateCTA({ providerName }: { providerName: string }) {
-    try {
-        const affiliateLink = await getAffiliateUrl(
-            providerName,
-            `https://www.google.com/search?q=${providerName}`
-        );
-
-        if (!affiliateLink) return null;
-
-        return (
-            <div className="flex justify-center mt-12">
-                <a
-                    href={affiliateLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
-                >
-                    Visit {providerName} <ExternalLink className="w-5 h-5" />
-                </a>
-            </div>
-        );
-    } catch (error) {
-        console.error("Error loading Affiliate CTA:", error);
-        return null;
-    }
-}
-
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { SocialShare } from "@/components/news/SocialShare";
@@ -158,7 +131,7 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
 
                 {/* Cover Image */}
                 {post.cover_image_url && (
-                    <div className="relative aspect-video w-full rounded-3xl overflow-hidden mb-16 shadow-2xl shadow-primary/5 ring-1 ring-white/10">
+                    <div className="relative aspect-video w-full lg:max-w-[60%] mx-auto rounded-3xl overflow-hidden mb-16 shadow-2xl shadow-primary/5 ring-1 ring-white/10">
                         <Image
                             src={post.cover_image_url}
                             alt={post.title}
@@ -178,8 +151,93 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
                         url={shareUrl}
                         dict={dict.news}
                     />
+
+                    <div className="mt-12 pt-12 border-t border-white/10">
+                        <Suspense fallback={<div className="h-20 animate-pulse bg-white/5 rounded-2xl" />}>
+                            <NewsConversionButtons
+                                relatedProvider={post.related_provider_name}
+                                category={post.category}
+                                lang={lang}
+                            />
+                        </Suspense>
+                    </div>
                 </GlassCard>
             </article>
+        </div>
+    );
+}
+
+// --- Dynamic Conversion Components ---
+
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
+
+// Popular providers to compare against (Top tier)
+const POPULAR_HOSTING = [
+    { name: "Hostinger", id: "d587e19c-679a-4cd0-8daf-0c5329920a54" },
+    { name: "Bluehost", id: "b42366e0-8cf0-4408-8139-5fe45c0d3ec9" },
+    { name: "HostGator", id: "26431090-260e-4230-b3cc-1316daa2ff44" }
+];
+
+const POPULAR_VPN = [
+    { name: "NordVPN", id: "f3895443-0bfa-4bc3-8c16-9ee3edf1536a" },
+    { name: "ExpressVPN", id: "9b612374-874b-4439-b9ae-6f3671b80e2e" },
+    { name: "Surfshark", id: "233ea0d4-3d2b-4547-a058-a8b3d36f523b" }
+];
+
+async function NewsConversionButtons({
+    relatedProvider,
+    category,
+    lang
+}: {
+    relatedProvider: string | null;
+    category: string | null;
+    lang: string;
+}) {
+    if (!relatedProvider) return null;
+
+    const supabase = await createClient();
+    const type = (category?.toLowerCase().includes('vpn')) ? 'vpn' : 'hosting';
+
+    // 1. Fetch Related Provider ID & Affiliate Info
+    const table = type === 'vpn' ? 'vpn_providers' : 'hosting_providers';
+    const { data: providerData } = await supabase
+        .from(table)
+        .select('id, provider_name, website_url')
+        .ilike('provider_name', relatedProvider)
+        .single();
+
+    if (!providerData) return null;
+
+    // 2. Get Affiliate URL
+    const affiliateUrl = await getAffiliateUrl(providerData.provider_name, providerData.website_url);
+
+    // 3. Pick random popular rival (not same as current)
+    const rivals = type === 'vpn' ? POPULAR_VPN : POPULAR_HOSTING;
+    const availableRivals = rivals.filter(r => r.name.toLowerCase() !== relatedProvider.toLowerCase());
+    const randomRival = availableRivals[Math.floor(Math.random() * availableRivals.length)] || rivals[0];
+
+    // 4. Build Comparison Link (using versus logic)
+    const compareLink = `/${lang}/compare?a=${providerData.id}&b=${randomRival.id}&cat=${type}`;
+
+    return (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <AffiliateButton
+                providerName={providerData.provider_name}
+                visitUrl={affiliateUrl}
+                position="news_bottom_cta"
+                className="w-full sm:w-auto h-14 px-8 text-base shadow-xl shadow-primary/20"
+                variant="default"
+            >
+                {lang === 'es' ? 'Ver Oferta de' : 'Visit'} {providerData.provider_name}
+            </AffiliateButton>
+
+            <Link
+                href={compareLink}
+                className="w-full sm:w-auto h-14 px-8 flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 font-bold transition-all"
+            >
+                {lang === 'es' ? 'Comparar contra' : 'Compare vs'} {randomRival.name}
+                <ChevronLeft className="w-4 h-4 rotate-180" />
+            </Link>
         </div>
     );
 }
