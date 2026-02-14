@@ -85,17 +85,16 @@ function ToolbarBtn({
     );
 }
 
-function ToolbarGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function ToolbarGroup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
     return (
-        <div className="flex flex-col items-center gap-1">
-            <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40 select-none">{label}</span>
-            <div className="flex items-center gap-0.5">{children}</div>
+        <div className={`flex items-center gap-0.5 ${className}`}>
+            {children}
         </div>
     );
 }
 
 function ToolbarDivider() {
-    return <div className="w-px h-10 bg-gradient-to-b from-transparent via-border to-transparent mx-2" />;
+    return <div className="w-px h-6 bg-border/40 mx-1" />;
 }
 
 const ResizableImage = (props: any) => {
@@ -217,6 +216,8 @@ function EditorToolbar({
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showAffiliateMenu, setShowAffiliateMenu] = useState(false);
     const [showVsMenu, setShowVsMenu] = useState(false);
+    const [showLinkMenu, setShowLinkMenu] = useState(false);
+    const [linkUrl, setLinkUrl] = useState("");
     const [vsCategory, setVsCategory] = useState<"hosting" | "vpn">("hosting");
     const [vsProviders, setVsProviders] = useState<any[]>([]);
     const [vsLoading, setVsLoading] = useState(false);
@@ -257,9 +258,9 @@ function EditorToolbar({
     );
 
     return (
-        <div className="flex flex-wrap items-end gap-1 px-5 py-3.5 border-b border-border/50 bg-muted/30">
-            {/* Undo/Redo */}
-            <ToolbarGroup label="History">
+        <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border/50 bg-muted/20 overflow-x-auto no-scrollbar">
+            {/* History */}
+            <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().undo().run()} title="Undo (⌘Z)">
                     <Undo2 className="w-4 h-4" />
                 </ToolbarBtn>
@@ -270,31 +271,27 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Image Insert */}
-            <ToolbarGroup label="Insert">
-                <ToolbarBtn onClick={() => fileInputRef.current?.click()} title="Insert Image">
-                    <ImageIcon className="w-4 h-4" />
+            {/* Formatting */}
+            <ToolbarGroup>
+                <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold (⌘B)">
+                    <Bold className="w-4 h-4" />
                 </ToolbarBtn>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                            onInsertImage(file);
-                            e.target.value = ""; // Reset
-                        }
-                    }}
-                />
+                <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic (⌘I)">
+                    <Italic className="w-4 h-4" />
+                </ToolbarBtn>
+                <ToolbarBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline (⌘U)">
+                    <UnderlineIcon className="w-4 h-4" />
+                </ToolbarBtn>
+                <ToolbarBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
+                    <Strikethrough className="w-4 h-4" />
+                </ToolbarBtn>
             </ToolbarGroup>
 
             <ToolbarDivider />
 
-            {/* Font Size */}
-            <ToolbarGroup label="Size">
-                <div className="flex items-center gap-1 bg-background/50 rounded-xl px-2 h-10 ring-1 ring-border/50">
+            {/* Size & Color */}
+            <ToolbarGroup>
+                <div className="flex items-center gap-1 bg-background/50 rounded-xl px-2 h-9 ring-1 ring-border/50">
                     <Type className="w-3.5 h-3.5 text-muted-foreground" />
                     <select
                         className="bg-transparent text-[11px] font-bold border-none focus:ring-0 cursor-pointer min-w-[50px] outline-none"
@@ -313,30 +310,44 @@ function EditorToolbar({
                         ))}
                     </select>
                 </div>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            {/* Text Formatting */}
-            <ToolbarGroup label="Format">
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold (⌘B)">
-                    <Bold className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic (⌘I)">
-                    <Italic className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline (⌘U)">
-                    <UnderlineIcon className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-                    <Strikethrough className="w-4 h-4" />
+                <div className="relative">
+                    <ToolbarBtn onClick={() => setShowColorPicker(!showColorPicker)} title="Text Color" active={showColorPicker}>
+                        <Palette className="w-4 h-4" />
+                    </ToolbarBtn>
+                    {showColorPicker && (
+                        <>
+                            <div className="fixed inset-0 z-[70]" onClick={() => setShowColorPicker(false)} />
+                            <div className="absolute top-full left-0 mt-2 p-3 rounded-2xl glass-panel shadow-2xl z-[80] flex gap-1.5 flex-wrap w-44 bg-card border border-border">
+                                <p className="w-full text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Presets</p>
+                                {colors.map(c => (
+                                    <button
+                                        key={c}
+                                        type="button"
+                                        onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(false); }}
+                                        className="w-7 h-7 rounded-lg border border-border hover:scale-125 transition-all duration-200 shadow-sm"
+                                        style={{ backgroundColor: c }}
+                                    />
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
+                                    className="w-full text-[10px] text-muted-foreground hover:text-foreground mt-1.5 py-1 rounded-lg hover:bg-accent transition-colors"
+                                >
+                                    ↩ Reset Color
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+                <ToolbarBtn onClick={() => editor.chain().focus().toggleHighlight({ color: "#fbbf24" }).run()} active={editor.isActive("highlight")} title="Highlight">
+                    <Highlighter className="w-4 h-4" />
                 </ToolbarBtn>
             </ToolbarGroup>
 
             <ToolbarDivider />
 
             {/* Headings */}
-            <ToolbarGroup label="Headings">
+            <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} title="Heading 1">
                     <Heading1 className="w-4 h-4" />
                 </ToolbarBtn>
@@ -350,8 +361,8 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Alignment */}
-            <ToolbarGroup label="Align">
+            {/* Alignment & Lists */}
+            <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} title="Align Left">
                     <AlignLeft className="w-4 h-4" />
                 </ToolbarBtn>
@@ -361,219 +372,245 @@ function EditorToolbar({
                 <ToolbarBtn onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align Right">
                     <AlignRight className="w-4 h-4" />
                 </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            {/* Lists & Quote */}
-            <ToolbarGroup label="Structure">
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
                     <List className="w-4 h-4" />
                 </ToolbarBtn>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
                     <ListOrdered className="w-4 h-4" />
                 </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Quote">
-                    <Quote className="w-4 h-4" />
-                </ToolbarBtn>
             </ToolbarGroup>
 
             <ToolbarDivider />
 
-            {/* Color & Highlight */}
-            <ToolbarGroup label="Style">
-                <div className="relative flex items-center gap-1">
-                    <ToolbarBtn onClick={() => setShowColorPicker(!showColorPicker)} title="Text Color">
-                        <Palette className="w-4 h-4" />
-                    </ToolbarBtn>
-                    <input
-                        type="color"
-                        className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
-                        onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
-                        title="Custom Color"
-                    />
-                    {showColorPicker && (
-                        <div className="absolute top-full left-0 mt-2 p-3 rounded-2xl glass-panel shadow-2xl z-50 flex gap-1.5 flex-wrap w-44 bg-card border border-border">
-                            <p className="w-full text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Presets</p>
-                            {colors.map(c => (
-                                <button
-                                    key={c}
-                                    type="button"
-                                    onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(false); }}
-                                    className="w-7 h-7 rounded-lg border border-border hover:scale-125 transition-all duration-200 shadow-sm"
-                                    style={{ backgroundColor: c }}
-                                />
-                            ))}
-                            <button
-                                type="button"
-                                onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
-                                className="w-full text-[10px] text-muted-foreground hover:text-foreground mt-1.5 py-1 rounded-lg hover:bg-accent transition-colors"
-                            >
-                                ↩ Reset Color
+            {/* Insert Media & Links */}
+            <ToolbarGroup>
+                <ToolbarBtn onClick={() => fileInputRef.current?.click()} title="Insert Image">
+                    <ImageIcon className="w-4 h-4" />
+                </ToolbarBtn>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                            onInsertImage(file);
+                            e.target.value = ""; // Reset
+                        }
+                    }}
+                />
+
+                {/* Hyperlink */}
+                <ToolbarBtn
+                    onClick={() => {
+                        const previousUrl = editor.getAttributes('link').href || "";
+                        setLinkUrl(previousUrl);
+                        setShowLinkMenu(true);
+                    }}
+                    active={editor.isActive('link')}
+                    title="Insert/Edit Link"
+                >
+                    <LinkIcon className="w-4 h-4" />
+                </ToolbarBtn>
+
+                {/* Versus */}
+                <ToolbarBtn onClick={() => setShowVsMenu(true)} active={showVsMenu} title="Insert Versus Comparison">
+                    <div className="flex items-center gap-0.5">
+                        <span className="text-[10px] font-black">VS</span>
+                    </div>
+                </ToolbarBtn>
+
+                {/* Affiliate */}
+                <button
+                    type="button"
+                    onClick={() => setShowAffiliateMenu(true)}
+                    title="Insert Affiliate Link"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
+                >
+                    <span className="hidden sm:inline">AFFILIATE</span>
+                    <ChevronDown className="w-3 h-3" />
+                </button>
+            </ToolbarGroup>
+
+            {/* Link Modal (Fixed Central) */}
+            {showLinkMenu && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLinkMenu(false)} />
+                    <GlassCard className="w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-bold flex items-center gap-2">
+                                <LinkIcon className="w-4 h-4 text-primary" />
+                                Edit Link
+                            </h4>
+                            <button onClick={() => setShowLinkMenu(false)} className="text-muted-foreground hover:text-foreground">
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
-                    )}
-                </div>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHighlight({ color: "#fbbf24" }).run()} active={editor.isActive("highlight")} title="Highlight">
-                    <Highlighter className="w-4 h-4" />
-                </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            {/* Versus Links */}
-            <ToolbarGroup label="Versus">
-                <div className="relative">
-                    <ToolbarBtn onClick={() => setShowVsMenu(!showVsMenu)} title="Insert Versus Comparison">
-                        <div className="flex items-center gap-0.5">
-                            <span className="text-[10px] font-black">VS</span>
-                        </div>
-                    </ToolbarBtn>
-
-                    {showVsMenu && (
-                        <div className="absolute top-full left-0 mt-2 w-72 p-4 bg-background border border-border rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Insert Comparison</h4>
-                                    <button onClick={() => setShowVsMenu(false)} className="text-muted-foreground hover:text-foreground" type="button">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="flex p-1 bg-muted/50 rounded-xl mb-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setVsCategory("hosting")}
-                                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "hosting" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                                    >
-                                        HOSTING
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setVsCategory("vpn")}
-                                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "vpn" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                                    >
-                                        VPN
-                                    </button>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-bold text-muted-foreground px-1">Provider A</label>
-                                        <select
-                                            value={vsA}
-                                            onChange={(e) => setVsA(e.target.value)}
-                                            className="w-full bg-muted/50 rounded-xl px-3 py-2 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none"
-                                            disabled={vsLoading}
-                                        >
-                                            <option value="">{vsLoading ? 'Loading...' : 'Select Provider...'}</option>
-                                            {vsProviders.map(a => (
-                                                <option key={a.id} value={a.id}>
-                                                    {a.provider_name} ({formatCurrency(a.pricing_monthly)})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="flex justify-center">
-                                        <div className="w-px h-4 bg-border/50" />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] uppercase font-bold text-muted-foreground px-1">Provider B</label>
-                                        <select
-                                            value={vsB}
-                                            onChange={(e) => setVsB(e.target.value)}
-                                            className="w-full bg-muted/50 rounded-xl px-3 py-2 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none"
-                                            disabled={vsLoading}
-                                        >
-                                            <option value="">{vsLoading ? 'Loading...' : 'Select Provider...'}</option>
-                                            {vsProviders.map(a => (
-                                                <option key={a.id} value={a.id}>
-                                                    {a.provider_name} ({formatCurrency(a.pricing_monthly)})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
+                        <div className="space-y-4">
+                            <input
+                                type="url"
+                                value={linkUrl}
+                                onChange={(e) => setLinkUrl(e.target.value)}
+                                placeholder="https://example.com"
+                                className="w-full px-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        if (linkUrl === '') {
+                                            editor.chain().focus().extendMarkRange('link').unsetLink().run();
+                                        } else {
+                                            editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+                                        }
+                                        setShowLinkMenu(false);
+                                    }
+                                }}
+                            />
+                            <div className="flex gap-2">
                                 <Button
-                                    className="w-full rounded-xl py-5 font-bold shadow-lg shadow-primary/20"
-                                    disabled={!vsA || !vsB || vsA === vsB || vsLoading}
-                                    type="button"
+                                    variant="ghost"
+                                    className="flex-1 rounded-xl"
                                     onClick={() => {
-                                        const lang = window.location.pathname.split('/')[1] || 'en';
-                                        const finalLang = lang === 'dashboard' || lang === 'news' ? 'en' : lang;
-                                        const url = `/${finalLang}/compare?a=${vsA}&b=${vsB}&cat=${vsCategory}`;
-
-                                        const providerA = vsProviders.find(p => p.id === vsA);
-                                        const providerB = vsProviders.find(p => p.id === vsB);
-                                        const label = `${providerA?.provider_name || 'Provider A'} vs ${providerB?.provider_name || 'Provider B'}`;
-
-                                        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).insertContent(label).run();
-                                        setShowVsMenu(false);
-                                        setVsA("");
-                                        setVsB("");
+                                        editor.chain().focus().extendMarkRange('link').unsetLink().run();
+                                        setShowLinkMenu(false);
                                     }}
                                 >
-                                    Insert Versus Link
+                                    Remove
+                                </Button>
+                                <Button
+                                    className="flex-1 rounded-xl font-bold"
+                                    onClick={() => {
+                                        if (linkUrl === '') {
+                                            editor.chain().focus().extendMarkRange('link').unsetLink().run();
+                                        } else {
+                                            editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+                                        }
+                                        setShowLinkMenu(false);
+                                    }}
+                                >
+                                    Apply
                                 </Button>
                             </div>
                         </div>
-                    )}
+                    </GlassCard>
                 </div>
-            </ToolbarGroup>
+            )}
 
-            <ToolbarDivider />
+            {/* VS Modal (Fixed Central) */}
+            {showVsMenu && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVsMenu(false)} />
+                    <div className="w-full max-w-[320px] p-5 bg-background border border-border rounded-3xl shadow-2xl z-50 animate-in zoom-in-95 duration-200 relative">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-black uppercase tracking-wider text-primary flex items-center gap-2">
+                                    <span className="p-1 px-1.5 bg-primary text-white rounded text-[10px]">VS</span>
+                                    Comparison
+                                </h4>
+                                <button onClick={() => setShowVsMenu(false)} className="text-muted-foreground hover:text-foreground hover:rotate-90 transition-transform" type="button">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
 
-            {/* Links */}
-            <div className="relative flex flex-col items-center gap-1">
-                <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/40 select-none">Links</span>
-                <div className="flex items-center gap-1">
-                    <ToolbarBtn
-                        onClick={() => {
-                            const previousUrl = editor.getAttributes('link').href;
-                            const url = window.prompt('URL', previousUrl);
-                            if (url === null) return;
-                            if (url === '') {
-                                editor.chain().focus().extendMarkRange('link').unsetLink().run();
-                                return;
-                            }
-                            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-                        }}
-                        active={editor.isActive('link')}
-                        title="Insert/Edit Link"
-                    >
-                        <LinkIcon className="w-4 h-4" />
-                    </ToolbarBtn>
+                            <div className="flex p-1 bg-muted/50 rounded-xl mb-4 ring-1 ring-border/50">
+                                <button
+                                    type="button"
+                                    onClick={() => setVsCategory("hosting")}
+                                    className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "hosting" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                    HOSTING
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setVsCategory("vpn")}
+                                    className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "vpn" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                    VPN
+                                </button>
+                            </div>
 
-                    <button
-                        type="button"
-                        onClick={() => setShowAffiliateMenu(!showAffiliateMenu)}
-                        title="Insert Affiliate Link"
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:scale-105"
-                    >
-                        <span className="hidden sm:inline">Affiliate</span>
-                        <ChevronDown className="w-3 h-3" />
-                    </button>
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">Provider A</label>
+                                    <select
+                                        value={vsA}
+                                        onChange={(e) => setVsA(e.target.value)}
+                                        className="w-full bg-muted/50 rounded-2xl px-4 py-2.5 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none font-medium"
+                                        disabled={vsLoading}
+                                    >
+                                        <option value="">{vsLoading ? 'Loading...' : 'Select...'}</option>
+                                        {vsProviders.map(a => (
+                                            <option key={a.id} value={a.id}>{a.provider_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">Provider B</label>
+                                    <select
+                                        value={vsB}
+                                        onChange={(e) => setVsB(e.target.value)}
+                                        className="w-full bg-muted/50 rounded-2xl px-4 py-2.5 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none font-medium"
+                                        disabled={vsLoading}
+                                    >
+                                        <option value="">{vsLoading ? 'Loading...' : 'Select...'}</option>
+                                        {vsProviders.map(a => (
+                                            <option key={a.id} value={a.id}>{a.provider_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <Button
+                                className="w-full rounded-2xl py-6 font-bold shadow-xl shadow-primary/20 mt-2"
+                                disabled={!vsA || !vsB || vsA === vsB || vsLoading}
+                                type="button"
+                                onClick={() => {
+                                    const lang = window.location.pathname.split('/')[1] || 'en';
+                                    const finalLang = ['en', 'es'].includes(lang) ? lang : 'en';
+                                    const url = `/${finalLang}/compare?a=${vsA}&b=${vsB}&cat=${vsCategory}`;
+
+                                    const providerA = vsProviders.find(p => p.id === vsA);
+                                    const providerB = vsProviders.find(p => p.id === vsB);
+                                    const label = `${providerA?.provider_name || 'Provider A'} vs ${providerB?.provider_name || 'Provider B'}`;
+
+                                    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).insertContent(label).run();
+                                    setShowVsMenu(false);
+                                    setVsA("");
+                                    setVsB("");
+                                }}
+                            >
+                                Insert Comparison
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                {showAffiliateMenu && (
-                    <div className="absolute top-full right-0 mt-2 w-72 rounded-2xl bg-card backdrop-blur-xl border border-border shadow-2xl shadow-black/20 dark:shadow-black/40 z-50 overflow-hidden">
-                        <div className="p-3 border-b border-border/50 bg-primary/5">
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-2">Active Partners</p>
+            )}
+
+            {/* Affiliate Modal (Fixed Central) */}
+            {showAffiliateMenu && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAffiliateMenu(false)} />
+                    <div className="w-full max-w-[320px] rounded-3xl bg-background border border-border shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 duration-200 relative">
+                        <div className="p-4 border-b border-border/50 bg-primary/5 flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Active Partners</span>
+                            <button onClick={() => setShowAffiliateMenu(false)} className="text-muted-foreground hover:text-foreground">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="p-4">
                             <input
                                 type="text"
                                 value={affSearch}
                                 onChange={(e) => setAffSearch(e.target.value)}
                                 placeholder="Search partners..."
-                                className="w-full px-3 py-2 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="w-full px-4 py-2.5 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 autoFocus
                             />
                         </div>
-                        <div className="max-h-56 overflow-y-auto py-1 bg-card">
+                        <div className="max-h-60 overflow-y-auto pb-4 px-2">
                             {filteredLinks.length === 0 ? (
-                                <div className="px-4 py-6 text-xs text-muted-foreground text-center">
-                                    <LinkIcon className="w-5 h-5 mx-auto mb-2 opacity-30" />
+                                <div className="py-8 text-xs text-muted-foreground text-center">
                                     No active affiliates found
                                 </div>
                             ) : filteredLinks.map(link => (
@@ -585,16 +622,16 @@ function EditorToolbar({
                                         setShowAffiliateMenu(false);
                                         setAffSearch("");
                                     }}
-                                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 transition-all flex items-center justify-between group"
+                                    className="w-full text-left px-4 py-3 text-sm hover:bg-primary/5 rounded-2xl transition-all flex items-center justify-between group"
                                 >
-                                    <span className="font-medium group-hover:text-primary transition-colors">{link.provider_name}</span>
+                                    <span className="font-semibold group-hover:text-primary">{link.provider_name}</span>
                                     <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </button>
                             ))}
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }
