@@ -13,6 +13,7 @@ import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { PerformanceBadge } from "@/components/ui/PerformanceBadge";
 import { ProsConsSection } from "@/components/ui/ProsConsSection";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -177,11 +178,13 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <Button size="lg" className="rounded-full h-16 px-12 text-xl font-black shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all" asChild>
-                                <a href={affiliateUrl} target="_blank" rel="noopener noreferrer">
-                                    Visit {provider.provider_name} <ArrowRight className="ml-2 w-6 h-6" />
-                                </a>
-                            </Button>
+                            <AffiliateButton
+                                size="lg"
+                                className="h-16 px-12 text-xl shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                                providerName={provider.provider_name}
+                                visitUrl={affiliateUrl}
+                                position="hero_main"
+                            />
                         </div>
                     </div>
                 </div>
@@ -403,11 +406,15 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                                     </div>
                                 </div>
 
-                                <Button size="lg" className="w-full rounded-2xl h-16 text-lg font-black shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform" asChild>
-                                    <a href={affiliateUrl} target="_blank" rel="noopener noreferrer">
-                                        CLAIM OFFER <ChevronRight className="ml-1 w-5 h-5" />
-                                    </a>
-                                </Button>
+                                <AffiliateButton
+                                    size="lg"
+                                    className="w-full h-16 text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
+                                    providerName={provider.provider_name}
+                                    visitUrl={affiliateUrl}
+                                    position="sidebar_summary"
+                                >
+                                    CLAIM OFFER
+                                </AffiliateButton>
 
                                 <p className="text-[10px] text-center text-muted-foreground mt-4 font-bold uppercase tracking-widest opacity-50">
                                     Prices updated: {new Date().toLocaleDateString()}

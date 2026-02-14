@@ -23,19 +23,25 @@ export function ArticleContent({ content, className }: ArticleContentProps) {
 
         const handleClick = (e: MouseEvent) => {
             const target = e.currentTarget as HTMLAnchorElement;
-            const provider = target.getAttribute("data-provider") || target.title || target.textContent;
+            const provider = target.getAttribute("data-provider") || target.title || target.textContent || "External Link";
+            const href = target.getAttribute("href") || "";
 
-            // Only track if it looks like an external/affiliate link or explicitly marked
-            if (provider && (target.getAttribute("data-affiliate") === "true" || target.getAttribute("data-provider"))) {
-                trackAffiliateClick(provider, target.href, "news_content_link");
+            // Track if:
+            // 1. Explicitly marked by editor (data-provider or data-affiliate)
+            // 2. Contains our redirect pattern (/go/)
+            // 3. Is an external link (starts with http) and not to our own domain
+            const isAffiliate = target.getAttribute("data-affiliate") === "true" || target.getAttribute("data-provider");
+            const isRedirect = href.includes("/go/");
+            const isExternal = href.startsWith("http") && !href.includes(window.location.hostname);
+
+            if (isAffiliate || isRedirect || isExternal) {
+                console.log(`[Tracking] News link click: ${provider} -> ${href}`);
+                trackAffiliateClick(provider, href, "news_content_link");
             }
         };
 
         links.forEach(link => {
-            // Check if it's an affiliate link (marked by editor or heuristically)
-            if (link.getAttribute("data-provider") || link.getAttribute("href")?.includes("/go/")) {
-                link.addEventListener("click", handleClick as EventListener);
-            }
+            link.addEventListener("click", handleClick as EventListener);
         });
 
         return () => {

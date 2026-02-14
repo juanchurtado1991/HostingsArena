@@ -6,6 +6,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { trackAffiliateClick } from "@/lib/analytics";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
 interface StickyBuyBarProps {
     providerName: string;
@@ -63,16 +64,13 @@ export function StickyBuyBar({ providerName, price, rating, visitUrl, discount, 
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <Button size="lg" className="rounded-full font-bold shadow-lg bg-primary hover:bg-primary/90 hover:scale-105 transition-all" asChild>
-                            <a
-                                href={visitUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => trackAffiliateClick(providerName, visitUrl, "sticky_bar")}
-                            >
-                                Visit Site <ArrowRight className="ml-2 w-4 h-4" />
-                            </a>
-                        </Button>
+                        <AffiliateButton
+                            size="lg"
+                            className="shadow-lg hover:bg-primary/90 hover:scale-105 transition-all"
+                            providerName={providerName}
+                            visitUrl={visitUrl}
+                            position="sticky_bar"
+                        />
                     </div>
                 </div>
             </motion.div>

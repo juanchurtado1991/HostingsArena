@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Zap, Server, ExternalLink, Shield, HardDrive, Database } from "lucide-react";
 import Link from "next/link";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
 interface Provider {
     id: number;
@@ -102,14 +103,15 @@ export default function HostingList({ initialProviders, affiliateUrls = {} }: { 
                                 >
                                     Analysis
                                 </a>
-                                <a
-                                    href={affiliateUrls[p.provider_name] || p.website_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="rounded-full h-10 px-6 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 inline-flex items-center justify-center font-medium transition-colors"
+                                <AffiliateButton
+                                    providerName={p.provider_name}
+                                    visitUrl={affiliateUrls[p.provider_name] || p.website_url}
+                                    position="hosting_list_card"
+                                    className="h-10 px-6 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
+                                    showIcon={false}
                                 >
                                     Visit
-                                </a>
+                                </AffiliateButton>
                             </div>
                         </div>
 

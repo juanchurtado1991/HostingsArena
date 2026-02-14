@@ -3,16 +3,15 @@ export const trackAffiliateClick = async (provider: string, targetUrl: string, p
         const data = JSON.stringify({
             provider_name: provider,
             target_url: targetUrl,
-            page_path: window.location.pathname,
+            page_path: typeof window !== "undefined" ? window.location.pathname : 'unknown',
             position: position,
-            // UTMs are handled backend side if we persist session, but for now we can just send them if needed. 
-            // Better to rely on page_views for UTM attribution via session/ip matching later.
         });
 
         const url = "/api/track/click";
 
         if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-            navigator.sendBeacon(url, data);
+            const blob = new Blob([data], { type: 'application/json' });
+            navigator.sendBeacon(url, blob);
         } else {
             await fetch(url, {
                 method: "POST",
