@@ -241,6 +241,19 @@ export async function PATCH(request: NextRequest) {
             }
         }
 
+        // Sanitize updates: convert empty strings to null for optional fields
+        const fieldsToNullify = [
+            'network', 'commission_rate', 'account_email', 'account_password',
+            'dashboard_url', 'account_phone', 'payment_method', 'reminder_at',
+            'reminder_note', 'minimum_payout_currency'
+        ];
+
+        fieldsToNullify.forEach(field => {
+            if (updates[field] === "") {
+                updates[field] = null;
+            }
+        });
+
         updates.last_verified_at = new Date().toISOString();
 
         const { data, error } = await supabase
