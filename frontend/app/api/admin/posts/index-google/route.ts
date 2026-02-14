@@ -33,19 +33,29 @@ export async function POST(request: NextRequest) {
         const result = await requestIndexing(finalUrl);
 
         if (!result) {
+            console.log(`[Google Indexing] SKIPPED: No credentials for ${finalUrl}`);
             return NextResponse.json({
                 success: false,
-                message: 'Indexing skipped (No credentials configured)'
+                message: 'Indexing skipped (No credentials configured)',
+                normalizedUrl: finalUrl
             });
         }
 
+        console.log(`[Google Indexing] SUCCESS for: ${finalUrl}`);
         return NextResponse.json({
             success: true,
+            message: 'Indexing request submitted successfully',
+            normalizedUrl: finalUrl,
             data: result
         });
 
     } catch (error: any) {
-        console.error('Google Indexing API Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('[Google Indexing API] ERROR:', error);
+        return NextResponse.json({
+            success: false,
+            error: 'Failed to submit indexing request',
+            message: error.message,
+            details: error.stack
+        }, { status: 500 });
     }
 }

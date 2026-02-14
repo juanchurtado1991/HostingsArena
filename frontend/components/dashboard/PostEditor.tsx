@@ -886,10 +886,15 @@ function PostEditorModal({
                         body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
                     });
 
-                    if (idxRes.ok) {
+                    const idxData = await idxRes.json();
+
+                    if (idxRes.ok && idxData.success) {
                         setIndexingStatus('success');
                     } else {
+                        console.error("Google Indexing failed:", idxData.message || idxData.error);
                         setIndexingStatus('error');
+                        // Store the error in state if we want to show it in the summary modal
+                        setPublishError(idxData.message || idxData.error);
                     }
                 } catch (idxErr) {
                     console.error("Google Indexing trigger failed:", idxErr);
