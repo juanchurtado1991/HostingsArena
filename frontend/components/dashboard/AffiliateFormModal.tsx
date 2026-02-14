@@ -20,6 +20,11 @@ export interface AffiliateFormData {
     account_password?: string;
     dashboard_url?: string;
     account_phone?: string;
+    payment_method?: string;
+    minimum_payout_amount?: string;
+    minimum_payout_currency?: string;
+    reminder_at?: string;
+    reminder_note?: string;
 }
 
 export const EMPTY_AFFILIATE_FORM: AffiliateFormData = {
@@ -34,6 +39,11 @@ export const EMPTY_AFFILIATE_FORM: AffiliateFormData = {
     account_password: "",
     dashboard_url: "",
     account_phone: "",
+    payment_method: "",
+    minimum_payout_amount: "",
+    minimum_payout_currency: "USD",
+    reminder_at: "",
+    reminder_note: "",
 };
 
 export interface ProviderOption {
@@ -212,7 +222,7 @@ export function AffiliateFormModal({
                     <div className="grid grid-cols-12 gap-6">
 
                         {/* LEFT COLUMN: Main Info & Credentials */}
-                        <div className="col-span-12 lg:col-span-6 space-y-6">
+                        <div className="col-span-12 lg:col-span-7 space-y-6">
                             {/* Provider Selection */}
                             <div className="space-y-1.5">
                                 <label className={LABEL_CLASS}>Provider *</label>
@@ -300,11 +310,6 @@ export function AffiliateFormModal({
                                                             ))}
                                                         </div>
                                                     )}
-                                                    {filteredProviders.length === 0 && (
-                                                        <div className="px-4 py-8 text-sm text-gray-400 text-center">
-                                                            No providers found
-                                                        </div>
-                                                    )}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -344,18 +349,34 @@ export function AffiliateFormModal({
                                 </div>
                             </div>
 
-                            {/* Dashboard URL (Optional) */}
-                            <div className="space-y-1.5">
-                                <label className={LABEL_CLASS}>Dashboard URL (Optional)</label>
-                                <div className="relative group">
-                                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                            {/* Dashboard URL & Payment Method */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className={LABEL_CLASS}>Dashboard URL</label>
                                     <input
                                         type="url"
                                         value={formData.dashboard_url || ""}
                                         onChange={(e) => update("dashboard_url", e.target.value)}
-                                        placeholder="https://partner.dashboard.com/login"
-                                        className={`${INPUT_CLASS} pl-10 font-mono text-[13px]`}
+                                        placeholder="https://partner..."
+                                        className={`${INPUT_CLASS} text-xs`}
                                     />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className={LABEL_CLASS}>Payment Method (Optional)</label>
+                                    <select
+                                        value={formData.payment_method || ""}
+                                        onChange={(e) => update("payment_method", e.target.value)}
+                                        className={`${INPUT_CLASS} appearance-none cursor-pointer text-xs`}
+                                    >
+                                        <option value="">Select Method...</option>
+                                        <option value="Paypal">Paypal</option>
+                                        <option value="Payoneer">Payoneer</option>
+                                        <option value="Wire Transfer">Wire Transfer</option>
+                                        <option value="ACH / Direct Deposit">ACH / Direct Deposit</option>
+                                        <option value="Check">Check</option>
+                                        <option value="Cryptocurrency">Cryptocurrency</option>
+                                        <option value="Other">Other</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -430,7 +451,7 @@ export function AffiliateFormModal({
                                             type="text"
                                             value={formData.account_phone || ""}
                                             onChange={(e) => update("account_phone", e.target.value)}
-                                            placeholder="+1 234 567 8900"
+                                            placeholder="+1 (555) 000-0000"
                                             className={`${INPUT_CLASS} text-xs`}
                                         />
                                     </div>
@@ -439,44 +460,69 @@ export function AffiliateFormModal({
                         </div>
 
                         {/* RIGHT COLUMN: Configuration Details */}
-                        <div className="col-span-12 lg:col-span-6 space-y-6 lg:pl-6 lg:border-l border-gray-100">
-                            <div className="flex items-center gap-3 mb-4">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Program Details</h3>
-                                <div className="flex-1 h-px bg-gray-100" />
+                        <div className="col-span-12 lg:col-span-5 space-y-6 lg:pl-6 lg:border-l border-gray-100">
+
+                            <div className="space-y-1.5">
+                                <label className={LABEL_CLASS}>Status</label>
+                                <select
+                                    value={formData.status}
+                                    onChange={(e) => update("status", e.target.value)}
+                                    className={`${INPUT_CLASS} appearance-none cursor-pointer bg-white font-medium`}
+                                >
+                                    <option value="active">Active (Live)</option>
+                                    <option value="paused">Paused (Inactive)</option>
+                                    <option value="processing_approval">Processing Approval</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="expired">Expired</option>
+                                </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="space-y-1.5">
-                                    <label className={LABEL_CLASS}>Network</label>
-                                    <select
+                            <div className="space-y-1.5">
+                                <label className={LABEL_CLASS}>Network</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        list="networks"
                                         value={formData.network}
                                         onChange={(e) => update("network", e.target.value)}
-                                        className={`${INPUT_CLASS} appearance-none cursor-pointer bg-white`}
-                                    >
-                                        <option value="">Direct</option>
-                                        <option value="ShareASale">ShareASale</option>
-                                        <option value="CJ Affiliate">CJ Affiliate</option>
-                                        <option value="Impact">Impact</option>
-                                        <option value="Awin">Awin</option>
-                                        <option value="Direct">Direct</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                        className={INPUT_CLASS}
+                                        placeholder="Select or type..."
+                                    />
+                                    <datalist id="networks">
+                                        <option value="Impact" />
+                                        <option value="ShareASale" />
+                                        <option value="CJ Affiliate" />
+                                        <option value="Awin" />
+                                        <option value="PartnerStack" />
+                                        <option value="Direct" />
+                                    </datalist>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className={LABEL_CLASS}>Status</label>
-                                    <select
-                                        value={formData.status}
-                                        onChange={(e) => update("status", e.target.value)}
-                                        className={`${INPUT_CLASS} appearance-none cursor-pointer bg-white`}
-                                    >
-                                        <option value="active">Active</option>
-                                        <option value="paused">Paused</option>
-                                        <option value="expired">Expired</option>
-                                    </select>
-                                </div>
+                            </div>
 
+                            <div className="space-y-1.5">
+                                <label className={LABEL_CLASS}>Min Payout</label>
+                                <div className="flex gap-2 w-full">
+                                    <input
+                                        type="number"
+                                        value={formData.minimum_payout_amount || ""}
+                                        onChange={(e) => update("minimum_payout_amount", e.target.value)}
+                                        placeholder="50"
+                                        className="flex-1 w-full min-w-0 px-4 py-3 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-gray-400 shadow-sm"
+                                    />
+                                    <select
+                                        value={formData.minimum_payout_currency || "USD"}
+                                        onChange={(e) => update("minimum_payout_currency", e.target.value)}
+                                        className="w-auto flex-none min-w-[80px] px-2 py-3 rounded-xl bg-white border border-gray-200 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all shadow-sm cursor-pointer hover:bg-gray-50 appearance-none text-center font-bold tracking-wide"
+                                    >
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className={LABEL_CLASS}>Commission</label>
+                                    <label className={LABEL_CLASS}>Comm. Rate</label>
                                     <input
                                         type="text"
                                         value={formData.commission_rate}
@@ -497,14 +543,38 @@ export function AffiliateFormModal({
                                 </div>
                             </div>
 
+                            <div className="space-y-1.5">
+                                <label className={LABEL_CLASS}>Reminder?</label>
+                                <input
+                                    type="date"
+                                    value={formData.reminder_at ? new Date(formData.reminder_at).toISOString().split('T')[0] : ""}
+                                    onChange={(e) => update("reminder_at", e.target.value)}
+                                    className={`${INPUT_CLASS} px-2 text-xs`}
+                                />
+                            </div>
+
+                            {formData.reminder_at && (
+                                <div className="space-y-1.5">
+                                    <label className={LABEL_CLASS}>Reminder Note</label>
+                                    <textarea
+                                        value={formData.reminder_note || ""}
+                                        onChange={(e) => update("reminder_note", e.target.value)}
+                                        placeholder="e.g. Follow up on approval next week..."
+                                        className={`${INPUT_CLASS} min-h-[60px] text-xs resize-none`}
+                                    />
+                                </div>
+                            )}
+
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 mt-6">
                                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Instructions</h4>
                                 <ul className="text-xs text-gray-500 space-y-1.5 list-disc pl-4">
                                     <li>Ensure the <strong>Provider Name</strong> matches the one in our database exactly.</li>
                                     <li>Credentials are stored securely but <strong>visible to admins</strong> for quick access.</li>
                                     <li>Set <strong>Status</strong> to 'Active' to immediately enable the link.</li>
+                                    <li>Use <strong>Processing Approval</strong> to track applications.</li>
                                 </ul>
                             </div>
+
                         </div>
                     </div>
                 </form>

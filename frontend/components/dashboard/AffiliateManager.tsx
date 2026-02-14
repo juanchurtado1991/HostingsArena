@@ -7,7 +7,7 @@ import {
     Search, Plus, Link as LinkIcon, ExternalLink, Edit3, Trash2,
     CheckCircle, XCircle, Pause, RefreshCw, Loader2, Globe,
     TrendingUp, Clock, BarChart3, Copy, Check, BookOpen, ChevronDown,
-    ShieldCheck
+    ShieldCheck, Filter
 } from "lucide-react";
 import { AffiliateFormModal, EMPTY_AFFILIATE_FORM } from "./AffiliateFormModal";
 import type { AffiliateFormData, ProviderOption } from "./AffiliateFormModal";
@@ -25,6 +25,13 @@ interface AffiliatePartner {
     last_verified_at: string | null;
     account_email?: string;
     account_password?: string;
+    dashboard_url?: string;
+    account_phone?: string;
+    payment_method?: string;
+    minimum_payout_amount?: number;
+    minimum_payout_currency?: string;
+    reminder_at?: string;
+    reminder_note?: string;
 }
 
 interface AffiliateStats {
@@ -34,12 +41,12 @@ interface AffiliateStats {
     expired: number;
 }
 
-
-
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
     active: { icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", label: "Active" },
     paused: { icon: Pause, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", label: "Paused" },
     expired: { icon: XCircle, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", label: "Expired" },
+    processing_approval: { icon: Clock, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", label: "Processing" },
+    rejected: { icon: XCircle, color: "text-gray-400", bg: "bg-gray-500/10 border-gray-500/20", label: "Rejected" },
 };
 
 export function AffiliateManager() {
@@ -48,6 +55,7 @@ export function AffiliateManager() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [networkFilter, setNetworkFilter] = useState("all");
     const [showModal, setShowModal] = useState(false);
     const [editingAffiliate, setEditingAffiliate] = useState<AffiliatePartner | null>(null);
     const [modalInitialData, setModalInitialData] = useState<AffiliateFormData>(EMPTY_AFFILIATE_FORM);
@@ -95,11 +103,15 @@ export function AffiliateManager() {
 
     const availableProviders = useMemo(() => {
         // Filter out providers that already have an affiliate entry
-        // NOTE: If editing, we strictly don't use this list (it's locked), 
-        // but for adding new ones, we want to hide existing ones.
         const usedNames = new Set(affiliates.map(a => a.provider_name));
         return allProviders.filter(p => !usedNames.has(p.name));
     }, [allProviders, affiliates]);
+
+    // Extract unique networks for filter
+    const uniqueNetworks = useMemo(() => {
+        const networks = new Set(affiliates.map(a => a.network).filter(Boolean));
+        return Array.from(networks).sort();
+    }, [affiliates]);
 
     const fetchAffiliates = useCallback(async () => {
         setLoading(true);
@@ -107,18 +119,27 @@ export function AffiliateManager() {
             const params = new URLSearchParams();
             if (search) params.set("search", search);
             if (statusFilter !== "all") params.set("status", statusFilter);
+            // Network filter is done client-side usually if not supported by API yet, 
+            // but let's see if we can just filter the results if the API doesn't support it.
+            // For now, let's filter client-side to be safe unless we updated the API for it.
 
             const res = await fetch(`/api/admin/affiliates?${params}`);
             const data = await res.json();
 
-            if (data.affiliates) setAffiliates(data.affiliates);
+            if (data.affiliates) {
+                let filtered = data.affiliates;
+                if (networkFilter !== "all") {
+                    filtered = filtered.filter((a: AffiliatePartner) => a.network === networkFilter);
+                }
+                setAffiliates(filtered);
+            }
             if (data.stats) setStats(data.stats);
         } catch (e) {
             console.error("Failed to fetch affiliates:", e);
         } finally {
             setLoading(false);
         }
-    }, [search, statusFilter]);
+    }, [search, statusFilter, networkFilter]);
 
     useEffect(() => {
         fetchAffiliates();
@@ -142,6 +163,13 @@ export function AffiliateManager() {
             status: aff.status || "active",
             account_email: aff.account_email || "",
             account_password: aff.account_password || "",
+            dashboard_url: aff.dashboard_url || "",
+            account_phone: aff.account_phone || "",
+            payment_method: aff.payment_method || "",
+            minimum_payout_amount: aff.minimum_payout_amount ? String(aff.minimum_payout_amount) : "",
+            minimum_payout_currency: aff.minimum_payout_currency || "USD",
+            reminder_at: aff.reminder_at || "",
+            reminder_note: aff.reminder_note || "",
         });
         setShowModal(true);
     };
@@ -307,9 +335,9 @@ export function AffiliateManager() {
 
             {/* Controls Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     {/* Search */}
-                    <div className="relative flex-1 md:w-72">
+                    <div className="relative flex-1 md:w-64">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
                             type="text"
@@ -321,19 +349,37 @@ export function AffiliateManager() {
                     </div>
 
                     {/* Status Filter */}
-                    <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10">
-                        {["all", "active", "paused", "expired"].map((s) => (
+                    <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto max-w-[200px] md:max-w-none scrollbar-hide">
+                        {["all", "active", "paused", "processing_approval", "rejected"].map((s) => (
                             <button
                                 key={s}
                                 onClick={() => setStatusFilter(s)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${statusFilter === s
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${statusFilter === s
                                     ? "bg-primary text-white shadow-lg shadow-primary/25"
                                     : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                                     }`}
                             >
-                                {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+                                {s === "all" ? "All" : s === "processing_approval" ? "Processing" : s.charAt(0).toUpperCase() + s.slice(1)}
                             </button>
                         ))}
+                    </div>
+
+                    {/* Network Filter */}
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            <Filter className="w-3.5 h-3.5" />
+                        </div>
+                        <select
+                            value={networkFilter}
+                            onChange={(e) => setNetworkFilter(e.target.value)}
+                            className="h-10 pl-9 pr-8 rounded-xl bg-white/5 border border-white/10 text-xs font-medium text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all appearance-none cursor-pointer"
+                        >
+                            <option value="all">All Networks</option>
+                            {uniqueNetworks.map(n => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
                     </div>
                 </div>
 
@@ -399,7 +445,9 @@ export function AffiliateManager() {
                                 {/* Status Ribbon */}
                                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${aff.status === "active" ? "from-emerald-500 to-green-400" :
                                     aff.status === "paused" ? "from-amber-500 to-orange-400" :
-                                        "from-red-500 to-rose-400"
+                                        aff.status === "processing_approval" ? "from-blue-500 to-indigo-400" :
+                                            aff.status === "rejected" ? "from-gray-500 to-slate-400" :
+                                                "from-red-500 to-rose-400"
                                     }`} />
 
                                 <div className="p-5">
@@ -447,6 +495,31 @@ export function AffiliateManager() {
                                         )}
                                     </div>
 
+                                    {/* Reminder Alert */}
+                                    {aff.reminder_at && (
+                                        <div className={`mb-4 flex items-start gap-2 p-2.5 rounded-xl border ${new Date(aff.reminder_at) <= new Date()
+                                                ? "bg-amber-500/10 border-amber-500/20"
+                                                : "bg-blue-500/5 border-blue-500/10"
+                                            }`}>
+                                            <Clock className={`w-4 h-4 mt-0.5 flex-shrink-0 ${new Date(aff.reminder_at) <= new Date() ? "text-amber-500" : "text-blue-400"
+                                                }`} />
+                                            <div>
+                                                <p className={`text-[11px] font-bold ${new Date(aff.reminder_at) <= new Date() ? "text-amber-500" : "text-blue-400"
+                                                    }`}>
+                                                    {new Date(aff.reminder_at) <= new Date()
+                                                        ? "Reminder Due"
+                                                        : `Reminder: ${new Date(aff.reminder_at).toLocaleDateString()}`}
+                                                </p>
+                                                {aff.reminder_note && (
+                                                    <p className={`text-[10px] leading-relaxed ${new Date(aff.reminder_at) <= new Date() ? "text-amber-400/80" : "text-blue-400/70"
+                                                        }`}>
+                                                        {aff.reminder_note}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Meta Info */}
                                     <div className="flex flex-wrap gap-2 mb-4">
                                         {aff.commission_rate && (
@@ -459,26 +532,14 @@ export function AffiliateManager() {
                                                 <Clock className="w-3 h-3" /> {aff.cookie_days}d cookie
                                             </span>
                                         )}
-                                        {aff.last_verified_at && (
-                                            <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-white/5 text-muted-foreground border border-white/5">
-                                                <CheckCircle className="w-3 h-3" /> Verified
-                                            </span>
-                                        )}
                                         {(aff.account_email || aff.account_password) && (
                                             <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/10">
-                                                <ShieldCheck className="w-3 h-3" /> Credentials Saved
+                                                <ShieldCheck className="w-3 h-3" /> Credentials
                                             </span>
                                         )}
-                                        {aff.expires_at && (
-                                            <span className={`flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg border ${new Date(aff.expires_at) < new Date()
-                                                ? "bg-red-500/10 text-red-400 border-red-500/10"
-                                                : "bg-indigo-500/10 text-indigo-400 border-indigo-500/10"
-                                                }`}>
-                                                <Clock className="w-3 h-3" />
-                                                {new Date(aff.expires_at) < new Date()
-                                                    ? "Expired"
-                                                    : `Expires ${new Date(aff.expires_at).toLocaleDateString()}`
-                                                }
+                                        {aff.payment_method && (
+                                            <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/10">
+                                                {aff.payment_method}
                                             </span>
                                         )}
                                     </div>

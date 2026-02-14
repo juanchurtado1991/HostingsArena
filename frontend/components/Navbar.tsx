@@ -118,13 +118,13 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             </span>
           </Link>
 
-          <div className="hidden xl:flex items-center gap-8">
+          <div className="hidden xl:flex items-center gap-4 2xl:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={getLink(link.href)}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
+                  "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
                   pathname.includes(link.href) ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -133,7 +133,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             ))}
           </div>
 
-          <div className="hidden xl:flex items-center gap-4">
+          <div className="hidden xl:flex items-center gap-2 2xl:gap-4">
             <GlobalSearch />
             <LocaleSwitcher />
 

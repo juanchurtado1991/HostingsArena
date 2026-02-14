@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor } from "@/components/dashboard";
+import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import type { AdminTask, TaskType, TaskPriority } from "@/lib/tasks/types";
 
@@ -573,7 +574,7 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                                             setSearchQuery(e.target.value);
                                             setTaskPage(1);
                                         }}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-64 pl-10"
+                                        className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-64 pl-10"
                                     />
                                     <Activity className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
                                 </div>
@@ -882,62 +883,7 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                 )}
 
                 {activeTab === "tutorial" && (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div>
-                                <h2 className="text-3xl font-bold tracking-tight">Centro de Ayuda y Tutoriales</h2>
-                                <p className="text-muted-foreground mt-1">Domina todas las herramientas de HostingArena.</p>
-                            </div>
-                            <div className="relative w-full md:w-96">
-                                <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <input
-                                    type="text"
-                                    placeholder="¿Qué necesitas aprender hoy?"
-                                    value={tutorialSearch}
-                                    onChange={(e) => setTutorialSearch(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {TUTORIAL_TOPICS.filter(t =>
-                                t.title.toLowerCase().includes(tutorialSearch.toLowerCase()) ||
-                                t.content.toLowerCase().includes(tutorialSearch.toLowerCase())
-                            ).map((topic) => (
-                                <GlassCard key={topic.id} className="p-8 group hover:border-primary/30 transition-all">
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                                            <topic.icon className="w-6 h-6" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[10px] uppercase tracking-widest font-bold text-primary/70">{topic.category}</span>
-                                                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </div>
-                                            <h3 className="text-xl font-bold mb-4">{topic.title}</h3>
-                                            <div className="text-sm text-muted-foreground leading-relaxed space-y-2 whitespace-pre-wrap">
-                                                {topic.content}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </GlassCard>
-                            ))}
-                        </div>
-
-                        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-primary/20 rounded-full">
-                                    <BookOpen className="w-6 h-6 text-primary" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold">¿Necesitas ayuda avanzada?</h4>
-                                    <p className="text-sm text-muted-foreground">Consulta la documentación técnica completa en el repositorio.</p>
-                                </div>
-                            </div>
-                            <Button variant="default">Ver Repo GitHub</Button>
-                        </div>
-                    </div>
+                    <HelpCenter dict={dict} lang={lang} />
                 )}
 
             </div>

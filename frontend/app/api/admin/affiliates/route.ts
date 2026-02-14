@@ -121,7 +121,12 @@ export async function POST(request: NextRequest) {
             account_email,
             account_password,
             dashboard_url,
-            account_phone
+            account_phone,
+            payment_method,
+            minimum_payout_amount,
+            minimum_payout_currency,
+            reminder_at,
+            reminder_note
         } = body;
 
         if (!provider_name || !affiliate_link) {
@@ -163,6 +168,11 @@ export async function POST(request: NextRequest) {
                 account_password: account_password || null,
                 dashboard_url: dashboard_url || null,
                 account_phone: account_phone || null,
+                payment_method: payment_method || null,
+                minimum_payout_amount: minimum_payout_amount ? parseFloat(minimum_payout_amount) : null,
+                minimum_payout_currency: minimum_payout_currency || 'USD',
+                reminder_at: reminder_at || null,
+                reminder_note: reminder_note || null,
                 last_verified_at: new Date().toISOString(),
             }, { onConflict: 'provider_name' })
             .select()
@@ -213,6 +223,10 @@ export async function PATCH(request: NextRequest) {
 
         if (updates.cookie_days) {
             updates.cookie_days = parseInt(updates.cookie_days);
+        }
+
+        if (updates.minimum_payout_amount) {
+            updates.minimum_payout_amount = parseFloat(updates.minimum_payout_amount);
         }
 
         if (updates.link_duration_days !== undefined) {

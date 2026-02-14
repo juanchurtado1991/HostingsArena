@@ -5,3 +5,4 @@ export type { AffiliateFormData, ProviderOption } from "./AffiliateFormModal";
 export { AffiliateManager } from "./AffiliateManager";
 export { PostEditor } from "./PostEditor";
 export { PublishSummaryModal } from "./PublishSummaryModal";
+export { HelpCenter } from "./HelpCenter";
