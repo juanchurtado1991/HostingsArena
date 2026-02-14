@@ -1,10 +1,14 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
 import { logger } from '@/lib/logger';
+import { requireAuth } from '@/lib/auth/guard';
 import { personas, structures, narrativeArcs, stressTests } from './data';
 import { buildContentSystemPrompt, buildMetaSystemPrompt } from './prompts';
 
 export async function POST(request: NextRequest) {
+    const authError = await requireAuth();
+    if (authError) return authError;
+
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
     const encoder = new TextEncoder();

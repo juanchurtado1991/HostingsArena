@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
+import { requireAuth } from '@/lib/auth/guard';
 
 /**
  * GET /api/admin/affiliates
@@ -8,6 +9,8 @@ import { createAdminClient } from '@/lib/tasks';
  */
 export async function GET(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search') || '';
@@ -102,6 +105,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
         const body = await request.json();
 
@@ -184,6 +189,8 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
         const body = await request.json();
 
@@ -291,6 +298,8 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
+import { requireAuth } from '@/lib/auth/guard';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -17,6 +18,8 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const { id } = await params;
         const body = await request.json();
         const supabase = createAdminClient();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
+import { requireAuth } from '@/lib/auth/guard';
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -12,6 +13,8 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const { id } = await params;
         const supabase = createAdminClient();
 
@@ -46,6 +49,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const { id } = await params;
         const body = await request.json();
         const supabase = createAdminClient();
@@ -79,6 +84,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const { id } = await params;
         const supabase = createAdminClient();
 

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
 import { requestIndexing } from '@/lib/google-indexing';
+import { requireAuth } from '@/lib/auth/guard';
 
 export async function POST(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
         const body = await request.json();
         const { url } = body;

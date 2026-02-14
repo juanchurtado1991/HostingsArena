@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
+import { requireAuth } from "@/lib/auth/guard";
 
 /**
  * GET /api/admin/analytics
@@ -13,6 +14,8 @@ import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
  */
 export async function GET(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
+import { requireAuth } from "@/lib/auth/guard";
 
 /**
  * POST /api/admin/posts/upload-image
@@ -12,6 +13,8 @@ const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"
 
 export async function POST(req: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const formData = await req.formData();
         const file = formData.get("file") as File | null;
 

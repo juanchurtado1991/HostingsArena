@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
+import { requireAuth } from '@/lib/auth/guard';
 
 /**
  * GET /api/admin/tasks
@@ -9,6 +10,8 @@ import { createAdminClient } from '@/lib/tasks';
  */
 export async function GET(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
         const priority = searchParams.get('priority');
@@ -59,6 +62,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const body = await request.json();
         const supabase = createAdminClient();
 
@@ -88,6 +93,8 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
     try {
+        const authError = await requireAuth();
+        if (authError) return authError;
         const supabase = createAdminClient();
 
         // Match everything by using a range filter on created_at (always true for all records)
