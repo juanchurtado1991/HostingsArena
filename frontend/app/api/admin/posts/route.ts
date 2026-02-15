@@ -70,7 +70,12 @@ export async function POST(request: NextRequest) {
             title, slug, content, excerpt, category,
             status: postStatus, seo_title, seo_description,
             target_keywords, related_provider_name, image_prompt,
-            is_ai_generated, social_tw_text, social_li_text, social_hashtags
+            is_ai_generated, ai_quality_score,
+            social_tw_text, social_fb_text, social_li_text, social_hashtags,
+            title_es, content_es, excerpt_es,
+            seo_title_es, seo_description_es,
+            target_keywords_es,
+            social_tw_text_es, social_fb_text_es, social_li_text_es, social_hashtags_es
         } = body;
 
         if (!title) {
@@ -94,12 +99,24 @@ export async function POST(request: NextRequest) {
                 seo_title: seo_title || title,
                 seo_description: seo_description || excerpt || null,
                 target_keywords: target_keywords || null,
+                target_keywords_es: target_keywords_es || null,
                 related_provider_name: related_provider_name || null,
                 image_prompt: image_prompt || null,
                 is_ai_generated: is_ai_generated || false,
+                ai_quality_score: ai_quality_score || null,
                 social_tw_text: social_tw_text || null,
+                social_fb_text: social_fb_text || null,
                 social_li_text: social_li_text || null,
                 social_hashtags: social_hashtags || null,
+                title_es: title_es || null,
+                content_es: content_es || null,
+                excerpt_es: excerpt_es || null,
+                seo_title_es: seo_title_es || null,
+                seo_description_es: seo_description_es || null,
+                social_tw_text_es: social_tw_text_es || null,
+                social_fb_text_es: social_fb_text_es || null,
+                social_li_text_es: social_li_text_es || null,
+                social_hashtags_es: social_hashtags_es || null,
                 published_at: postStatus === 'published' ? new Date().toISOString() : null,
             })
             .select()

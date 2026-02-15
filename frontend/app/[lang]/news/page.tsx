@@ -92,6 +92,16 @@ export default async function NewsPage({
             <div className="container mx-auto lg:max-w-7xl">
                 <div className="text-center mb-10 relative">
                     <div className="max-w-3xl mx-auto">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight">
+                            {dict.news.title_part1}{" "}
+                            <span className="text-primary">{dict.news.title_part2}</span>
+                        </h1>
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                            {dict.news.subtitle}
+                        </p>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto">
                         <NewsFilters
                             categories={categories}
                             lang={lang}

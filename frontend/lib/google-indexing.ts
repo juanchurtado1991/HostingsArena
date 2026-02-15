@@ -6,7 +6,14 @@ const SCOPES = ['https://www.googleapis.com/auth/indexing'];
 
 export async function requestIndexing(url: string) {
     const clientEmail = process.env.GOOGLE_SA_CLIENT_EMAIL;
-    const privateKey = process.env.GOOGLE_SA_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    let privateKey = process.env.GOOGLE_SA_PRIVATE_KEY;
+
+    if (privateKey) {
+        // Remove surrounding quotes if they exist
+        privateKey = privateKey.replace(/^"|"$/g, '');
+        // Handle escaped newlines
+        privateKey = privateKey.replace(/\\n/g, '\n');
+    }
 
     if (!clientEmail || !privateKey) {
         logger.warn('Google Indexing skipped: Missing service account credentials');

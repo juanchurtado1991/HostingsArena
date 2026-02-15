@@ -1,24 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/guard';
 import { logger } from '@/lib/logger';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request: NextRequest) {
     try {
         const authError = await requireAuth();
         if (authError) return authError;
 
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-            return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
-        }
+        const openAiKey = process.env.OPENAI_API_KEY;
+        const geminiKey = process.env.GEMINI_API_KEY;
 
         const body = await request.json();
         const {
             content,
             title,
             language = 'en', // 'en' or 'es'
-            platform = 'all' // 'twitter', 'facebook', 'linkedin', or 'all'
+            platform = 'all', // 'twitter', 'facebook', 'linkedin', or 'all'
+            model = 'gemini-1.5-flash' // Default to Gemini 1.5
         } = body;
+
+        const isGemini = model.startsWith('gemini');
+
+        if (isGemini && !geminiKey) {
+            return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
+        }
+        if (!isGemini && !openAiKey) {
+            return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
+        }
 
         if (!content && !title) {
             return NextResponse.json({ error: 'Content or Title is required' }, { status: 400 });
@@ -50,36 +59,70 @@ export async function POST(request: NextRequest) {
         Response ONLY with the JSON.
         `;
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a social media expert. Respond ONLY with valid JSON.'
-                    },
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ],
-                response_format: { type: "json_object" },
-                temperature: 0.7,
-            }),
-        });
+        let resultRaw = "";
 
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.error?.message || 'Generation failed');
+        if (isGemini) {
+            try {
+                const genAI = new GoogleGenerativeAI(geminiKey!);
+                // Map UI model names to actual API model names available in this account
+                let modelName = model;
+                if (model.includes('2.0')) {
+                    modelName = 'gemini-2.0-flash-lite';
+                } else if (model.includes('1.5') || model.includes('flash')) {
+                    modelName = 'gemini-flash-latest';
+                }
+
+                const modelInstance = genAI.getGenerativeModel({ model: modelName });
+
+                // Universal prompt format
+                const finalPrompt = `SYSTEM INSTRUCTIONS:\nYou are a professional social media manager. Respond ONLY with valid JSON.\n\nUSER REQUEST:\n${prompt}`;
+
+                const result = await modelInstance.generateContent(finalPrompt);
+                const response = await result.response;
+                resultRaw = response.text();
+            } catch (error: any) {
+                if (error.message?.includes('429') || error.message?.includes('Quota')) {
+                    throw new Error("Gemini Quota Exceeded (429). Tu cuenta gratuita de Google tiene el límite en 0 para este modelo. Prueba usando 'Gemini 1.5 Flash' en el selector.");
+                }
+                if (error.message?.includes('404')) {
+                    throw new Error(`Gemini 404: El modelo '${model}' no fue encontrado. Intenta con 'Gemini 1.5 Flash'.`);
+                }
+                throw error;
+            }
+        } else {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openAiKey}`,
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are a social media expert. Respond ONLY with valid JSON.'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    response_format: { type: "json_object" },
+                    temperature: 0.7,
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error?.message || 'Generation failed');
+            }
+            resultRaw = data.choices[0].message.content;
         }
 
-        console.log("OpenAI Social Gen Raw:", data.choices[0].message.content);
-        const generatedFields = JSON.parse(data.choices[0].message.content);
+        console.log("Social Gen Raw:", resultRaw);
+        const jsonMatch = resultRaw.match(/\{[\s\S]*\}/);
+        const generatedFields = JSON.parse(jsonMatch ? jsonMatch[0] : resultRaw || "{}");
 
         return NextResponse.json({
             success: true,

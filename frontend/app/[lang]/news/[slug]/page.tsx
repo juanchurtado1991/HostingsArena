@@ -96,10 +96,10 @@ export default async function NewsPostPage({ params }: PageProps) {
             <JsonLd post={post} url={shareUrl} lang={lang} />
             <PageTracker postSlug={post.slug} />
 
-            <article className="container mx-auto max-w-5xl">
-                <GlassCard className="p-8 md:p-14 lg:p-16 shadow-2xl border-white/10 rounded-[2.5rem] mb-12 mt-3">
-                    <header className="mb-10">
-                        <div className="flex flex-wrap items-center gap-4 mb-8">
+            <article className="mx-auto max-w-7xl px-6 md:px-12">
+                <GlassCard className="p-8 md:p-14 lg:p-16 shadow-2xl border-white/10 rounded-[2.5rem] mb-12 mt-3 overflow-hidden">
+                    <header className="mb-10 text-center">
+                        <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                             <Link
                                 href={`/${lang}/news`}
                                 className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-all hover:translate-x-[-2px]"
@@ -121,18 +121,18 @@ export default async function NewsPostPage({ params }: PageProps) {
                             </div>
                         </div>
 
-                        <h1 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight text-gradient leading-[1.15] text-balance">
+                        <h1 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight text-gradient leading-[1.15] text-balance mx-auto">
                             {displayTitle}
                         </h1>
 
                         {displayExcerpt && (
-                            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-4xl font-medium tracking-tight mb-12 text-balance">
+                            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-4xl font-medium tracking-tight mb-12 text-balance mx-auto">
                                 {displayExcerpt}
                             </p>
                         )}
 
                         {post.cover_image_url && (
-                            <div className="relative aspect-[21/9] w-full rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 ring-1 ring-white/10 mb-12">
+                            <div className="relative aspect-video w-full max-w-4xl mx-auto rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 ring-1 ring-white/10 mb-12">
                                 <Image
                                     src={post.cover_image_url}
                                     alt={displayTitle}

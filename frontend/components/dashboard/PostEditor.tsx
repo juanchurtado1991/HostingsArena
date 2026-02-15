@@ -65,6 +65,7 @@ export interface Post {
     social_fb_text_es?: string | null;
     social_li_text_es?: string | null;
     social_hashtags_es?: string[] | null;
+    target_keywords_es?: string[] | null;
 }
 
 interface AffiliateLink {
@@ -721,6 +722,7 @@ function PostEditorModal({
     const [socialFbEs, setSocialFbEs] = useState(post?.social_fb_text_es || "");
     const [socialLiEs, setSocialLiEs] = useState(post?.social_li_text_es || "");
     const [socialTagsEs, setSocialTagsEs] = useState(post?.social_hashtags_es?.join(" ") || "");
+    const [keywordsEs, setKeywordsEs] = useState(post?.target_keywords_es?.join(", ") || "");
 
     const handleLangSwitch = (targetLang: 'en' | 'es') => {
         if (targetLang === editLang) return;
@@ -787,6 +789,9 @@ function PostEditorModal({
             setSocialLiEs(translated.social_li_text || "");
             if (translated.social_hashtags) {
                 setSocialTagsEs(Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : translated.social_hashtags);
+            }
+            if (translated.target_keywords) {
+                setKeywordsEs(Array.isArray(translated.target_keywords) ? translated.target_keywords.join(", ") : translated.target_keywords);
             }
 
             if (editLang === 'es') {
@@ -965,6 +970,7 @@ function PostEditorModal({
             setSocialFbEs(post.social_fb_text_es || "");
             setSocialLiEs(post.social_li_text_es || "");
             setSocialTagsEs(post.social_hashtags_es?.join(" ") || "");
+            setKeywordsEs(post.target_keywords_es?.join(", ") || "");
         }
     }, [post]); // Only re-run if post object changes (e.g. initial load or save)
 
@@ -1130,6 +1136,7 @@ function PostEditorModal({
             let finalSocialFbEs = socialFbEs;
             let finalSocialLiEs = socialLiEs;
             let finalSocialTagsEs = socialTagsEs;
+            let finalKeywordsEs = keywordsEs;
 
             // Auto-translate if ES fields are empty and we are in EN
             if (!titleEs.trim() && !finalContentEs.trim() && editLang === 'en') {
@@ -1145,6 +1152,10 @@ function PostEditorModal({
                     finalSocialFbEs = translated.social_fb_text;
                     finalSocialLiEs = translated.social_li_text;
                     finalSocialTagsEs = Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : (translated.social_hashtags || "");
+                    finalKeywordsEs = Array.isArray(translated.target_keywords) ? translated.target_keywords.join(", ") : (translated.target_keywords || "");
+
+                    // Also update state so UI reflects it immediately
+                    setKeywordsEs(finalKeywordsEs);
                 }
             }
 
@@ -1176,6 +1187,7 @@ function PostEditorModal({
                 social_fb_text_es: finalSocialFbEs || null,
                 social_li_text_es: finalSocialLiEs || null,
                 social_hashtags_es: finalSocialTagsEs ? finalSocialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
+                target_keywords_es: finalKeywordsEs ? finalKeywordsEs.split(",").map(k => k.trim()).filter(Boolean) : null,
             });
 
             // Auto-append URL to social fields if missing and publishing
@@ -1582,11 +1594,17 @@ function PostEditorModal({
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Target Keywords</label>
-                                    <input type="text" value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="keyword1, keyword2, keyword3" className={INPUT_CLASS} />
-                                    {keywords && (
+                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Target Keywords {editLang === 'es' ? '(ES)' : '(EN)'}</label>
+                                    <input
+                                        type="text"
+                                        value={editLang === 'es' ? keywordsEs : keywords}
+                                        onChange={(e) => editLang === 'es' ? setKeywordsEs(e.target.value) : setKeywords(e.target.value)}
+                                        placeholder="keyword1, keyword2, keyword3"
+                                        className={INPUT_CLASS}
+                                    />
+                                    {(editLang === 'es' ? keywordsEs : keywords) && (
                                         <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                            {keywords.split(",").map((k, i) => k.trim() && (
+                                            {(editLang === 'es' ? keywordsEs : keywords).split(",").map((k, i) => k.trim() && (
                                                 <span key={i} className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-medium border border-primary/15">
                                                     {k.trim()}
                                                 </span>
@@ -1633,7 +1651,7 @@ function PostEditorModal({
                                                     <span className="text-sm font-bold">HostingArena</span>
                                                     <span className="text-xs text-muted-foreground">@hostingarena · 1m</span>
                                                 </div>
-                                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{socialTw || "Write something amazing..."} {socialTags}</p>
+                                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{(editLang === 'es' ? (socialTwEs || socialTw) : socialTw) || "Write something amazing..."} {editLang === 'es' ? socialTagsEs : socialTags}</p>
                                                 {coverImageUrl && (
                                                     <div className="mt-2 rounded-xl overflow-hidden border border-border/50">
                                                         <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
@@ -1669,7 +1687,7 @@ function PostEditorModal({
                                                 <p className="text-xs text-muted-foreground">Just now · 🌍</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialFbEs || "What's on your mind? Share this with your friends..." : socialFb || "What's on your mind? Share this with your friends..."}</p>
+                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialFbEs || socialFb || "What's on your mind?" : socialFb || "What's on your mind?"}</p>
                                         {coverImageUrl && (
                                             <div className="rounded-lg overflow-hidden border border-border/50 bg-muted/20">
                                                 <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
@@ -1709,7 +1727,7 @@ function PostEditorModal({
                                                 <p className="text-xs text-muted-foreground">redefining verified benchmarks.</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialLiEs || "Share your professional insights..." : socialLi || "Share your professional insights..."}</p>
+                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialLiEs || socialLi || "Share your professional insights..." : socialLi || "Share your professional insights..."}</p>
                                         <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mb-3">{editLang === 'es' ? socialTagsEs : socialTags}</p>
                                         {coverImageUrl && (
                                             <div className="rounded-sm overflow-hidden border border-border/50 bg-muted/20">
@@ -1734,17 +1752,17 @@ function PostEditorModal({
 
                                 {/* Hashtags */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Hashtags</label>
+                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Hashtags {editLang === 'es' ? '(ES)' : '(EN)'}</label>
                                     <input
                                         type="text"
-                                        value={socialTags}
-                                        onChange={(e) => setSocialTags(e.target.value)}
+                                        value={editLang === 'es' ? socialTagsEs : socialTags}
+                                        onChange={(e) => editLang === 'es' ? setSocialTagsEs(e.target.value) : setSocialTags(e.target.value)}
                                         placeholder="#webhosting #tech #review"
                                         className={INPUT_CLASS}
                                     />
-                                    {socialTags && (
+                                    {(editLang === 'es' ? socialTagsEs : socialTags) && (
                                         <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                            {socialTags.split(" ").map((t, i) => t.trim() && (
+                                            {(editLang === 'es' ? socialTagsEs : socialTags).split(" ").map((t, i) => t.trim() && (
                                                 <span key={i} className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-medium border border-blue-500/15">
                                                     {t.startsWith("#") ? t : `#${t}`}
                                                 </span>
@@ -1830,8 +1848,13 @@ function PostEditorModal({
                         <div className="p-6 space-y-6">
                             {/* Excerpt */}
                             <div>
-                                <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Excerpt</label>
-                                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Short summary that appears in post cards and social sharing..." className={`${INPUT_CLASS} h-24 resize-none`} />
+                                <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Excerpt {editLang === 'es' ? '(ES)' : '(EN)'}</label>
+                                <textarea
+                                    value={editLang === 'es' ? excerptEs : excerpt}
+                                    onChange={(e) => editLang === 'es' ? setExcerptEs(e.target.value) : setExcerpt(e.target.value)}
+                                    placeholder="Short summary that appears in post cards and social sharing..."
+                                    className={`${INPUT_CLASS} h-24 resize-none`}
+                                />
                             </div>
 
                             {/* Category */}
@@ -1940,7 +1963,7 @@ function GenerationConfigModal({
     const [customPersona, setCustomPersona] = useState("");
     const [structure, setStructure] = useState("random");
     const [customStructure, setCustomStructure] = useState("");
-    const [model, setModel] = useState("gpt-4o-mini");
+    const [model, setModel] = useState("gemini-1.5-flash");
     const [wordCount, setWordCount] = useState("1500");
     const [instructions, setInstructions] = useState("");
 
@@ -2101,8 +2124,7 @@ function GenerationConfigModal({
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">AI Model</label>
                             <select value={model} onChange={(e) => setModel(e.target.value)} className={INPUT_CLASS}>
-                                <option value="gpt-4o-mini">⚡ GPT-4o Mini (Fast & Cheap)</option>
-                                <option value="gpt-4o">🧠 GPT-4o (High Quality)</option>
+                                <option value="gemini-1.5-flash">✨ Gemini 1.5 Flash (Default)</option>
                             </select>
                         </div>
                         <div className="space-y-2">
@@ -2264,7 +2286,7 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         let successCount = 0;
 
         for (let i = 0; i < totalToGenerate; i++) {
-            setGenerationStatus(`Initializing AI Agent (${config.model || 'gpt-4o-mini'})...`);
+            setGenerationStatus(`Initializing AI Agent (${config.model || 'gemini-2.0-flash'})...`);
 
             try {
                 const response = await fetch("/api/admin/posts/generate", {

@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 import { requireAuth } from '@/lib/auth/guard';
 import { personas, structures, narrativeArcs, stressTests } from './data';
 import { buildContentSystemPrompt, buildMetaSystemPrompt } from './prompts';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request: NextRequest) {
     const authError = await requireAuth();
@@ -17,40 +18,68 @@ export async function POST(request: NextRequest) {
         await writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
     };
 
-    const fetchWithRetry = async (url: string, options: any, retries = 3, backoff = 1000) => {
-        let lastError: any;
-        for (let i = 0; i < retries; i++) {
-            try {
-                const res = await fetch(url, options);
-                if (res.ok) return res;
-
-                // Retry on transient errors: 500, 502, 503, 504, 520, 429
-                if (![429, 500, 502, 503, 504, 520].includes(res.status)) {
-                    return res;
-                }
-
-                logger.warn(`OpenAI fetch failed with ${res.status}, retry ${i + 1}/${retries}`);
-                lastError = new Error(`OpenAI Error ${res.status}`);
-            } catch (e: any) {
-                lastError = e;
-                logger.warn(`OpenAI fetch exception: ${e.message}, retry ${i + 1}/${retries}`);
-            }
-            if (i < retries - 1) {
-                await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
-            }
+    const fetchOpenAI = async (apiKey: string, body: any) => {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`OpenAI Error (${res.status}): ${errorText}`);
         }
-        throw lastError || new Error('Fetch failed after retries');
+        const json = await res.json();
+        return json.choices?.[0]?.message?.content || "";
+    };
+
+    const generateWithGemini = async (apiKey: string, model: string, systemPrompt: string, userPrompt?: string) => {
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+
+            // Map UI model names to actual API model names available in this account
+            let modelName = model;
+            if (model.includes('2.0')) {
+                // gemini-2.0-flash-lite was found in the user's list
+                modelName = 'gemini-2.0-flash-lite';
+            } else if (model.includes('1.5') || model.includes('flash')) {
+                // gemini-flash-latest is the active 1.5 alias found in this account
+                modelName = 'gemini-flash-latest';
+            }
+
+            const modelInstance = genAI.getGenerativeModel({ model: modelName });
+
+            // Revert to prompt injection for maximum compatibility across v1/v1beta
+            const finalPrompt = `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\nUSER REQUEST:\n${userPrompt || "Produce the content following the system instructions."}`;
+
+            const result = await modelInstance.generateContent(finalPrompt);
+            const response = await result.response;
+            return response.text();
+        } catch (error: any) {
+            if (error.message?.includes('429') || error.message?.includes('Quota')) {
+                throw new Error("Gemini Quota Exceeded (429). Tu cuenta gratuita de Google tiene el límite en 0 para este modelo. Prueba usando 'Gemini 1.5 Flash' en el selector.");
+            }
+            if (error.message?.includes('404')) {
+                throw new Error(`Gemini 404: El modelo '${model}' no fue encontrado. Intenta con 'Gemini 1.5 Flash'.`);
+            }
+            if (error.message?.includes('400')) {
+                throw new Error("Gemini 400: Error en el formato de la solicitud. Intentando modo de compatibilidad...");
+            }
+            throw error;
+        }
     };
 
     const runGeneration = async () => {
         try {
             const supabase = createAdminClient();
-            const apiKey = process.env.OPENAI_API_KEY;
+            const geminiKey = process.env.GEMINI_API_KEY;
             const body = await request.json().catch(() => ({}));
             const currentYear = new Date().getFullYear();
 
-            if (!apiKey) {
-                await sendProgress({ error: 'OPENAI_API_KEY not configured' });
+            // Default model is now gemini-1.5-flash (safe due to 2.0 quota issues)
+            const modelToUse = body.model || 'gemini-1.5-flash';
+
+            if (!geminiKey) {
+                await sendProgress({ error: 'GEMINI_API_KEY not configured' });
                 return;
             }
 
@@ -115,7 +144,6 @@ export async function POST(request: NextRequest) {
                 ? body.persona
                 : personas[Math.floor(Math.random() * personas.length)];
 
-            const modelToUse = body.model || 'gpt-4o-mini';
             const targetWordCount = body.target_word_count || 1500;
             const approxReadingTime = Math.ceil(targetWordCount / 200);
 
@@ -124,96 +152,64 @@ export async function POST(request: NextRequest) {
                 : "";
 
             await sendProgress({
-                status: `Creating Story: ${provider.provider_name} | Arc: ${selectedArc}`,
+                status: `Creating Story: ${provider.provider_name} | Arc: ${selectedArc} | Model: ${modelToUse}`,
                 progress: 20
             });
 
-            const contentRes = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                body: JSON.stringify({
-                    model: modelToUse,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: buildContentSystemPrompt({
-                                providerName: provider.provider_name,
-                                specsString,
-                                targetWordCount,
-                                approxReadingTime,
-                                structure: selectedStructure,
-                                persona: selectedPersona,
-                                arc: selectedArc,
-                                test: selectedTest,
-                                extraInstructions
-                            })
-                        }
-                    ],
-                    temperature: 0.9,
-                })
+            const contentSystemPrompt = buildContentSystemPrompt({
+                providerName: provider.provider_name,
+                specsString,
+                targetWordCount,
+                approxReadingTime,
+                structure: selectedStructure,
+                persona: selectedPersona,
+                arc: selectedArc,
+                test: selectedTest,
+                extraInstructions
             });
 
-            if (!contentRes.ok) {
-                const errorText = await contentRes.text();
-                logger.error('OpenAI Content Generation failed:', { status: contentRes.status, errorText });
-                throw new Error(`OpenAI Content Error (${contentRes.status})`);
-            }
-
-            const contentJson = await contentRes.json();
-            let fullContent = contentJson.choices?.[0]?.message?.content || "";
+            let fullContent = await generateWithGemini(geminiKey!, modelToUse, contentSystemPrompt);
             fullContent = fullContent.replace(/```html/g, '').replace(/```/g, '').trim();
 
             await sendProgress({ status: `Generating Viral Metadata...`, progress: 80 });
 
-            const metaRes = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    response_format: { type: "json_object" },
-                    messages: [
-                        {
-                            role: 'system',
-                            content: buildMetaSystemPrompt({
-                                structureName: selectedStructure.name,
-                                providerName: provider.provider_name,
-                                persona: selectedPersona,
-                                extraInstructions,
-                                currentYear
-                            })
-                        }
-                    ],
-                    temperature: 0.85,
-                })
-            }).catch(e => {
-                logger.error('Meta generation fetch failed finally:', e);
-                return { ok: false, status: 500 } as any;
+            const metaSystemPrompt = buildMetaSystemPrompt({
+                structureName: selectedStructure.name,
+                providerName: provider.provider_name,
+                persona: selectedPersona,
+                extraInstructions,
+                currentYear
             });
 
-            if (!metaRes.ok) {
-                const errorText = await metaRes.text();
-                logger.error('OpenAI Metadata Generation failed:', { status: metaRes.status, errorText });
-                // We don't throw here, use fallback
-                console.warn('Using fallback metadata due to OpenAI error');
-            }
+            let metaRaw = await generateWithGemini(geminiKey!, modelToUse, metaSystemPrompt, "Generate the JSON metadata object.");
 
-            const metaJson = metaRes.ok ? await metaRes.json() : {};
             let meta;
             try {
-                meta = JSON.parse(metaJson.choices?.[0]?.message?.content || "{}");
+                const jsonMatch = metaRaw.match(/\{[\s\S]*\}/);
+                meta = JSON.parse(jsonMatch ? jsonMatch[0] : metaRaw || "{}");
             } catch (e) {
-                meta = {
-                    title: `Is ${provider.provider_name} Worth It in ${currentYear}?`,
-                    seo_title: `${provider.provider_name} Review ${currentYear}`,
-                    seo_description: `Honest review of ${provider.provider_name}.`,
-                    excerpt: `We tested ${provider.provider_name} to see if the hype is real.`,
-                    image_prompt: "server room tech",
-                    social_tw_text: `Is ${provider.provider_name} the best host in ${currentYear}? We tested it. 👇`,
-                    social_li_text: `We just completed our deep dive review of ${provider.provider_name}. Here is what the data says about their performance and pricing.`,
-                    social_fb_text: `Looking for a new host? We just put ${provider.provider_name} to the test. Check out our findings!`,
-                    social_hashtags: ["webhosting", "techreview", "server"],
-                    rating_score: 80
-                };
+                logger.error('Metadata parsing failed, using fallback:', e);
+                meta = {};
+            }
+
+            // CRITICAL: Ensure title is never null/undefined before DB insert
+            if (!meta.title || typeof meta.title !== 'string' || meta.title.trim() === '') {
+                meta.title = `Review: Is ${provider.provider_name} Worth It in ${currentYear}?`;
+            }
+
+            // Build defaults for other fields if missing
+            if (!meta.seo_title) meta.seo_title = `${provider.provider_name} Review ${currentYear} - Pros & Cons`;
+            if (!meta.seo_description) meta.seo_description = `In-depth review of ${provider.provider_name}. We analyze pricing, speed, and support.`;
+            if (!meta.excerpt) meta.excerpt = `We tested ${provider.provider_name} extensively. Here is our honest verdict on their performance and value.`;
+            if (!meta.image_prompt) meta.image_prompt = `server room data center modern technology ${provider.provider_name} logo style`;
+            if (!meta.rating_score) meta.rating_score = 85;
+
+            // Target Keywords - ensuring it's an array
+            let targetKeywordsEn = meta.target_keywords;
+            if (typeof targetKeywordsEn === 'string') {
+                targetKeywordsEn = targetKeywordsEn.split(',').map((k: string) => k.trim()).filter(Boolean);
+            } else if (!Array.isArray(targetKeywordsEn)) {
+                targetKeywordsEn = [provider.provider_name, "hosting review", "vpn review", "benchmarks"].filter(Boolean);
             }
 
             // Fallback for empty social fields
@@ -222,109 +218,70 @@ export async function POST(request: NextRequest) {
             if (!meta.social_li_text) meta.social_li_text = `New Industry Review: ${meta.title}. We analyze the performance, pricing, and true value proposition.`;
             if (!meta.social_hashtags || meta.social_hashtags.length === 0) meta.social_hashtags = ["hosting", "tech", "review"];
 
-            await sendProgress({ status: 'Magic Translate to ES...', progress: 90 });
+            await sendProgress({ status: 'Magic Translate to ES (Natural Flow)...', progress: 90 });
 
             const translationPrompt = `
-            You are a professional tech translator and social media expert specializing in Cloud Hosting and VPN.
-            Translate the following article from English to Spanish.
+            You are a top-tier tech copywriter and SEO expert specializing in Hosting and VPN (like GSMArena but for Cloud). 
+            Translate the following blog post to Spanish (Spain/Neutral).
             
-            CRITICAL RULES:
-            1. CONTENT: Keep HTML structure exactly as is. Translate the text inside tags.
-            2. METADATA: Translate title, excerpt, seo_title, and seo_description.
-            3. SOCIAL: Generate or translate engaging social media copy in Spanish.
-            4. Return a JSON object with: title, content, excerpt, seo_title, seo_description, social_tw_text, social_fb_text, social_li_text, social_hashtags.
-            5. IMPORTANT: social_hashtags MUST be an ARRAY of strings.
+            CRITICAL RULES FOR NATURAL SPANISH:
+            1. **AVOID LITERAL TRANSLATION**: Do not translate word-for-word. If an English expression sounds stiff in Spanish, rewrite it to sound like a native tech expert wrote it from scratch. 
+               - BAD: "Este hosting tiene un gran uptime."
+               - GOOD: "La estabilidad de este hosting es impecable, manteniendo el servicio online sin interrupciones."
+            2. **TECHNICAL TERMS**: DO NOT TRANSLATE terms like "Hosting", "VPS", "VPN", "Uptime", "Dashboard", "cPanel", "SSD NVMe", "Bandwidth", "Logs", "Backups". Spanish speakers in this industry use the English terms.
+            3. **TONE**: Professional but engaging. Avoid "Usted". Use "tú" or impersonal forms for a modern startup feel.
+            4. **HTML**: Preserve ALL HTML tags (<p>, <h2>, <strong>, etc.) exactly as they are in the "content".
+            5. **SEO & HOOKS**: The "excerpt", "seo_title", and "social" fields must be catchy. In Spanish, use punchy verbs.
             
-            EN DATA:
-            - title: ${meta.title}
-            - excerpt: ${meta.excerpt}
-            - seo_title: ${meta.seo_title}
-            - seo_description: ${meta.seo_description}
-            - social_tw_text: ${meta.social_tw_text}
-            - social_fb_text: ${meta.social_fb_text}
-            - social_li_text: ${meta.social_li_text}
-            - social_hashtags: ${(meta.social_hashtags || []).join(' ')}
-            
-            EN CONTENT (HTML):
-            ${fullContent.substring(0, 10000)} // Safety limit
+            EN DATA JSON:
+            ${JSON.stringify({
+                title: meta.title,
+                excerpt: meta.excerpt,
+                seo_title: meta.seo_title,
+                seo_description: meta.seo_description,
+                target_keywords: targetKeywordsEn.join(', '),
+                social_tw_text: meta.social_tw_text,
+                social_fb_text: meta.social_fb_text,
+                social_li_text: meta.social_li_text,
+                social_hashtags: meta.social_hashtags,
+                content: fullContent.substring(0, 15000)
+            })}
             `;
 
             let translatedFields: any = {};
             try {
-                const t0 = Date.now();
-                const translationRes = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                    body: JSON.stringify({
-                        model: 'gpt-4o-mini',
-                        response_format: { type: "json_object" },
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'You are a professional tech translator. Respond ONLY with valid JSON.'
-                            },
-                            {
-                                role: 'user',
-                                content: translationPrompt
-                            }
-                        ],
-                        temperature: 0.3,
-                    })
-                });
-
-                if (translationRes.ok) {
-                    const translationJson = await translationRes.json();
-                    translatedFields = JSON.parse(translationJson.choices?.[0]?.message?.content || "{}");
-                    console.log(`Translation successful in ${Date.now() - t0}ms`);
-                } else {
-                    const errorText = await translationRes.text();
-                    logger.error(`OpenAI Translation failed with status ${translationRes.status}:`, errorText);
-                }
+                const transRaw = await generateWithGemini(geminiKey!, modelToUse, "You are a professional tech translator. Return ONLY valid JSON.", translationPrompt);
+                const jsonMatch = transRaw.match(/\{[\s\S]*\}/);
+                translatedFields = JSON.parse(jsonMatch ? jsonMatch[0] : transRaw || "{}");
             } catch (e: any) {
                 logger.error('Failed to translate post during generation:', e.message);
             }
 
             const randomSuffix = Math.random().toString(36).substring(2, 6);
-            const cleanSlug = meta.title
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '')
-                .substring(0, 60);
-
+            const slugBase = (meta.title || provider.provider_name || 'review').toString();
+            const cleanSlug = slugBase.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').substring(0, 60);
             const finalSlug = `${cleanSlug}-${randomSuffix}`;
-            const finalCategory = body.custom_category
-                ? body.custom_category
-                : (provider.type === 'vpn' ? 'VPN Reviews' : 'Hosting Reviews');
 
-            // Sanitize hashtags to be an array for the DB
-            let hashtagsEs = translatedFields?.social_hashtags;
-            if (hashtagsEs && typeof hashtagsEs === 'string') {
-                hashtagsEs = hashtagsEs.split(/[\s,]+/).map((t: string) => t.startsWith("#") ? t : `#${t}`).filter(Boolean);
-            } else if (!Array.isArray(hashtagsEs)) {
-                hashtagsEs = null;
-            }
+            const finalCategory = body.custom_category || (provider.type === 'vpn' ? 'VPN Reviews' : 'Hosting Reviews');
+
+            // Sanitize hashtags and keywords
+            const sanitizeArray = (val: any) => {
+                if (typeof val === 'string') return val.split(/[\s,]+/).map((t: string) => t.trim()).filter(Boolean);
+                if (Array.isArray(val)) return val;
+                return null;
+            };
+
+            const hashtagsEs = sanitizeArray(translatedFields?.social_hashtags)?.map((t: string) => t.startsWith("#") ? t : `#${t}`);
+            const keywordsEs = sanitizeArray(translatedFields?.target_keywords);
 
             const baseUrl = `https://hostingsarena.com`;
             const enDraftUrl = `${baseUrl}/en/news/${finalSlug}`;
             const esDraftUrl = `${baseUrl}/es/news/${finalSlug}`;
 
-            // Helper to fix links in generated social text
-            const fixGeneratedSocialLink = (text: string | null, liveUrl: string) => {
+            const fixSocial = (text: string | null, url: string) => {
                 if (!text) return null;
-                // Robust regex to move ALL variations of hostingsarena news links
-                const cleaned = text.replace(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\/[^\s]+(?=\s|$)/g, '').trim();
-                return `${cleaned}\n\n${liveUrl}`;
+                return text.replace(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\/[^\s]+(?=\s|$)/g, '').trim() + `\n\n${url}`;
             };
-
-            // Process EN Social Links
-            meta.social_tw_text = fixGeneratedSocialLink(meta.social_tw_text, enDraftUrl);
-            meta.social_fb_text = fixGeneratedSocialLink(meta.social_fb_text, enDraftUrl);
-            meta.social_li_text = fixGeneratedSocialLink(meta.social_li_text, enDraftUrl);
-
-            // Process ES Social Links
-            translatedFields.social_tw_text = fixGeneratedSocialLink(translatedFields.social_tw_text, esDraftUrl);
-            translatedFields.social_fb_text = fixGeneratedSocialLink(translatedFields.social_fb_text, esDraftUrl);
-            translatedFields.social_li_text = fixGeneratedSocialLink(translatedFields.social_li_text, esDraftUrl);
 
             const { error: insertError } = await supabase.from('posts').insert({
                 title: meta.title,
@@ -337,11 +294,12 @@ export async function POST(request: NextRequest) {
                 ai_quality_score: meta.rating_score || 85,
                 seo_title: meta.seo_title,
                 seo_description: meta.seo_description,
+                target_keywords: targetKeywordsEn,
                 related_provider_name: provider.provider_name,
                 image_prompt: meta.image_prompt,
-                social_tw_text: meta.social_tw_text,
-                social_fb_text: meta.social_fb_text,
-                social_li_text: meta.social_li_text,
+                social_tw_text: fixSocial(meta.social_tw_text, enDraftUrl),
+                social_fb_text: fixSocial(meta.social_fb_text, enDraftUrl),
+                social_li_text: fixSocial(meta.social_li_text, enDraftUrl),
                 social_hashtags: meta.social_hashtags,
                 // Translated fields
                 title_es: translatedFields.title || null,
@@ -349,15 +307,15 @@ export async function POST(request: NextRequest) {
                 excerpt_es: translatedFields.excerpt || null,
                 seo_title_es: translatedFields.seo_title || null,
                 seo_description_es: translatedFields.seo_description || null,
-                social_tw_text_es: translatedFields.social_tw_text || null,
-                social_fb_text_es: translatedFields.social_fb_text || null,
-                social_li_text_es: translatedFields.social_li_text || null,
-                social_hashtags_es: hashtagsEs,
+                target_keywords_es: keywordsEs || null,
+                social_tw_text_es: fixSocial(translatedFields.social_tw_text, esDraftUrl),
+                social_fb_text_es: fixSocial(translatedFields.social_fb_text, esDraftUrl),
+                social_li_text_es: fixSocial(translatedFields.social_li_text, esDraftUrl),
+                social_hashtags_es: hashtagsEs || null,
                 updated_at: new Date().toISOString(),
             });
 
             if (insertError) throw new Error(insertError.message);
-
             await sendProgress({ status: 'Done', progress: 100, success: true });
 
         } catch (error: any) {
