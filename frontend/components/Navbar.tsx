@@ -45,12 +45,22 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
 
     const checkUserRole = async (uid: string) => {
       console.log('[Navbar] Checking role for UID:', uid);
+
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', uid)
-          .single();
+        // Create a timeout promise
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Query timeout')), 5000)
+        );
+
+        // Race the query against the timeout
+        const { data: profile, error }: any = await Promise.race([
+          supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', uid)
+            .single(),
+          timeout
+        ]);
 
         if (error) {
           console.error('[Navbar] Profile query error:', error);
@@ -74,9 +84,11 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           }
         }
       } catch (err) {
-        console.error('[Navbar] Unexpected error during role check:', err);
+        console.error('[Navbar] Unexpected error or timeout in role check:', err);
         if (mounted) {
-          setIsAdmin(false);
+          // Fallback to cached value if it's a timeout, or false if it's an error
+          const cached = localStorage.getItem('isAdmin') === 'true';
+          setIsAdmin(cached);
         }
       }
     };
