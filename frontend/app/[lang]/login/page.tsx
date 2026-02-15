@@ -32,9 +32,10 @@ export default function LoginPage() {
         setErrorMsg(error.message);
       } else {
         logger.log('AUTH', 'Login successful. Syncing session...');
-        // router.push("/") can trigger a double redirect if i18n middleware isn't present, 
-        // using window.location for a hard refresh ensures cookies are fully flushed in some browsers
-        window.location.href = `/${window.location.pathname.split('/')[1] || 'en'}/dashboard`;
+        // Extract locale from URL or default to 'en'
+        const pathParts = window.location.pathname.split('/');
+        const locale = pathParts[1] && pathParts[1].length === 2 ? pathParts[1] : 'en';
+        window.location.href = `/${locale}`;
       }
     } catch (err) {
       logger.error('Unexpected login error', err);
@@ -49,7 +50,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-2xl">HostingArena Admin</CardTitle>
+          <CardTitle className="text-center text-2xl">HostingArena</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">

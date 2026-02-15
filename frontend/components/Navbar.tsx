@@ -37,7 +37,14 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   useEffect(() => {
     let mounted = true;
 
+    // Fast path: Check localStorage first for immediate UI update
+    if (typeof window !== 'undefined') {
+      const cachedAdmin = localStorage.getItem('isAdmin') === 'true';
+      if (cachedAdmin) setIsAdmin(true);
+    }
+
     const checkUserRole = async (uid: string) => {
+      console.log('[Navbar] Checking role for UID:', uid);
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -45,13 +52,32 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           .eq('id', uid)
           .single();
 
-        if (error) return;
+        if (error) {
+          console.error('[Navbar] Profile query error:', error);
+          if (mounted) {
+            setIsAdmin(false);
+            localStorage.removeItem('isAdmin');
+          }
+          return;
+        }
 
+        console.log('[Navbar] Profile data received:', profile);
         if (mounted) {
-          setIsAdmin(profile?.role === 'admin');
+          const isUserAdmin = profile?.role === 'admin';
+          console.log('[Navbar] Setting isAdmin to:', isUserAdmin);
+          setIsAdmin(isUserAdmin);
+
+          if (isUserAdmin) {
+            localStorage.setItem('isAdmin', 'true');
+          } else {
+            localStorage.removeItem('isAdmin');
+          }
         }
       } catch (err) {
-        logger.error("Failed to check user role:", err);
+        console.error('[Navbar] Unexpected error during role check:', err);
+        if (mounted) {
+          setIsAdmin(false);
+        }
       }
     };
 
@@ -63,19 +89,23 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           await checkUserRole(session.user.id);
         } else {
           setIsAdmin(false);
+          localStorage.removeItem('isAdmin');
         }
       }
     };
 
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      logger.log('AUTH', `Navbar Auth Event: ${event}`);
+
       if (mounted) {
         setUser(session?.user ?? null);
         if (session?.user) {
           await checkUserRole(session.user.id);
         } else {
           setIsAdmin(false);
+          localStorage.removeItem('isAdmin');
         }
       }
     });
