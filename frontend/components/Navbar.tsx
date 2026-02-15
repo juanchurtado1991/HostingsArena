@@ -69,7 +69,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
 
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
       if (mounted) {
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -87,17 +87,26 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   }, [supabase]);
 
   const handleSignOut = async () => {
+    logger.log('AUTH', "Initiating Sign Out...");
     try {
-      await supabase.auth.signOut();
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('isAdmin'); // Cleanup for any legacy use cases
-      }
+      // 1. Clear local state immediately for visual feedback
       setUser(null);
       setIsAdmin(false);
-      router.push(`/${lang}/login`);
-      router.refresh();
+
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('isAdmin');
+      }
+
+      // 2. Call Supabase Sign Out
+      // We don't await this if we want speed, but awaiting ensures cookies are cleared
+      await supabase.auth.signOut();
+
+      // 3. Force a hard refresh/redirect to ensure all cache and cookies are flushed
+      window.location.href = `/${lang}/login`;
+
     } catch (err) {
-      logger.error("Sign out failed:", err);
+      logger.error("Sign out error - forcing redirect", err);
+      window.location.href = `/${lang}/login`;
     }
   };
 
