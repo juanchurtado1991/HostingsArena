@@ -59,18 +59,34 @@ export function PublishSummaryModal({
     };
 
     const currentContent = activeLang === 'es' && socialContentEs ? socialContentEs : socialContent;
+    const localePrefix = activeLang === 'es' ? '/es' : '/en';
+    const finalPostUrl = postUrl.replace(/https:\/\/hostingsarena\.com\/news\//, `https://hostingsarena.com${localePrefix}/news/`);
 
-    const twitterFullText = currentContent?.twitter
-        ? `${currentContent.twitter}${currentContent.hashtags ? '\n\n' + currentContent.hashtags.join(' ') : ''}\n\n${postUrl}`
-        : '';
+    // Helper to check if text already contains the URL or hashtags to avoid duplication
+    const buildFullText = (baseText?: string) => {
+        if (!baseText) return "";
+        let text = baseText;
 
-    const facebookFullText = currentContent?.facebook
-        ? `${currentContent.facebook}${currentContent.hashtags ? '\n\n' + currentContent.hashtags.join(' ') : ''}\n\n${postUrl}`
-        : '';
+        // Only append hashtags if they aren't already there
+        if (currentContent?.hashtags && currentContent.hashtags.length > 0) {
+            const hashtagsStr = currentContent.hashtags.join(' ');
+            if (!text.includes(currentContent.hashtags[0])) {
+                text += `\n\n${hashtagsStr}`;
+            }
+        }
 
-    const linkedinFullText = currentContent?.linkedin
-        ? `${currentContent.linkedin}${currentContent.hashtags ? '\n\n' + currentContent.hashtags.join(' ') : ''}\n\n${postUrl}`
-        : '';
+        // Only append URL if it's not already there (AI or handleSave might have added it)
+        // We look for any version of the hostingsarena news link
+        if (!text.match(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\//)) {
+            text += `\n\n${finalPostUrl}`;
+        }
+
+        return text;
+    };
+
+    const twitterFullText = buildFullText(currentContent?.twitter);
+    const facebookFullText = buildFullText(currentContent?.facebook);
+    const linkedinFullText = buildFullText(currentContent?.linkedin);
 
     return (
         <div
@@ -128,7 +144,7 @@ export function PublishSummaryModal({
                                 </div>
                                 {status === 'success' ? (
                                     <a
-                                        href={postUrl}
+                                        href={finalPostUrl}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-2"

@@ -182,6 +182,35 @@ export async function POST(request: NextRequest) {
 
         if (error) throw error;
 
+        // Handle Reminder -> Task creation
+        if (data && data.reminder_at) {
+            const title = `Reminder: Affiliate Link for ${data.provider_name}`;
+            const description = data.reminder_note || `Follow up on affiliate link for ${data.provider_name}`;
+
+            const { data: existing } = await supabase
+                .from('admin_tasks')
+                .select('id')
+                .eq('task_type', 'affiliate_reminder')
+                .eq('status', 'pending')
+                .eq('title', title)
+                .maybeSingle();
+
+            if (!existing) {
+                await supabase.from('admin_tasks').insert({
+                    task_type: 'affiliate_reminder',
+                    priority: 'medium',
+                    status: 'pending',
+                    title,
+                    description,
+                    metadata: {
+                        affiliate_id: data.id,
+                        provider_name: data.provider_name,
+                        reminder_at: data.reminder_at,
+                    },
+                });
+            }
+        }
+
         return NextResponse.json({ affiliate: data, message: 'Affiliate saved successfully' });
     } catch (error: any) {
         console.error('[Affiliates API] POST error:', error);
@@ -270,6 +299,35 @@ export async function PATCH(request: NextRequest) {
             .single();
 
         if (error) throw error;
+
+        // Handle Reminder -> Task creation
+        if (data && data.reminder_at) {
+            const title = `Reminder: Affiliate Link for ${data.provider_name}`;
+            const description = data.reminder_note || `Follow up on affiliate link for ${data.provider_name}`;
+
+            const { data: existing } = await supabase
+                .from('admin_tasks')
+                .select('id')
+                .eq('task_type', 'affiliate_reminder')
+                .eq('status', 'pending')
+                .eq('title', title)
+                .maybeSingle();
+
+            if (!existing) {
+                await supabase.from('admin_tasks').insert({
+                    task_type: 'affiliate_reminder',
+                    priority: 'medium',
+                    status: 'pending',
+                    title,
+                    description,
+                    metadata: {
+                        affiliate_id: data.id,
+                        provider_name: data.provider_name,
+                        reminder_at: data.reminder_at,
+                    },
+                });
+            }
+        }
 
         if (data && (data.status === 'paused' || data.status === 'expired')) {
             try {

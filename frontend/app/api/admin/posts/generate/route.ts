@@ -17,6 +17,31 @@ export async function POST(request: NextRequest) {
         await writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
     };
 
+    const fetchWithRetry = async (url: string, options: any, retries = 3, backoff = 1000) => {
+        let lastError: any;
+        for (let i = 0; i < retries; i++) {
+            try {
+                const res = await fetch(url, options);
+                if (res.ok) return res;
+
+                // Retry on transient errors: 500, 502, 503, 504, 520, 429
+                if (![429, 500, 502, 503, 504, 520].includes(res.status)) {
+                    return res;
+                }
+
+                logger.warn(`OpenAI fetch failed with ${res.status}, retry ${i + 1}/${retries}`);
+                lastError = new Error(`OpenAI Error ${res.status}`);
+            } catch (e: any) {
+                lastError = e;
+                logger.warn(`OpenAI fetch exception: ${e.message}, retry ${i + 1}/${retries}`);
+            }
+            if (i < retries - 1) {
+                await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
+            }
+        }
+        throw lastError || new Error('Fetch failed after retries');
+    };
+
     const runGeneration = async () => {
         try {
             const supabase = createAdminClient();
@@ -103,7 +128,7 @@ export async function POST(request: NextRequest) {
                 progress: 20
             });
 
-            const contentRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            const contentRes = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify({
@@ -128,13 +153,19 @@ export async function POST(request: NextRequest) {
                 })
             });
 
+            if (!contentRes.ok) {
+                const errorText = await contentRes.text();
+                logger.error('OpenAI Content Generation failed:', { status: contentRes.status, errorText });
+                throw new Error(`OpenAI Content Error (${contentRes.status})`);
+            }
+
             const contentJson = await contentRes.json();
             let fullContent = contentJson.choices?.[0]?.message?.content || "";
             fullContent = fullContent.replace(/```html/g, '').replace(/```/g, '').trim();
 
             await sendProgress({ status: `Generating Viral Metadata...`, progress: 80 });
 
-            const metaRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            const metaRes = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify({
@@ -154,9 +185,19 @@ export async function POST(request: NextRequest) {
                     ],
                     temperature: 0.85,
                 })
+            }).catch(e => {
+                logger.error('Meta generation fetch failed finally:', e);
+                return { ok: false, status: 500 } as any;
             });
 
-            const metaJson = await metaRes.json();
+            if (!metaRes.ok) {
+                const errorText = await metaRes.text();
+                logger.error('OpenAI Metadata Generation failed:', { status: metaRes.status, errorText });
+                // We don't throw here, use fallback
+                console.warn('Using fallback metadata due to OpenAI error');
+            }
+
+            const metaJson = metaRes.ok ? await metaRes.json() : {};
             let meta;
             try {
                 meta = JSON.parse(metaJson.choices?.[0]?.message?.content || "{}");
@@ -181,6 +222,68 @@ export async function POST(request: NextRequest) {
             if (!meta.social_li_text) meta.social_li_text = `New Industry Review: ${meta.title}. We analyze the performance, pricing, and true value proposition.`;
             if (!meta.social_hashtags || meta.social_hashtags.length === 0) meta.social_hashtags = ["hosting", "tech", "review"];
 
+            await sendProgress({ status: 'Magic Translate to ES...', progress: 90 });
+
+            const translationPrompt = `
+            You are a professional tech translator and social media expert specializing in Cloud Hosting and VPN.
+            Translate the following article from English to Spanish.
+            
+            CRITICAL RULES:
+            1. CONTENT: Keep HTML structure exactly as is. Translate the text inside tags.
+            2. METADATA: Translate title, excerpt, seo_title, and seo_description.
+            3. SOCIAL: Generate or translate engaging social media copy in Spanish.
+            4. Return a JSON object with: title, content, excerpt, seo_title, seo_description, social_tw_text, social_fb_text, social_li_text, social_hashtags.
+            5. IMPORTANT: social_hashtags MUST be an ARRAY of strings.
+            
+            EN DATA:
+            - title: ${meta.title}
+            - excerpt: ${meta.excerpt}
+            - seo_title: ${meta.seo_title}
+            - seo_description: ${meta.seo_description}
+            - social_tw_text: ${meta.social_tw_text}
+            - social_fb_text: ${meta.social_fb_text}
+            - social_li_text: ${meta.social_li_text}
+            - social_hashtags: ${(meta.social_hashtags || []).join(' ')}
+            
+            EN CONTENT (HTML):
+            ${fullContent.substring(0, 10000)} // Safety limit
+            `;
+
+            let translatedFields: any = {};
+            try {
+                const t0 = Date.now();
+                const translationRes = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        response_format: { type: "json_object" },
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a professional tech translator. Respond ONLY with valid JSON.'
+                            },
+                            {
+                                role: 'user',
+                                content: translationPrompt
+                            }
+                        ],
+                        temperature: 0.3,
+                    })
+                });
+
+                if (translationRes.ok) {
+                    const translationJson = await translationRes.json();
+                    translatedFields = JSON.parse(translationJson.choices?.[0]?.message?.content || "{}");
+                    console.log(`Translation successful in ${Date.now() - t0}ms`);
+                } else {
+                    const errorText = await translationRes.text();
+                    logger.error(`OpenAI Translation failed with status ${translationRes.status}:`, errorText);
+                }
+            } catch (e: any) {
+                logger.error('Failed to translate post during generation:', e.message);
+            }
+
             const randomSuffix = Math.random().toString(36).substring(2, 6);
             const cleanSlug = meta.title
                 .toLowerCase()
@@ -192,6 +295,36 @@ export async function POST(request: NextRequest) {
             const finalCategory = body.custom_category
                 ? body.custom_category
                 : (provider.type === 'vpn' ? 'VPN Reviews' : 'Hosting Reviews');
+
+            // Sanitize hashtags to be an array for the DB
+            let hashtagsEs = translatedFields?.social_hashtags;
+            if (hashtagsEs && typeof hashtagsEs === 'string') {
+                hashtagsEs = hashtagsEs.split(/[\s,]+/).map((t: string) => t.startsWith("#") ? t : `#${t}`).filter(Boolean);
+            } else if (!Array.isArray(hashtagsEs)) {
+                hashtagsEs = null;
+            }
+
+            const baseUrl = `https://hostingsarena.com`;
+            const enDraftUrl = `${baseUrl}/en/news/${finalSlug}`;
+            const esDraftUrl = `${baseUrl}/es/news/${finalSlug}`;
+
+            // Helper to fix links in generated social text
+            const fixGeneratedSocialLink = (text: string | null, liveUrl: string) => {
+                if (!text) return null;
+                // Robust regex to move ALL variations of hostingsarena news links
+                const cleaned = text.replace(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\/[^\s]+(?=\s|$)/g, '').trim();
+                return `${cleaned}\n\n${liveUrl}`;
+            };
+
+            // Process EN Social Links
+            meta.social_tw_text = fixGeneratedSocialLink(meta.social_tw_text, enDraftUrl);
+            meta.social_fb_text = fixGeneratedSocialLink(meta.social_fb_text, enDraftUrl);
+            meta.social_li_text = fixGeneratedSocialLink(meta.social_li_text, enDraftUrl);
+
+            // Process ES Social Links
+            translatedFields.social_tw_text = fixGeneratedSocialLink(translatedFields.social_tw_text, esDraftUrl);
+            translatedFields.social_fb_text = fixGeneratedSocialLink(translatedFields.social_fb_text, esDraftUrl);
+            translatedFields.social_li_text = fixGeneratedSocialLink(translatedFields.social_li_text, esDraftUrl);
 
             const { error: insertError } = await supabase.from('posts').insert({
                 title: meta.title,
@@ -210,6 +343,16 @@ export async function POST(request: NextRequest) {
                 social_fb_text: meta.social_fb_text,
                 social_li_text: meta.social_li_text,
                 social_hashtags: meta.social_hashtags,
+                // Translated fields
+                title_es: translatedFields.title || null,
+                content_es: translatedFields.content || null,
+                excerpt_es: translatedFields.excerpt || null,
+                seo_title_es: translatedFields.seo_title || null,
+                seo_description_es: translatedFields.seo_description || null,
+                social_tw_text_es: translatedFields.social_tw_text || null,
+                social_fb_text_es: translatedFields.social_fb_text || null,
+                social_li_text_es: translatedFields.social_li_text || null,
+                social_hashtags_es: hashtagsEs,
                 updated_at: new Date().toISOString(),
             });
 

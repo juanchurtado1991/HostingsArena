@@ -1,4 +1,5 @@
 "use client";
+// Bumping file for re-compile to fix potential Turbopack stale build issue
 
 import React, { useState, useEffect, useCallback, useRef, FormEvent, ChangeEvent } from "react";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
@@ -744,8 +745,8 @@ function PostEditorModal({
         setEditLang(targetLang);
     };
 
-    const handleTranslate = async () => {
-        if (isTranslating) return;
+    const handleTranslate = async (manual = true) => {
+        if (isTranslating) return null;
         try {
             setIsTranslating(true);
             setError(null);
@@ -780,26 +781,22 @@ function PostEditorModal({
             setExcerptEs(translated.excerpt);
             setSeoTitleEs(translated.seo_title);
             setSeoDescEs(translated.seo_description);
-            // Optionally update social fields too if you want them localized in the DB 
-            // Our DB schema currently only has _es for main fields, 
-            // but the user might want _es for social too. 
-            // For now, let's stick to the schema and maybe just update the social states 
-            // if we are in the ES tab, but wait, we only have one set of social states.
-            // If the user wants separate social for ES, we'd need more columns.
+
             setSocialTwEs(translated.social_tw_text || "");
             setSocialFbEs(translated.social_fb_text || "");
             setSocialLiEs(translated.social_li_text || "");
             if (translated.social_hashtags) {
                 setSocialTagsEs(Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : translated.social_hashtags);
             }
-            console.log("Translation applied to ES fields:", translated);
 
             if (editLang === 'es') {
                 editor?.commands.setContent(translated.content);
             }
+            return translated;
         } catch (err: any) {
             console.error("Translation error:", err);
             setError(err.message);
+            return null;
         } finally {
             setIsTranslating(false);
         }
@@ -1124,7 +1121,32 @@ function PostEditorModal({
         try {
             const currentHTML = editor?.getHTML() || "";
             const finalContentEn = editLang === 'en' ? currentHTML : contentEn;
-            const finalContentEs = editLang === 'es' ? currentHTML : contentEs;
+            let finalContentEs = editLang === 'es' ? currentHTML : contentEs;
+            let finalTitleEs = titleEs;
+            let finalExcerptEs = excerptEs;
+            let finalSeoTitleEs = seoTitleEs;
+            let finalSeoDescEs = seoDescEs;
+            let finalSocialTwEs = socialTwEs;
+            let finalSocialFbEs = socialFbEs;
+            let finalSocialLiEs = socialLiEs;
+            let finalSocialTagsEs = socialTagsEs;
+
+            // Auto-translate if ES fields are empty and we are in EN
+            if (!titleEs.trim() && !finalContentEs.trim() && editLang === 'en') {
+                console.log("ES copy missing, auto-translating...");
+                const translated = await handleTranslate(false);
+                if (translated) {
+                    finalTitleEs = translated.title;
+                    finalContentEs = translated.content;
+                    finalExcerptEs = translated.excerpt;
+                    finalSeoTitleEs = translated.seo_title;
+                    finalSeoDescEs = translated.seo_description;
+                    finalSocialTwEs = translated.social_tw_text;
+                    finalSocialFbEs = translated.social_fb_text;
+                    finalSocialLiEs = translated.social_li_text;
+                    finalSocialTagsEs = Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : (translated.social_hashtags || "");
+                }
+            }
 
             const savedPost = await onSave({
                 id: post?.id,
@@ -1145,33 +1167,57 @@ function PostEditorModal({
                 social_li_text: socialLi || null,
                 social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
                 // Multi-language fields
-                title_es: titleEs || null,
+                title_es: finalTitleEs || null,
                 content_es: finalContentEs || null,
-                excerpt_es: excerptEs || null,
-                seo_title_es: seoTitleEs || null,
-                seo_description_es: seoDescEs || null,
-                social_tw_text_es: socialTwEs || null,
-                social_fb_text_es: socialFbEs || null,
-                social_li_text_es: socialLiEs || null,
-                social_hashtags_es: socialTagsEs ? socialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
+                excerpt_es: finalExcerptEs || null,
+                seo_title_es: finalSeoTitleEs || null,
+                seo_description_es: finalSeoDescEs || null,
+                social_tw_text_es: finalSocialTwEs || null,
+                social_fb_text_es: finalSocialFbEs || null,
+                social_li_text_es: finalSocialLiEs || null,
+                social_hashtags_es: finalSocialTagsEs ? finalSocialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
             });
 
-            // Auto-append URL to Twitter if missing and publishing
-            const localePrefix = editLang === 'es' ? '/es' : '/en';
-            const livePostUrl = `https://hostingsarena.com${localePrefix}/news/${slug}`;
+            // Auto-append URL to social fields if missing and publishing
+            const baseUrl = `https://hostingsarena.com`;
+            const enLiveUrl = `${baseUrl}/en/news/${slug}`;
+            const esLiveUrl = `${baseUrl}/es/news/${slug}`;
 
-            let finalSocialTw = editLang === 'en' ? socialTw : socialTwEs;
+            if (publish) {
+                const updatedSocials: Partial<Post> = {};
 
-            if (publish && finalSocialTw && !finalSocialTw.includes('hostingsarena.com')) {
-                finalSocialTw = `${finalSocialTw}\n\n${livePostUrl}`;
+                // Helper to fix links in a social text
+                const fixSocialLink = (text: string | null, liveUrl: string) => {
+                    if (!text) return null;
+                    // Robust regex to remove ALL variations of hostingsarena news links
+                    const cleaned = text.replace(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\/[^\s]+(?=\s|$)/g, '').trim();
+                    return `${cleaned}\n\n${liveUrl}`;
+                };
 
-                // Update local state and save payload based on language
-                if (editLang === 'en') {
-                    setSocialTw(finalSocialTw);
-                    await onSave({ id: post?.id || (savedPost as any)?.post?.id, social_tw_text: finalSocialTw });
-                } else {
-                    setSocialTwEs(finalSocialTw);
-                    await onSave({ id: post?.id || (savedPost as any)?.post?.id, social_tw_text_es: finalSocialTw });
+                // EN Socials
+                const newTwEn = fixSocialLink(socialTw, enLiveUrl);
+                const newFbEn = fixSocialLink(socialFb, enLiveUrl);
+                const newLiEn = fixSocialLink(socialLi, enLiveUrl);
+
+                if (newTwEn) { setSocialTw(newTwEn); updatedSocials.social_tw_text = newTwEn; }
+                if (newFbEn) { setSocialFb(newFbEn); updatedSocials.social_fb_text = newFbEn; }
+                if (newLiEn) { setSocialLi(newLiEn); updatedSocials.social_li_text = newLiEn; }
+
+                // ES Socials
+                const newTwEs = fixSocialLink(socialTwEs, esLiveUrl);
+                const newFbEs = fixSocialLink(socialFbEs, esLiveUrl);
+                const newLiEs = fixSocialLink(socialLiEs, esLiveUrl);
+
+                if (newTwEs) { setSocialTwEs(newTwEs); updatedSocials.social_tw_text_es = newTwEs; }
+                if (newFbEs) { setSocialFbEs(newFbEs); updatedSocials.social_fb_text_es = newFbEs; }
+                if (newLiEs) { setSocialLiEs(newLiEs); updatedSocials.social_li_text_es = newLiEs; }
+
+                // Save all updated social fields
+                if (Object.keys(updatedSocials).length > 0) {
+                    await onSave({
+                        id: post?.id || (savedPost as any)?.post?.id,
+                        ...updatedSocials
+                    });
                 }
             }
 
@@ -1394,7 +1440,7 @@ function PostEditorModal({
                                         {editLang === 'en' && (
                                             <button
                                                 type="button"
-                                                onClick={handleTranslate}
+                                                onClick={() => handleTranslate()}
                                                 disabled={isTranslating}
                                                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:scale-105 transition-all disabled:opacity-50 disabled:grayscale"
                                             >
@@ -2115,6 +2161,9 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
     const [showProgressOverlay, setShowProgressOverlay] = useState(false);
     const [showGenModal, setShowGenModal] = useState(false);
 
+    // Summary Modal State for Card Actions
+    const [summaryPost, setSummaryPost] = useState<Post | null>(null);
+
     const fetchPosts = useCallback(async () => {
         setLoading(true);
         try {
@@ -2167,6 +2216,28 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         // We no longer close the modal here to allow the user to see the publish summary or continue editing
         fetchPosts();
         return result;
+    };
+
+    const handleManualIndex = async (post: Post) => {
+        try {
+            // Index both languages
+            const urls = [
+                `https://hostingsarena.com/en/news/${post.slug}`,
+                `https://hostingsarena.com/es/news/${post.slug}`
+            ];
+
+            for (const url of urls) {
+                await fetch("/api/admin/posts/index-google", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url }),
+                });
+            }
+            alert("Index requests sent for both languages!");
+        } catch (e) {
+            console.error("Manual indexing error:", e);
+            alert("Failed to send indexing request.");
+        }
     };
 
     const handleDelete = async (id: string) => {
@@ -2434,6 +2505,20 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                                         </span>
                                         <div className="flex gap-1">
                                             <button
+                                                onClick={() => setSummaryPost(post)}
+                                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+                                                title="Social Content"
+                                            >
+                                                <Share2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleManualIndex(post)}
+                                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-emerald-400"
+                                                title="Index Google"
+                                            >
+                                                <Globe className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button
                                                 onClick={() => setEditingPost(post)}
                                                 className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                                                 title="Edit"
@@ -2532,6 +2617,28 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 />
             )}
 
+            {/* Quick Share Summary Modal */}
+            {summaryPost && (
+                <PublishSummaryModal
+                    isOpen={!!summaryPost}
+                    onClose={() => setSummaryPost(null)}
+                    status="success"
+                    postUrl={`https://hostingsarena.com/news/${summaryPost.slug}`}
+                    socialContent={{
+                        twitter: summaryPost.social_tw_text || "",
+                        facebook: summaryPost.social_fb_text || "",
+                        linkedin: summaryPost.social_li_text || "",
+                        hashtags: summaryPost.social_hashtags || []
+                    }}
+                    socialContentEs={{
+                        twitter: summaryPost.social_tw_text_es || "",
+                        facebook: summaryPost.social_fb_text_es || "",
+                        linkedin: summaryPost.social_li_text_es || "",
+                        hashtags: summaryPost.social_hashtags_es || []
+                    }}
+                    indexingStatus="idle"
+                />
+            )}
             {/* Editor Modal */}
             {editingPost !== null && (
                 <PostEditorModal
