@@ -53,17 +53,17 @@ export async function generateMetadata({ params }: PageProps) {
         openGraph: {
             title: title,
             description: description,
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/news/${post.slug}`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://hostingsarena.com'}/${lang}/news/${post.slug}`,
             siteName: 'HostingsArena',
             images: post.cover_image_url ? [{ url: post.cover_image_url, width: 1200, height: 630, alt: title }] : [],
             locale: lang === 'es' ? 'es_ES' : 'en_US',
             type: 'article',
         },
         alternates: {
-            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/news/${post.slug}`,
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://hostingsarena.com'}/${lang}/news/${post.slug}`,
             languages: {
-                'en-US': `${process.env.NEXT_PUBLIC_SITE_URL}/en/news/${post.slug}`,
-                'es-ES': `${process.env.NEXT_PUBLIC_SITE_URL}/es/news/${post.slug}`,
+                'en-US': `${process.env.NEXT_PUBLIC_SITE_URL || 'https://hostingsarena.com'}/en/news/${post.slug}`,
+                'es-ES': `${process.env.NEXT_PUBLIC_SITE_URL || 'https://hostingsarena.com'}/es/news/${post.slug}`,
             },
         },
         twitter: {

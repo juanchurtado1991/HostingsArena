@@ -11,7 +11,21 @@ export const metadata: Metadata = {
   title: "Best Web Hosting 2026 (Verified Data) | HostingArena",
   description: "We tested 50+ hosting providers. See the real winners for speed, uptime, and support. No fake reviews, just data.",
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_SITE_URL!,
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com",
+  },
+  openGraph: {
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/logo-wide.jpg`,
+        width: 1200,
+        height: 630,
+        alt: 'HostingArena - Web Hosting Comparisons',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: [`${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/logo-wide.jpg`],
   }
 };
 

@@ -37,11 +37,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   useEffect(() => {
     let mounted = true;
 
-    if (typeof window !== 'undefined') {
-      const cachedAdmin = localStorage.getItem('isAdmin') === 'true';
-      if (cachedAdmin) setIsAdmin(true);
-    }
-
     const checkUserRole = async (uid: string) => {
       try {
         const { data: profile, error } = await supabase
@@ -53,13 +48,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         if (error) return;
 
         if (mounted) {
-          const isUserAdmin = profile?.role === 'admin';
-          setIsAdmin(isUserAdmin);
-          if (isUserAdmin) {
-            localStorage.setItem('isAdmin', 'true');
-          } else {
-            localStorage.removeItem('isAdmin');
-          }
+          setIsAdmin(profile?.role === 'admin');
         }
       } catch (err) {
         logger.error("Failed to check user role:", err);
@@ -74,7 +63,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           await checkUserRole(session.user.id);
         } else {
           setIsAdmin(false);
-          localStorage.removeItem('isAdmin');
         }
       }
     };
@@ -88,7 +76,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           await checkUserRole(session.user.id);
         } else {
           setIsAdmin(false);
-          localStorage.removeItem('isAdmin');
         }
       }
     });
@@ -100,12 +87,18 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   }, [supabase]);
 
   const handleSignOut = async () => {
-    setUser(null);
-    setIsAdmin(false);
-    localStorage.removeItem('isAdmin');
-    router.push(`/${lang}/login`);
-    await supabase.auth.signOut();
-    router.refresh();
+    try {
+      await supabase.auth.signOut();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('isAdmin'); // Cleanup for any legacy use cases
+      }
+      setUser(null);
+      setIsAdmin(false);
+      router.push(`/${lang}/login`);
+      router.refresh();
+    } catch (err) {
+      logger.error("Sign out failed:", err);
+    }
   };
 
   return (

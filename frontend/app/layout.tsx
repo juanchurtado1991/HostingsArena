@@ -10,7 +10,6 @@ export const metadata: Metadata = {
     description: "Stop relying on fake reviews. We verified 50+ providers with deep data extraction. Real uptime, real speeds, real hidden fees revealed.",
     icons: {
         icon: "/swords-icon.svg",
-        apple: "/apple-icon.png",
     },
     openGraph: {
         type: 'website',
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
         siteName: 'HostingsArena',
         images: [
             {
-                url: `${process.env.NEXT_PUBLIC_SITE_URL}/logo-wide.jpg`,
+                url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/logo-wide.jpg`,
                 width: 1200,
                 height: 630,
                 alt: 'HostingArena - Real Data Comparisons',
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'HostingArena | Real Data Comparisons',
         description: 'Stop relying on fake reviews. We verified 50+ providers with deep data extraction.',
-        images: [`${process.env.NEXT_PUBLIC_SITE_URL}/logo-wide.jpg`],
+        images: [`${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/logo-wide.jpg`],
         creator: '@HostingsArena',
     },
     robots: {

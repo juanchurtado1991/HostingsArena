@@ -7,10 +7,19 @@ import Link from "next/link";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import Image from "next/image";
+import { Metadata } from "next";
 
 import { NewsFilters } from "@/components/news/NewsFilters";
 
 export const revalidate = 300; // ISR: revalidate every 5 minutes
+
+export const metadata: Metadata = {
+    title: "Cloud Hosting News & AI Comparisons | HostingArena",
+    description: "Stay updated with verified data on hosting and VPN providers. Deep analysis, real uptime stats, and industry news.",
+    alternates: {
+        canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/en/news`,
+    }
+};
 
 async function getPublishedPosts(query?: string, category?: string) {
     const supabase = await createClient();

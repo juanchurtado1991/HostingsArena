@@ -31,9 +31,10 @@ export default function LoginPage() {
         logger.error('Login failed', error);
         setErrorMsg(error.message);
       } else {
-        logger.log('AUTH', 'Login successful. Redirecting...');
-        router.push("/"); // Redirect to Home
-        router.refresh();
+        logger.log('AUTH', 'Login successful. Syncing session...');
+        // router.push("/") can trigger a double redirect if i18n middleware isn't present, 
+        // using window.location for a hard refresh ensures cookies are fully flushed in some browsers
+        window.location.href = `/${window.location.pathname.split('/')[1] || 'en'}/dashboard`;
       }
     } catch (err) {
       logger.error('Unexpected login error', err);
