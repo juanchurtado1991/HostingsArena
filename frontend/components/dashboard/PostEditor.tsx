@@ -214,6 +214,17 @@ const FontSize = Extension.create({
     },
 })
 
+// Helper to normalize URLs
+const normalizeUrl = (url: string) => {
+    if (!url) return "";
+    // If it starts with / or has a protocol, leave it
+    if (url.startsWith('/') || /^[a-z]+:\/\//i.test(url)) {
+        return url;
+    }
+    // Otherwise, prepend https://
+    return `https://${url}`;
+};
+
 function EditorToolbar({
     editor,
     affiliateLinks,
@@ -497,7 +508,8 @@ function EditorToolbar({
                                         if (linkUrl === '') {
                                             editor.chain().focus().extendMarkRange('link').unsetLink().run();
                                         } else {
-                                            editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+                                            const normalized = normalizeUrl(linkUrl);
+                                            editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
                                         }
                                         setShowLinkMenu(false);
                                     }
@@ -520,7 +532,8 @@ function EditorToolbar({
                                         if (linkUrl === '') {
                                             editor.chain().focus().extendMarkRange('link').unsetLink().run();
                                         } else {
-                                            editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+                                            const normalized = normalizeUrl(linkUrl);
+                                            editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
                                         }
                                         setShowLinkMenu(false);
                                     }}

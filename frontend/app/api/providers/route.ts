@@ -35,7 +35,7 @@ export async function GET(request: Request) {
         } else if (search) {
             query = query.ilike('provider_name', `%${search}%`);
         } else {
-            query = query.limit(50);
+            query = query.limit(500);
         }
 
         const { data, error } = await query;

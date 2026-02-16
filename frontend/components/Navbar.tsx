@@ -47,9 +47,9 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
       console.log('[Navbar] Checking role for UID:', uid);
 
       try {
-        // Create a timeout promise
+        // Create a timeout promise (increase to 15s for more reliability)
         const timeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Query timeout')), 5000)
+          setTimeout(() => reject(new Error('Query timeout')), 15000)
         );
 
         // Race the query against the timeout
@@ -63,7 +63,13 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         ]);
 
         if (error) {
-          console.error('[Navbar] Profile query error:', error);
+          // Log as info if it's just a missing profile (expected for new users)
+          if (error.code === 'PGRST116') {
+            console.log('[Navbar] Profile not created yet.');
+          } else {
+            console.warn('[Navbar] Profile query issue:', error.message);
+          }
+
           if (mounted) {
             setIsAdmin(false);
             localStorage.removeItem('isAdmin');
@@ -71,10 +77,8 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           return;
         }
 
-        console.log('[Navbar] Profile data received:', profile);
         if (mounted) {
           const isUserAdmin = profile?.role === 'admin';
-          console.log('[Navbar] Setting isAdmin to:', isUserAdmin);
           setIsAdmin(isUserAdmin);
 
           if (isUserAdmin) {
@@ -83,8 +87,14 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             localStorage.removeItem('isAdmin');
           }
         }
-      } catch (err) {
-        console.error('[Navbar] Unexpected error or timeout in role check:', err);
+      } catch (err: any) {
+        // Only log if it's NOT a timeout to avoid spamming the user
+        if (err.message === 'Query timeout') {
+          console.warn('[Navbar] Role check timed out. Falling back to cached state.');
+        } else {
+          console.error('[Navbar] Unexpected error in role check:', err);
+        }
+
         if (mounted) {
           // Fallback to cached value if it's a timeout, or false if it's an error
           const cached = localStorage.getItem('isAdmin') === 'true';
