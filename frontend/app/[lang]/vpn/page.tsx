@@ -204,20 +204,17 @@ export default async function VPNPage({
                 </div>
               )}
 
-              {/* CTA - Money First */}
-              <div className="mt-auto space-y-3">
-                <AffiliateButton
-                  providerName={provider.provider_name}
-                  visitUrl={affiliateUrls.get(provider.provider_name) || provider.website_url}
-                  position="vpn_list_card"
-                  className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform"
-                  size="lg"
-                  showIcon={false}
-                >
-                  {dict.hosting.view_deal}
-                </AffiliateButton>
-                <Link href={`/${lang}/vpn/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
-                  {dict.hosting.read_review.replace('{provider}', provider.provider_name)}
+              {/* CTA - Deep Analysis First */}
+              <div className="mt-auto">
+                <Link href={`/${lang}/vpn/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="w-full">
+                  <Button 
+                    variant="default" 
+                    size="lg" 
+                    className="w-full rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/10 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                  >
+                    {dict.common.read_review.replace('{provider}', provider.provider_name)}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </Link>
               </div>
 
