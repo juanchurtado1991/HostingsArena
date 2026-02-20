@@ -12,9 +12,10 @@ interface ComparisonTableProps {
   data: (HostingProvider | VPNProvider)[];
   title?: string;
   type?: "hosting" | "vpn";
+  affiliateUrls?: string[];
 }
 
-export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTableProps) {
+export function ComparisonTable({ data, title, type = "hosting", affiliateUrls }: ComparisonTableProps) {
   if (!data || data.length === 0) return null;
 
   const renderFeature = (val: any) => {
@@ -301,11 +302,11 @@ export function ComparisonTable({ data, title, type = "hosting" }: ComparisonTab
               </td>
               {data.map((p, i) => (
                 <td key={i} className="p-10 text-center border-l border-white/5 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                   <AffiliateButton
                     className="w-full h-14 text-xl font-black rounded-2xl shadow-[0_20px_40px_-10px_rgba(59,130,246,0.3)] hover:scale-[1.02] transition-all"
                     providerName={p.provider_name}
-                    visitUrl={p.website_url || "#"}
+                    visitUrl={(affiliateUrls && affiliateUrls[i] && affiliateUrls[i] !== "#") ? affiliateUrls[i] : (p.website_url || "#")}
                     position="comparison_table_final"
                   >
                     Get Verified Offer <ChevronRight className="ml-2 w-6 h-6" />

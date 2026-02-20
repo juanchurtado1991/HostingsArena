@@ -11,7 +11,8 @@
         "try_again": "Reintentar",
         "back_home": "Volver al Inicio",
         "coming_soon": "Próximamente",
-        "search_placeholder": "Buscar proveedores..."
+        "search_placeholder": "Buscar proveedores...",
+        "fair_renewal": "Renovación Justa"
     },
     "nav": {
         "hosting": "Hosting",
@@ -135,8 +136,9 @@
             "overview": "Resumen",
             "tasks": "Tareas",
             "affiliates": "Afiliados",
-            "newsroom": "Noticias IA",
-            "workflows": "Flujos de Scrapers",
+            "newsroom": "Newsroom",
+            "workflows": "Workflows",
+            "seo": "Indexación",
             "tutorial": "Tutorial"
         },
         "metrics": {
@@ -182,9 +184,19 @@
         },
         "tutorial": {
             "newsroom": {
-                "title": "Newsroom IA & SEO",
+                "title": "Newsroom & SEO",
                 "category": "Contenido",
-                "content": "Crea y distribuye noticias con el poder de GPT-4o.\n\n• **Configuración IA**: Elige `GPT-4o` para análisis profundos o `Mini` para velocidad. Ajusta la longitud (800-2500 palabras).\n• **Social Tab**: Edita los posts generados para Twitter y LinkedIn antes de publicar.\n• **Publicar y Compartir**: El botón `Publish & Share` guarda el post y envía los datos a Make.com para su distribución automática.\n• **Indexación**: Usa el botón 🌐 para pedirle a Google que indexe tu artículo inmediatamente."
+                "content": "Crea y distribuye noticias con el poder de GPT-4o.\n\n• **Configuración IA**: Elige `GPT-4o` para análisis profundos o `Mini` para velocidad. Ajusta la longitud (800-2500 palabras).\n• **Social Tab**: Edita los posts generados para Twitter y LinkedIn antes de publicar.\n• **Publicar y Compartir**: El botón `Publish & Share` guarda el post y envía los datos a Make.com para su distribución automática."
+            },
+            "indexing": {
+                "title": "API de Indexación Google",
+                "category": "SEO",
+                "content": "HostingArena inclue una conexión directa con la API de Google Indexing para saltar el lento proceso de rastreo natural.\n\n• **Actualizar URLs**: Obtiene todos los slugs actuales (Noticias, Hosting, VPN, Comparativas) de la base de datos.\n• **Indexar Todo**: Envía una notificación 'URL_UPDATED' por cada link seleccionado.\n• **Velocidad**: Las páginas enviadas suelen aparecer en Google en 24-48 horas.\n• **Schema FAQ**: Inyectado automáticamente para duplicar tu visibilidad en buscadores."
+            },
+            "roadmap": {
+                "title": "Hoja de Ruta de Innovación",
+                "category": "Estrategia",
+                "content": "Estas son las próximas funciones de alto impacto planificadas para aumentar la conversión y el tráfico:\n\n• **Cupones Exclusivos**: Negociación de descuentos directos con los mejores proveedores.\n• **Reseñas Verificadas**: Verificación impulsada por la comunidad de clientes reales.\n• **Alertas de Bajada de Precios**: Sistema de retargeting para notificar a los usuarios sobre ofertas."
             }
         }
     }

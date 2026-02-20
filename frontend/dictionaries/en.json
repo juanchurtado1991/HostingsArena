@@ -11,7 +11,8 @@
         "try_again": "Try again",
         "back_home": "Back to Home",
         "coming_soon": "Coming Soon",
-        "search_placeholder": "Search providers..."
+        "search_placeholder": "Search providers...",
+        "fair_renewal": "Fair Renewal"
     },
     "nav": {
         "hosting": "Hosting",
@@ -135,8 +136,9 @@
             "overview": "Overview",
             "tasks": "Tasks",
             "affiliates": "Affiliates",
-            "newsroom": "AI Newsroom",
-            "workflows": "Scraper Workflows",
+            "newsroom": "Newsroom",
+            "workflows": "Workflows",
+            "seo": "Indexing",
             "tutorial": "Tutorial"
         },
         "metrics": {
@@ -182,9 +184,19 @@
         },
         "tutorial": {
             "newsroom": {
-                "title": "AI Newsroom & SEO",
+                "title": "Newsroom & SEO",
                 "category": "Content",
-                "content": "Create and distribute news with the power of GPT-4o.\n\n• **AI Config**: Choose `GPT-4o` for deep analysis or `Mini` for speed. Adjust length (800-2500 words).\n• **Social Tab**: Edit generated Twitter and LinkedIn posts before publishing.\n• **Publish & Share**: The `Publish & Share` button saves the post and sends data to Make.com for automatic distribution.\n• **Indexing**: Use the 🌐 button to request Google to index your article immediately."
+                "content": "Create and distribute news with the power of GPT-4o.\n\n• **AI Config**: Choose `GPT-4o` for deep analysis or `Mini` for speed. Adjust length (800-2500 words).\n• **Social Tab**: Edit generated Twitter and LinkedIn posts before publishing.\n• **Publish & Share**: The `Publish & Share` button saves the post and sends data to Make.com for automatic distribution."
+            },
+            "indexing": {
+                "title": "Google Indexing API",
+                "category": "SEO",
+                "content": "HostingArena includes a direct connection to the Google Indexing API to skip the slow crawl process.\n\n• **Refresh URLs**: Pulls all current slugs (News, Hosting, VPN, Compare) from the database.\n• **Index All**: Sends a 'URL_UPDATED' notification for every selected link. \n• **Speed**: Pages submitted through here usually appear in Search Results within 24-48 hours.\n• **FAQ Schema**: Automatically injected into comparison pages to double your visibility."
+            },
+            "roadmap": {
+                "title": "Innovation Roadmap",
+                "category": "Strategy",
+                "content": "These are the next high-impact features planned to increase conversion and traffic:\n\n• **Exclusive Coupons**: Negotiating direct discounts with top providers.\n• **User Verified Reviews**: Community-driven verification from real customers.\n• **Price Drop Alerts**: Retargeting system to notify users of deals."
             }
         }
     }

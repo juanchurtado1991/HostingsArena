@@ -1,48 +1,100 @@
 import { HeroSection } from "@/components/HeroSection";
-import { TopProviders } from "@/components/TopProviders";
+import { TopProviders, TopProviderData } from "@/components/TopProviders";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { RefreshCw, Zap, ShieldCheck } from "lucide-react";
 import { getDictionary } from "../../get-dictionary";
 import type { Locale } from "../../i18n-config";
 import { Metadata } from "next";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
+import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
-export const metadata: Metadata = {
-  title: "Best Web Hosting 2026 (Verified Data) | HostingArena",
-  description: "We tested 50+ hosting providers. See the real winners for speed, uptime, and support. No fake reviews, just data.",
-  alternates: {
-    canonical: process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com",
-  },
-  openGraph: {
-    images: [
-      {
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/logo-wide.jpg`,
-        width: 1200,
-        height: 630,
-        alt: 'HostingArena - Web Hosting Comparisons',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    images: [`${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/logo-wide.jpg`],
-  }
-};
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+  const { lang } = await params;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com";
+  
+  return {
+    title: "Best Web Hosting 2026 (Verified Data) | HostingArena",
+    description: "We tested 50+ hosting providers. See the real winners for speed, uptime, and support. No fake reviews, just data.",
+    alternates: {
+      canonical: `${baseUrl}/${lang}`,
+    },
+    openGraph: {
+      images: [
+        {
+          url: `${baseUrl}/logo-wide.jpg`,
+          width: 1200,
+          height: 630,
+          alt: 'HostingArena - Web Hosting Comparisons',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [`${baseUrl}/logo-wide.jpg`],
+    }
+  };
+}
 
 export default async function Home({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params;
   const dict = await getDictionary(lang);
 
+  const supabase = createAdminClient();
+  const { data: activeAffiliates } = await supabase
+      .from('affiliate_partners')
+      .select('provider_name, affiliate_link')
+      .eq('status', 'active');
+
+  const providerNames = activeAffiliates?.map(a => a.provider_name) || [];
+
+  const { data: providersData } = await supabase
+      .from('hosting_providers')
+      .select('*')
+      .in('provider_name', providerNames)
+      .order('support_score', { ascending: false });
+
+  const uniqueProviders: TopProviderData[] = [];
+  const seenNames = new Set();
+  
+  for (const p of (providersData || [])) {
+      const lowerName = p.provider_name.toLowerCase();
+      if (!seenNames.has(lowerName)) {
+          seenNames.add(lowerName);
+          
+          const aff = activeAffiliates?.find(a => a.provider_name.toLowerCase() === lowerName);
+          
+          uniqueProviders.push({
+              rank: uniqueProviders.length + 1,
+              name: p.provider_name,
+              slug: p.provider_name.toLowerCase().replace(/\s+/g, '-'),
+              price: p.pricing_monthly,
+              discount: p.renewal_price && p.pricing_monthly 
+                  ? `${Math.round(((p.renewal_price - p.pricing_monthly) / p.renewal_price) * 100)}%` 
+                  : "0%",
+              features: [
+                  p.storage_gb ? `${p.storage_gb} GB Storage` : "Generous Storage",
+                  p.bandwidth || "Unmetered Bandwidth",
+                  "24/7 Support"
+              ],
+              color: uniqueProviders.length === 0 ? "from-purple-500/20 to-blue-500/20" : uniqueProviders.length === 1 ? "from-orange-500/20 to-red-500/20" : "from-blue-400/20 to-cyan-400/20",
+              badge: uniqueProviders.length === 0 ? "Best Overall 2026" : uniqueProviders.length === 1 ? "Fastest Speed" : "Best Value",
+              affiliateLink: aff?.affiliate_link || "#"
+          });
+          
+          if (uniqueProviders.length === 3) break;
+      }
+  }
+
+  const providersToPass = uniqueProviders.length > 0 ? uniqueProviders : undefined;
+
   return (
     <div className="flex flex-col pb-20 overflow-x-hidden">
       <OrganizationJsonLd />
 
-
       <HeroSection dict={dict.hero} lang={lang} />
 
-
       <div className="relative z-20 -mt-12 px-4">
-        <TopProviders dict={dict.common} lang={lang} />
+        <TopProviders dict={dict.common} lang={lang} providers={providersToPass} />
       </div>
 
 
@@ -86,7 +138,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Locale 
       </section>
 
 
-      <section className="container mx-auto px-6 text-center py-10">
+      <section className="container mx-auto px-6 text-center py-20 pb-40">
         <h2 className="text-3xl font-bold mb-6">{dict.home.convince_title}</h2>
         <p className="text-muted-foreground mb-8 text-lg">
           {dict.home.convince_desc}

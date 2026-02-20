@@ -5,12 +5,14 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { getAffiliateUrlBatch } from "@/lib/affiliates";
+import { getAffiliateUrlBatch, getActiveAffiliatePartners } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { TrendingUp } from "lucide-react";
 
 export const metadata = {
   title: "Top VPNs - Verified Privacy Audits | HostingArena",
@@ -35,18 +37,47 @@ export default async function VPNPage({
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage - 1;
 
-  let dbQuery = supabase
+  // Let's fetch all active affiliates globally
+  const activeAffiliates = await getActiveAffiliatePartners();
+  
+  // We need to fetch all providers if we want to sort globally before pagination.
+  // BUT the VPN page currently natively paginates via Supabase `.range(start, end)`.
+  // To sort by affiliate first, we MUST fetch all active providers, or at least modify the query.
+  // For simplicity since the number of VPNs is small (< 100), we fetch all, sort, and slice like in Hosting.
+  let allQuery = supabase
     .from("vpn_providers")
     .select("*", { count: "exact" });
 
   if (query) {
-    dbQuery = dbQuery.ilike("provider_name", `%${query}%`);
+    allQuery = allQuery.ilike("provider_name", `%${query}%`);
   }
 
-  dbQuery = dbQuery.order("provider_name", { ascending: true }).range(start, end);
+  const { data: allProviders, count } = await allQuery.order("provider_name", { ascending: true });
+  
+  // Deduplicate by provider_name
+  const uniqueProvidersMap = new Map();
+  if (allProviders) {
+    for (const p of allProviders) {
+      if (!uniqueProvidersMap.has(p.provider_name)) {
+        uniqueProvidersMap.set(p.provider_name, p);
+      }
+    }
+  }
 
-  const { data: providers, count } = await dbQuery;
-  const totalPages = count ? Math.ceil(count / itemsPerPage) : 0;
+  let uniqueProviders = Array.from(uniqueProvidersMap.values());
+  
+  let sortedProviders = uniqueProviders.sort((a: any, b: any) => {
+    const aHasAffiliate = activeAffiliates.has(a.provider_name.toLowerCase()) ? 1 : 0;
+    const bHasAffiliate = activeAffiliates.has(b.provider_name.toLowerCase()) ? 1 : 0;
+    
+    if (aHasAffiliate !== bHasAffiliate) {
+      return bHasAffiliate - aHasAffiliate;
+    }
+    return a.provider_name.localeCompare(b.provider_name);
+  });
+
+  const totalPages = sortedProviders ? Math.ceil(sortedProviders.length / itemsPerPage) : 0;
+  const providers = sortedProviders.slice(start, end + 1);
 
   const affiliateUrls = providers ? await getAffiliateUrlBatch(
     providers.map(p => ({ provider_name: p.provider_name, website_url: p.website_url }))
@@ -70,6 +101,7 @@ export default async function VPNPage({
           <div className="max-w-md mx-auto relative">
             <GlobalSearch
               variant="hero"
+              lang={lang}
               placeholder={dict.vpn.search_placeholder}
             />
           </div>
@@ -114,6 +146,29 @@ export default async function VPNPage({
                 <span className="font-bold">{provider.jurisdiction || "Unknown"}</span>
               </div>
 
+              {/* Renewal Warning / Fair Renewal */}
+              {provider.renewal_price && (
+                provider.renewal_price <= provider.pricing_monthly ? (
+                  <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-3 mb-6">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-green-500 font-medium flex items-center gap-2">
+                        <Check className="w-4 h-4" /> {dict.common.fair_renewal}
+                      </span>
+                      <span className="font-bold text-foreground">{formatCurrency(provider.renewal_price)}/mo</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-3 mb-6">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-destructive font-medium flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" /> {dict.hosting.renewal}
+                      </span>
+                      <span className="font-bold text-foreground">{formatCurrency(provider.renewal_price)}/mo</span>
+                    </div>
+                  </div>
+                )
+              )}
+
               {/* Specs */}
               <div className="space-y-4 mb-8 flex-grow">
                 <div className="flex items-center justify-between text-sm">
@@ -151,11 +206,16 @@ export default async function VPNPage({
 
               {/* CTA - Money First */}
               <div className="mt-auto space-y-3">
-                <Link href={affiliateUrls.get(provider.provider_name) || provider.website_url} target="_blank" className="w-full block">
-                  <Button className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform" size="lg">
-                    {dict.hosting.view_deal}
-                  </Button>
-                </Link>
+                <AffiliateButton
+                  providerName={provider.provider_name}
+                  visitUrl={affiliateUrls.get(provider.provider_name) || provider.website_url}
+                  position="vpn_list_card"
+                  className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform"
+                  size="lg"
+                  showIcon={false}
+                >
+                  {dict.hosting.view_deal}
+                </AffiliateButton>
                 <Link href={`/${lang}/vpn/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
                   {dict.hosting.read_review.replace('{provider}', provider.provider_name)}
                 </Link>

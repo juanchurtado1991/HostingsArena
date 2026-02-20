@@ -14,8 +14,13 @@ export async function POST(request: NextRequest) {
 
         // Context Parsing
         const userAgent = request.headers.get("user-agent") || "";
-        const ip = (request.headers.get("x-forwarded-for")?.split(',')[0] || "unknown").slice(0, 45);
+        const ip = (request.headers.get("x-forwarded-for")?.split(',')[0] || "unknown").trim();
         const country = request.headers.get("x-vercel-ip-country") || request.headers.get("cf-ipcountry") || null;
+
+        const IGNORED_IPS = ["190.150.105.226", "190.53.30.25"];
+        if (IGNORED_IPS.includes(ip)) {
+            return NextResponse.json({ ok: true, ignored: true });
+        }
 
         // Simple Device Detection
         let deviceType = 'desktop';
@@ -28,7 +33,7 @@ export async function POST(request: NextRequest) {
             target_url,
             page_path,
             position,
-            ip_address: ip,
+            ip_address: ip.slice(0, 45),
             user_agent: userAgent,
             country: country?.slice(0, 10),
             device_type: deviceType

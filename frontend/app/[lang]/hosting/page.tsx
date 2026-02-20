@@ -5,8 +5,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getAffiliateUrlBatch } from "@/lib/affiliates";
+import { getAffiliateUrlBatch, getActiveAffiliatePartners } from "@/lib/affiliates";
 import { PageTracker } from "@/components/tracking/PageTracker";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 
@@ -58,11 +59,21 @@ export default async function HostingPage({
     }
   }
 
-  const uniqueProviders = Array.from(uniqueProvidersMap.values());
+  let uniqueProviders = Array.from(uniqueProvidersMap.values());
 
-  // Sort alphabetically by provider name (or keep price order if preferred, but usually lists are alphabetical or by rank)
-  // Let's stick to the previous behavior: alphabetical
-  uniqueProviders.sort((a, b) => a.provider_name.localeCompare(b.provider_name));
+  const activeAffiliates = await getActiveAffiliatePartners();
+
+  // Sort by affiliate status first, then alphabetically
+  uniqueProviders.sort((a: any, b: any) => {
+    const aHasAffiliate = activeAffiliates.has(a.provider_name.toLowerCase()) ? 1 : 0;
+    const bHasAffiliate = activeAffiliates.has(b.provider_name.toLowerCase()) ? 1 : 0;
+    
+    if (aHasAffiliate !== bHasAffiliate) {
+      return bHasAffiliate - aHasAffiliate;
+    }
+    
+    return a.provider_name.localeCompare(b.provider_name);
+  });
 
   // Client-side pagination
   const totalItems = uniqueProviders.length;
@@ -91,6 +102,7 @@ export default async function HostingPage({
           <div className="max-w-md mx-auto relative">
             <GlobalSearch
               variant="hero"
+              lang={lang}
               placeholder={dict.hosting.search_placeholder}
             />
           </div>
@@ -115,16 +127,27 @@ export default async function HostingPage({
                 </div>
               </div>
 
-              {/* Renewal Warning */}
+              {/* Renewal Warning / Fair Renewal */}
               {provider.renewal_price && (
-                <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-3 mb-6">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-destructive font-medium flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" /> {dict.hosting.renewal}
-                    </span>
-                    <span className="font-bold text-foreground">{formatCurrency(provider.renewal_price)}/mo</span>
+                provider.renewal_price <= provider.pricing_monthly ? (
+                  <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-3 mb-6">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-green-500 font-medium flex items-center gap-2">
+                        <Check className="w-4 h-4" /> {dict.common.fair_renewal}
+                      </span>
+                      <span className="font-bold text-foreground">{formatCurrency(provider.renewal_price)}/mo</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-destructive/5 border border-destructive/10 rounded-xl p-3 mb-6">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-destructive font-medium flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" /> {dict.hosting.renewal}
+                      </span>
+                      <span className="font-bold text-foreground">{formatCurrency(provider.renewal_price)}/mo</span>
+                    </div>
+                  </div>
+                )
               )}
 
               {/* Specs */}
@@ -160,11 +183,16 @@ export default async function HostingPage({
 
               {/* CTA - Money First */}
               <div className="mt-auto space-y-3">
-                <Link href={affiliateUrls.get(provider.provider_name) || provider.website_url} target="_blank" className="w-full block">
-                  <Button className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform" size="lg">
-                    {dict.hosting.view_deal}
-                  </Button>
-                </Link>
+                <AffiliateButton
+                  providerName={provider.provider_name}
+                  visitUrl={affiliateUrls.get(provider.provider_name) || provider.website_url}
+                  position="hosting_list_card"
+                  className="w-full rounded-xl font-bold shadow-lg shadow-primary/10 hover:scale-[1.02] transition-transform"
+                  size="lg"
+                  showIcon={false}
+                >
+                  {dict.hosting.view_deal}
+                </AffiliateButton>
                 <Link href={`/${lang}/hosting/${provider.slug || provider.provider_name.toLowerCase().replace(/\s+/g, '-')}`} className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
                   {dict.hosting.read_review.replace('{provider}', provider.provider_name)}
                 </Link>

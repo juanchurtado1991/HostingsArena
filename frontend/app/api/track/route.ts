@@ -19,8 +19,14 @@ export async function POST(request: NextRequest) {
 
         const supabase = createAdminClient();
         const userAgent = request.headers.get("user-agent") || "";
+        const ip = (request.headers.get("x-forwarded-for")?.split(',')[0] || "unknown").trim();
         const country = request.headers.get("x-vercel-ip-country") ||
             request.headers.get("cf-ipcountry") || null;
+
+        const IGNORED_IPS = ["190.150.105.226", "190.53.30.25"];
+        if (IGNORED_IPS.includes(ip)) {
+            return NextResponse.json({ ok: true, ignored: true });
+        }
 
         // Simple Device Detection
         let deviceType = 'desktop';
@@ -34,7 +40,7 @@ export async function POST(request: NextRequest) {
             referrer: referrer?.slice(0, 500) || null,
             user_agent: userAgent.slice(0, 500),
             country: country?.slice(0, 10) || null,
-            ip_address: (request.headers.get("x-forwarded-for")?.split(',')[0] || "unknown").slice(0, 45),
+            ip_address: ip.slice(0, 45),
             device_type: deviceType,
             utm_source: utm_source?.slice(0, 100),
             utm_medium: utm_medium?.slice(0, 100),

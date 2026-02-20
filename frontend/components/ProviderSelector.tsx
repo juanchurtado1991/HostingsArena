@@ -38,12 +38,13 @@ export function ProviderSelector({ type, onSelect, selectedProvider, className }
     }, []);
 
     React.useEffect(() => {
+        const controller = new AbortController();
         const fetchProviders = async () => {
             setLoading(true);
             logger.log('SEARCH', `Fetching providers for ${type} via PROXY API`);
 
             try {
-                const response = await fetch(`/api/providers?type=${type}`);
+                const response = await fetch(`/api/providers?type=${type}`, { signal: controller.signal });
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -58,7 +59,8 @@ export function ProviderSelector({ type, onSelect, selectedProvider, className }
                 });
                 setProviders(data || []);
 
-            } catch (err) {
+            } catch (err: any) {
+                if (controller.signal.aborted) return;
                 logger.error('CRITICAL SEARCH CRASH (Proxy)', err);
             } finally {
                 setLoading(false);
@@ -66,6 +68,7 @@ export function ProviderSelector({ type, onSelect, selectedProvider, className }
         };
 
         fetchProviders();
+        return () => controller.abort();
     }, [type]);
 
     const filteredProviders = providers.filter(p =>

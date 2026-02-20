@@ -188,7 +188,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           </div>
 
           <div className="hidden xl:flex items-center gap-2 2xl:gap-4">
-            <GlobalSearch />
+            <GlobalSearch lang={lang} />
             <LocaleSwitcher />
 
             {user ? (
@@ -239,7 +239,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         <div className="absolute top-20 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl xl:hidden animate-in fade-in slide-in-from-top-4 z-40">
           <div className="flex flex-col gap-4">
             <div className="mb-4 flex flex-col gap-4">
-              <GlobalSearch />
+              <GlobalSearch lang={lang} />
               <div className="flex justify-start px-2">
                 <LocaleSwitcher />
               </div>

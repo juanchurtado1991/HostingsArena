@@ -42,7 +42,20 @@ const TOP_PROVIDERS = [
     }
 ];
 
-export function TopProviders({ dict, lang = 'en' }: { dict?: any, lang?: string }) {
+export interface TopProviderData {
+    rank: number;
+    name: string;
+    slug: string;
+    price: string | number;
+    discount: string;
+    features: string[];
+    color: string;
+    badge?: string;
+    affiliateLink: string;
+}
+
+export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lang?: string, providers?: TopProviderData[] }) {
+    const displayProviders = providers || TOP_PROVIDERS;
     return (
         <section className="container mx-auto px-4 md:px-6 relative z-20 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
@@ -51,7 +64,7 @@ export function TopProviders({ dict, lang = 'en' }: { dict?: any, lang?: string 
             User asked for symmetry. A 1-2-3 grid is symmetrical in alignment. 
             Let's keep the array order but make them identical in size.
         */}
-                {TOP_PROVIDERS.sort((a, b) => a.rank - b.rank).map((provider) => (
+                {displayProviders.sort((a, b) => a.rank - b.rank).map((provider) => (
                     <GlassCard
                         key={provider.name}
                         className={`

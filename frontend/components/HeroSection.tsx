@@ -61,6 +61,7 @@ export function HeroSection({ dict, lang = 'en' }: { dict?: any, lang?: string }
         >
           <GlobalSearch
             variant="hero"
+            lang={lang}
             placeholder={lang === 'es' ? "Buscar proveedores (ej. Bluehost, NordVPN)..." : "Search providers (e.g. Bluehost, NordVPN)..."}
           />
         </motion.div>

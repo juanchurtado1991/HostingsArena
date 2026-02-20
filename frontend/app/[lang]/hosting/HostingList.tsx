@@ -19,7 +19,7 @@ interface Provider {
     raw_data: any;
 }
 
-export default function HostingList({ initialProviders, affiliateUrls = {} }: { initialProviders: Provider[]; affiliateUrls?: Record<string, string> }) {
+export default function HostingList({ initialProviders, affiliateUrls = {}, lang = "en" }: { initialProviders: Provider[]; affiliateUrls?: Record<string, string>; lang?: string }) {
     const [search, setSearch] = useState("");
 
     const filtered = initialProviders.filter(p =>
@@ -98,7 +98,7 @@ export default function HostingList({ initialProviders, affiliateUrls = {} }: { 
                             </div>
                             <div className="flex gap-3 mt-4">
                                 <a
-                                    href={`/hosting/${p.slug || p.provider_name.toLowerCase().replace(/\s+/g, '-')}`}
+                                    href={`/${lang}/hosting/${p.slug || p.provider_name.toLowerCase().replace(/\s+/g, '-')}`}
                                     className="h-10 px-6 font-semibold inline-flex items-center justify-center rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
                                 >
                                     Analysis

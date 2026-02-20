@@ -16,20 +16,20 @@ import { ProsConsSection } from "@/components/ui/ProsConsSection";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import Link from "next/link";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; lang: string }> }) {
+    const { slug, lang } = await params;
     const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
     return {
         title: `${title} - In-Depth Review & Benchmarks ${new Date().getFullYear()} | HostingArena`,
         description: `Performance tests, uptime stats, and pricing analysis for ${title}. See why it scored 8+/10.`,
         alternates: {
-            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/hosting/${slug}`,
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/hosting/${slug}`,
         },
         openGraph: {
             title: `${title} Review - Is it Worth It in ${new Date().getFullYear()}?`,
             description: `Real data: Performance, Pricing, and Hidden Fees analyzed for ${title}.`,
-            url: `${process.env.NEXT_PUBLIC_SITE_URL}/hosting/${slug}`,
+            url: `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/hosting/${slug}`,
             siteName: 'HostingsArena',
             images: [
                 {
@@ -70,6 +70,26 @@ export default async function HostingDetailPage({ params, searchParams }: { para
         .eq("provider_name", baseProvider.provider_name)
         .order("pricing_monthly", { ascending: true });
 
+    // 2.5 Fetch Top Alternatives for Programmatic SEO Internal Linking (Deduplicated)
+    const { data: rawAlternatives } = await supabase
+        .from("hosting_providers")
+        .select("provider_name, slug, performance_grade, support_score")
+        .neq("slug", baseProvider.slug)
+        .order("support_score", { ascending: false })
+        .limit(10);
+
+    const alternativesData = [];
+    const seenAltNames = new Set();
+    if (rawAlternatives) {
+        for (const alt of rawAlternatives) {
+            if (!seenAltNames.has(alt.provider_name.toLowerCase())) {
+                seenAltNames.add(alt.provider_name.toLowerCase());
+                alternativesData.push(alt);
+            }
+            if (alternativesData.length === 3) break;
+        }
+    }
+
     // 3. Determine the current active plan
     const provider = allPlans?.find(p => p.id === planId) || allPlans?.[0] || baseProvider;
 
@@ -106,9 +126,9 @@ export default async function HostingDetailPage({ params, searchParams }: { para
             />
             <BreadcrumbJsonLd
                 items={[
-                    { name: "Home", item: "/" },
-                    { name: "Hosting Reviews", item: "/hosting" },
-                    { name: provider.provider_name, item: `/hosting/${slug}` }
+                    { name: "Home", item: `/${lang}` },
+                    { name: "Hosting Reviews", item: `/${lang}/hosting` },
+                    { name: provider.provider_name, item: `/${lang}/hosting/${slug}` }
                 ]}
             />
             <StickyBuyBar
@@ -337,6 +357,37 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                                                 </Button>
                                             </div>
                                         </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Top Competitors (Programmatic SEO Internal Links) */}
+                        {alternativesData && alternativesData.length > 0 && (
+                            <section className="pt-12 border-t border-border/50">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-2xl font-bold tracking-tight">Top Alternatives</h3>
+                                    <Badge variant="outline" className="font-mono">COMPARE</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {alternativesData.map((alt) => (
+                                        <Link 
+                                            key={alt.slug} 
+                                            href={`/${lang}/compare/${baseProvider.slug}-vs-${alt.slug}`}
+                                            className="group block p-6 rounded-3xl border border-border/50 bg-card/30 hover:bg-card hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-300"
+                                        >
+                                            <div className="flex flex-col h-full justify-between gap-4">
+                                                <div>
+                                                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">{baseProvider.provider_name} vs</div>
+                                                    <h4 className="text-xl font-black group-hover:text-primary transition-colors">{alt.provider_name}</h4>
+                                                </div>
+                                                <div className="flex items-center justify-end mt-4">
+                                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                                                        <ArrowRight className="w-4 h-4" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Link>
                                     ))}
                                 </div>
                             </section>

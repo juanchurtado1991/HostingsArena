@@ -2,7 +2,7 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTrackPageView } from "@/hooks/useTrackPageView";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ProviderSelector } from "@/components/ProviderSelector";
@@ -10,6 +10,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertCircle, TrendingUp, Zap } from "lucide-react";
+import { getCalculatorAffiliateLinks, getDefaultCompareProviders } from "@/lib/actions/affiliates";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
 interface CalculatorClientProps {
     dict: any;
@@ -19,9 +21,63 @@ interface CalculatorClientProps {
 export default function CalculatorClient({ dict, lang }: CalculatorClientProps) {
     const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
     const [years, setYears] = useState(3);
-    const [provider1, setProvider1] = useState({ id: "", provider_name: "Bluehost", initial: 2.95, renewal: 10.99, promo: 12 });
-    const [provider2, setProvider2] = useState({ id: "", provider_name: "FastComet", initial: 2.95, renewal: 2.95, promo: 12 });
+    const [provider1, setProvider1] = useState({ id: "", provider_name: "Loading...", initial: 0, renewal: 0, promo: 12, website_url: "" });
+    const [provider2, setProvider2] = useState({ id: "", provider_name: "Loading...", initial: 0, renewal: 0, promo: 12, website_url: "" });
+    const [p1Link, setP1Link] = useState("#");
+    const [p2Link, setP2Link] = useState("#");
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    
     useTrackPageView();
+
+    useEffect(() => {
+        const fetchDefaults = async () => {
+            try {
+                const defaults = await getDefaultCompareProviders(category);
+                if (defaults.length > 0) {
+                    const p1 = defaults[0];
+                    const p1Renewal = p1.renewal_price || p1.renewal_price_monthly || (p1.pricing_monthly * 2) || 0;
+                    setProvider1({
+                        id: p1.id,
+                        provider_name: p1.provider_name,
+                        initial: Number(p1.pricing_monthly) || 0,
+                        renewal: Number(p1Renewal),
+                        promo: 12,
+                        website_url: p1.website_url || ""
+                    });
+                }
+                if (defaults.length > 1) {
+                    const p2 = defaults[1];
+                    const p2Renewal = p2.renewal_price || p2.renewal_price_monthly || (p2.pricing_monthly * 2) || 0;
+                    setProvider2({
+                        id: p2.id,
+                        provider_name: p2.provider_name,
+                        initial: Number(p2.pricing_monthly) || 0,
+                        renewal: Number(p2Renewal),
+                        promo: 12,
+                        website_url: p2.website_url || ""
+                    });
+                }
+            } catch (e) {
+                console.error("Error fetching defaults", e);
+            }
+            setIsInitialLoad(false);
+        };
+        fetchDefaults();
+    }, [category]);
+
+    useEffect(() => {
+        if (!isInitialLoad && provider1.provider_name !== "Loading..." && provider2.provider_name !== "Loading...") {
+        getCalculatorAffiliateLinks(
+            provider1.provider_name,
+            provider1.website_url || "#",
+            provider2.provider_name,
+            provider2.website_url || "#"
+        ).then(({ p1Link, p2Link }) => {
+            setP1Link(p1Link);
+            setP2Link(p2Link);
+        });
+        }
+    }, [provider1.provider_name, provider1.website_url, provider2.provider_name, provider2.website_url, isInitialLoad]);
 
     const data = [];
     let p1Total = 0;
@@ -68,6 +124,21 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                             {dict.calculator.stop_bleeding.replace('{amount}', formatCurrency(diff)).replace('{years}', years.toString())}
                         </span>
                     </div>
+
+                    {/* Category Tabs */}
+                    <div className="flex justify-center mt-10">
+                        <Tabs value={category} onValueChange={(v) => {
+                            setCategory(v as "hosting" | "vpn");
+                            setIsInitialLoad(true);
+                            setProvider1({ id: "", provider_name: "Loading...", initial: 0, renewal: 0, promo: 12, website_url: "" });
+                            setProvider2({ id: "", provider_name: "Loading...", initial: 0, renewal: 0, promo: 12, website_url: "" });
+                        }}>
+                            <TabsList className="bg-muted p-1 rounded-xl glass-morphism-header backdrop-blur-md">
+                                <TabsTrigger value="hosting" className="px-8 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">{dict.compare.tab_hosting}</TabsTrigger>
+                                <TabsTrigger value="vpn" className="px-8 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">{dict.compare.tab_vpn}</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -99,8 +170,8 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                 </h3>
                                 <div className="space-y-4">
                                     <ProviderSelector
-                                        type="hosting"
-                                        selectedProvider={provider1}
+                                        type={category}
+                                        selectedProvider={provider1.provider_name !== "Loading..." ? provider1 : null}
                                         onSelect={(p) => {
                                             if (p) {
                                                 const renewalPrice = p.renewal_price || p.renewal_price_monthly || (p.pricing_monthly * 2) || 0;
@@ -109,7 +180,8 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                                     id: p.id,
                                                     provider_name: p.provider_name,
                                                     initial: Number(p.pricing_monthly) || 0,
-                                                    renewal: Number(renewalPrice)
+                                                    renewal: Number(renewalPrice),
+                                                    website_url: p.website_url || ""
                                                 });
                                             }
                                         }}
@@ -135,7 +207,7 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                 <div className="space-y-4">
                                     <ProviderSelector
                                         type={category}
-                                        selectedProvider={provider2}
+                                        selectedProvider={provider2.provider_name !== "Loading..." ? provider2 : null}
                                         onSelect={(p) => {
                                             if (p) {
                                                 const renewalPrice = p.renewal_price || p.renewal_price_monthly || (p.pricing_monthly * 2) || 0;
@@ -144,7 +216,8 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                                     id: p.id,
                                                     provider_name: p.provider_name,
                                                     initial: Number(p.pricing_monthly) || 0,
-                                                    renewal: Number(renewalPrice)
+                                                    renewal: Number(renewalPrice),
+                                                    website_url: p.website_url || ""
                                                 });
                                             }
                                         }}
@@ -228,11 +301,15 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                                 </div>
 
                                 <div className="mt-6">
-                                    <Button size="lg" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg shadow-green-500/20" asChild>
-                                        <Link href={`/${lang}/hosting/${winner.toLowerCase().replace(/\s+/g, '-')}`}>
-                                            {dict.calculator.switch_to.replace('{provider}', winner)}
-                                        </Link>
-                                    </Button>
+                                    <AffiliateButton 
+                                        size="lg" 
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg shadow-green-500/20" 
+                                        providerName={winner}
+                                        visitUrl={winner === provider1.provider_name ? p1Link : p2Link}
+                                        position="calculator-winner"
+                                    >
+                                        {dict.calculator.switch_to.replace('{provider}', winner)}
+                                    </AffiliateButton>
                                 </div>
                             </GlassCard>
                         </div>

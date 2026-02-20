@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
 /**
  * Fetches the affiliate link for a provider from the database.
@@ -11,7 +11,7 @@ export async function getAffiliateUrl(
     fallbackUrl: string
 ): Promise<string> {
     try {
-        const supabase = await createClient();
+        const supabase = createAdminClient();
         const { data } = await supabase
             .from('affiliate_partners')
             .select('affiliate_link, status')
@@ -44,7 +44,7 @@ export async function getAffiliateUrlBatch(
     }
 
     try {
-        const supabase = await createClient();
+        const supabase = createAdminClient();
         const { data: affiliates } = await supabase
             .from('affiliate_partners')
             .select('provider_name, affiliate_link')
@@ -66,4 +66,22 @@ export async function getAffiliateUrlBatch(
     }
 
     return urlMap;
+}
+
+/**
+ * Returns a Set of provider names (lowercased) that have an active affiliate link.
+ * Useful for sorting providers globally before pagination.
+ */
+export async function getActiveAffiliatePartners(): Promise<Set<string>> {
+    try {
+        const supabase = createAdminClient();
+        const { data } = await supabase
+            .from('affiliate_partners')
+            .select('provider_name')
+            .eq('status', 'active');
+            
+        return new Set(data?.map(a => a.provider_name.toLowerCase()) || []);
+    } catch {
+        return new Set();
+    }
 }

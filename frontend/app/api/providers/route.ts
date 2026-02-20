@@ -32,6 +32,9 @@ export async function GET(request: Request) {
         if (searchParams.get('id')) {
             const id = searchParams.get('id');
             query = query.eq('id', id);
+        } else if (searchParams.get('slug')) {
+            const slug = searchParams.get('slug');
+            query = query.eq('slug', slug);
         } else if (search) {
             query = query.ilike('provider_name', `%${search}%`);
         } else {

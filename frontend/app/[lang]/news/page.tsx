@@ -3,6 +3,7 @@ import { Clock, Tag, ExternalLink, Sparkles, ImageIcon, Calendar } from "lucide-
 import { getAffiliateUrl } from "@/lib/affiliates";
 import { createClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/tracking/PageTracker";
+import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import Link from "next/link";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
@@ -13,13 +14,16 @@ import { NewsFilters } from "@/components/news/NewsFilters";
 
 export const revalidate = 300; // ISR: revalidate every 5 minutes
 
-export const metadata: Metadata = {
-    title: "Cloud Hosting News & AI Comparisons | HostingArena",
-    description: "Stay updated with verified data on hosting and VPN providers. Deep analysis, real uptime stats, and industry news.",
-    alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/en/news`,
-    }
-};
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+    const { lang } = await params;
+    return {
+        title: "Cloud Hosting News & AI Comparisons | HostingArena",
+        description: "Stay updated with verified data on hosting and VPN providers. Deep analysis, real uptime stats, and industry news.",
+        alternates: {
+            canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com"}/${lang}/news`,
+        }
+    };
+}
 
 async function getPublishedPosts(query?: string, category?: string) {
     const supabase = await createClient();
@@ -183,14 +187,16 @@ export default async function NewsPage({
                                                 : ""}
                                         </span>
                                         {affiliateLink && (
-                                            <a
-                                                href={affiliateLink}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-1 text-primary font-semibold hover:underline"
+                                            <AffiliateButton
+                                                providerName={post.related_provider_name!}
+                                                visitUrl={affiliateLink}
+                                                position="news_card_cta"
+                                                variant="link"
+                                                className="h-auto p-0 flex items-center gap-1 text-primary font-semibold hover:underline bg-transparent hover:bg-transparent"
+                                                showIcon={false}
                                             >
                                                 {lang === 'es' ? 'Ver Oferta' : 'Check Deal'} <ExternalLink className="w-3 h-3" />
-                                            </a>
+                                            </AffiliateButton>
                                         )}
                                     </div>
                                 </GlassCard>

@@ -10,61 +10,129 @@ import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ComparisonTable } from "@/components/comparisons/ComparisonTable";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { getCalculatorAffiliateLinks, getDefaultCompareProviders } from "@/lib/actions/affiliates";
 
 interface CompareClientProps {
     dict: any;
     lang: string;
+    initialCategory?: "hosting" | "vpn";
+    initialSlugA?: string;
+    initialSlugB?: string;
+    initialDataA?: any;
+    initialDataB?: any;
 }
 
-function CompareContent({ dict, lang }: CompareClientProps) {
+function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlugB, initialDataA, initialDataB }: CompareClientProps) {
     const searchParams = useSearchParams();
-    const [category, setCategory] = useState<"hosting" | "vpn">("hosting");
-    const [p1, setP1] = useState<any>(null);
-    const [p2, setP2] = useState<any>(null);
+    const router = useRouter();
+    const pathname = usePathname();
+    const [category, setCategory] = useState<"hosting" | "vpn">(initialCategory || "hosting");
+    const [p1, setP1] = useState<any>(initialDataA || null);
+    const [p2, setP2] = useState<any>(initialDataB || null);
+    const [p1Link, setP1Link] = useState("#");
+    const [p2Link, setP2Link] = useState("#");
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     useTrackPageView();
 
     useEffect(() => {
+        if (p1 && p2) {
+            getCalculatorAffiliateLinks(
+                p1.provider_name,
+                p1.website_url || "#",
+                p2.provider_name,
+                p2.website_url || "#"
+            ).then(({ p1Link, p2Link }) => {
+                setP1Link(p1Link);
+                setP2Link(p2Link);
+            });
+
+            // Update URL for Programmatic SEO seamlessly without triggering a full navigation
+            if (p1.slug && p2.slug && !isInitialLoad) {
+                const newPath = `/${lang}/compare/${p1.slug}-vs-${p2.slug}`;
+                if (pathname !== newPath) {
+                    window.history.replaceState(null, '', newPath);
+                }
+            }
+        }
+    }, [p1, p2, lang, pathname, isInitialLoad]);
+
+    // Force sync state if initial props change (crucial for SPA navigation)
+    useEffect(() => {
+        if (initialDataA) setP1(initialDataA);
+        if (initialDataB) setP2(initialDataB);
+        if (initialCategory) setCategory(initialCategory);
+        
+        // If data was provided via props, we don't need the initial client-side fetch flow
+        if (initialDataA && initialDataB) {
+            setIsInitialLoad(false);
+        }
+    }, [initialDataA, initialDataB, initialCategory]);
+
+    useEffect(() => {
+        const controller = new AbortController();
         const preselectProviders = async () => {
             const providerA = searchParams.get('a');
             const providerB = searchParams.get('b');
-            const cat = searchParams.get('cat') as "hosting" | "vpn" || "hosting";
+            const cat = initialCategory || (searchParams.get('cat') as "hosting" | "vpn" || "hosting");
 
             if (cat !== category) {
                 setCategory(cat);
             }
 
-            if (providerA) {
-                try {
-                    // Try by ID first if it looks like a uuid, otherwise search by name
-                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(providerA);
-                    const queryParam = isUuid ? `&id=${providerA}` : `&search=${providerA}`;
-                    const res = await fetch(`/api/providers?type=${cat}${queryParam}`);
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        // If fetching by ID, data might be an array of one or just the object depending on API implementation
-                        // Our API returns an array based on the `select('*')` + `eq`
-                        const found = Array.isArray(data) ? data[0] : data;
-                        if (found) setP1(found);
+            // Priority: Dynamic Route Slug -> URL Params -> Default
+            const fetchA = async () => {
+                if (initialSlugA || providerA) {
+                    try {
+                        const identifier = initialSlugA || providerA;
+                        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier!);
+                        const queryParam = initialSlugA ? `&slug=${initialSlugA}` : (isUuid ? `&id=${identifier}` : `&search=${identifier}`);
+                        const res = await fetch(`/api/providers?type=${cat}${queryParam}`, { signal: controller.signal });
+                        if (res.ok) {
+                            const data = await res.json();
+                            const found = Array.isArray(data) ? data[0] : data;
+                            if (found) setP1(found);
+                        }
+                    } catch (e: any) { 
+                        if (controller.signal.aborted) return;
+                        console.error("Error preselecting A:", e); 
                     }
-                } catch (e) { console.error("Error preselecting A:", e); }
-            }
+                }
+            };
 
-            if (providerB) {
-                try {
-                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(providerB);
-                    const queryParam = isUuid ? `&id=${providerB}` : `&search=${providerB}`;
-                    const res = await fetch(`/api/providers?type=${cat}${queryParam}`);
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        const found = Array.isArray(data) ? data[0] : data;
-                        if (found) setP2(found);
+            const fetchB = async () => {
+                if (initialSlugB || providerB) {
+                    try {
+                        const identifier = initialSlugB || providerB;
+                        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier!);
+                        const queryParam = initialSlugB ? `&slug=${initialSlugB}` : (isUuid ? `&id=${identifier}` : `&search=${identifier}`);
+                        const res = await fetch(`/api/providers?type=${cat}${queryParam}`, { signal: controller.signal });
+                        if (res.ok) {
+                            const data = await res.json();
+                            const found = Array.isArray(data) ? data[0] : data;
+                            if (found) setP2(found);
+                        }
+                    } catch (e: any) { 
+                        if (controller.signal.aborted) return;
+                        console.error("Error preselecting B:", e); 
                     }
-                } catch (e) { console.error("Error preselecting B:", e); }
+                }
+            };
+
+            const fetchDefaults = async () => {
+                if (!initialSlugA && !initialSlugB && !providerA && !providerB) {
+                    try {
+                        const defaults = await getDefaultCompareProviders(cat);
+                        if (defaults.length > 0) setP1(defaults[0]);
+                        if (defaults.length > 1) setP2(defaults[1]);
+                    } catch (e) { console.error("Error setting defaults:", e); }
+                }
+            };
+
+            // Run all pre-selections only if data wasn't provided server-side
+            if (!initialDataA || !initialDataB) {
+                await Promise.all([fetchA(), fetchB(), fetchDefaults()]);
             }
             setIsInitialLoad(false);
         };
@@ -72,7 +140,9 @@ function CompareContent({ dict, lang }: CompareClientProps) {
         if (isInitialLoad) {
             preselectProviders();
         }
-    }, [searchParams, category, isInitialLoad]);
+
+        return () => controller.abort();
+    }, [searchParams, isInitialLoad, initialCategory, initialSlugA, initialSlugB]);
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6">
@@ -94,7 +164,7 @@ function CompareContent({ dict, lang }: CompareClientProps) {
 
                 {/* Selection Area */}
                 <div className="max-w-4xl mx-auto mb-16">
-                    <Tabs defaultValue="hosting" className="w-full" onValueChange={(v) => {
+                    <Tabs value={category} className="w-full" onValueChange={(v) => {
                         setCategory(v as "hosting" | "vpn");
                         setP1(null);
                         setP2(null);
@@ -109,7 +179,6 @@ function CompareContent({ dict, lang }: CompareClientProps) {
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center relative">
                             {/* Provider 1 */}
                             <div className={`p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p1 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
-                                <div className="mb-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">{dict.compare.provider_a}</div>
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP1}
@@ -126,7 +195,6 @@ function CompareContent({ dict, lang }: CompareClientProps) {
 
                             {/* Provider 2 */}
                             <div className={`p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p2 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
-                                <div className="mb-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">{dict.compare.provider_b}</div>
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP2}
@@ -140,7 +208,7 @@ function CompareContent({ dict, lang }: CompareClientProps) {
                 {/* Comparison Table (Money First) */}
                 {p1 && p2 ? (
                     <div className="animate-in slide-in-from-bottom-4 duration-700 fade-in">
-                        <ComparisonTable data={[p1, p2]} title="Direct Comparison" type={category} />
+                        <ComparisonTable data={[p1, p2]} title="Direct Comparison" type={category} affiliateUrls={[p1Link, p2Link]} />
                     </div>
                 ) : (
                     <div className="text-center py-20 text-muted-foreground bg-card/30 rounded-3xl border border-dashed border-border/50">
@@ -154,14 +222,22 @@ function CompareContent({ dict, lang }: CompareClientProps) {
     );
 }
 
-export default function CompareClient({ dict, lang }: CompareClientProps) {
+export default function CompareClient({ dict, lang, initialCategory, initialSlugA, initialSlugB, initialDataA, initialDataB }: CompareClientProps) {
     return (
         <Suspense fallback={
             <div className="min-h-screen pt-24 pb-12 px-6 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         }>
-            <CompareContent dict={dict} lang={lang} />
+            <CompareContent 
+                dict={dict} 
+                lang={lang} 
+                initialCategory={initialCategory} 
+                initialSlugA={initialSlugA} 
+                initialSlugB={initialSlugB} 
+                initialDataA={initialDataA} 
+                initialDataB={initialDataB} 
+            />
         </Suspense>
     );
 }

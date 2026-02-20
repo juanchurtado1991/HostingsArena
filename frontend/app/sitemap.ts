@@ -23,6 +23,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
     }));
 
+    // Get all hosting providers
+    const { data: hostingProviders } = await supabase
+        .from('hosting_providers')
+        .select('slug, updated_at');
+    
+    const hostingEntries: MetadataRoute.Sitemap = (hostingProviders || []).map((p) => ({
+        url: `${baseUrl}/hosting/${p.slug}`,
+        lastModified: new Date(p.updated_at || Date.now()),
+        changeFrequency: 'daily',
+        priority: 0.7,
+    }));
+
+    // Get all VPN providers
+    const { data: vpnProviders } = await supabase
+        .from('vpn_providers')
+        .select('slug, updated_at');
+    
+    const vpnEntries: MetadataRoute.Sitemap = (vpnProviders || []).map((p) => ({
+        url: `${baseUrl}/vpn/${p.slug}`,
+        lastModified: new Date(p.updated_at || Date.now()),
+        changeFrequency: 'daily',
+        priority: 0.7,
+    }));
+
     return [
         {
             url: baseUrl,
@@ -31,11 +55,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 1,
         },
         {
+            url: `${baseUrl}/hosting`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.9,
+        },
+        {
+            url: `${baseUrl}/vpn`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.9,
+        },
+        {
             url: `${baseUrl}/news`,
             lastModified: new Date(),
             changeFrequency: 'daily',
             priority: 0.9,
         },
+        {
+            url: `${baseUrl}/compare`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
+        },
         ...newsEntries,
+        ...hostingEntries,
+        ...vpnEntries,
     ];
 }

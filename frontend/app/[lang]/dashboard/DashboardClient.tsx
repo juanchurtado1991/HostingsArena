@@ -2,14 +2,15 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor } from "@/components/dashboard";
+import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
+import { SEOManager } from "@/components/dashboard/SEOManager";
 import type { AdminTask, TaskType, TaskPriority, ScraperStatus } from "@/lib/tasks/types";
 
 const SCRAPER_STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; ribbon: string; label: string }> = {
@@ -89,6 +90,20 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
             icon: Newspaper,
             category: dict.dashboard.tutorial.newsroom.category,
             content: dict.dashboard.tutorial.newsroom.content
+        },
+        {
+            id: "indexing",
+            title: dict.dashboard.tutorial.indexing.title,
+            icon: Globe,
+            category: dict.dashboard.tutorial.indexing.category,
+            content: dict.dashboard.tutorial.indexing.content
+        },
+        {
+            id: "roadmap",
+            title: dict.dashboard.tutorial.roadmap.title,
+            icon: Sparkles,
+            category: dict.dashboard.tutorial.roadmap.category,
+            content: dict.dashboard.tutorial.roadmap.content
         }
     ];
 
@@ -433,6 +448,13 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                         >
                             <GitBranch className="w-4 h-4" />
                             {dict.dashboard.tabs.workflows}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("seo")}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "seo" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                        >
+                            <Globe className="w-4 h-4" />
+                            {dict.dashboard.tabs.seo || "Indexing"}
                         </button>
                         <button
                             onClick={() => setActiveTab("tutorial")}
@@ -863,7 +885,10 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                 )}
 
                 {activeTab === "affiliates" && (
-                    <AffiliateManager />
+                    <div className="space-y-8">
+                        <AffiliateLinkTester />
+                        <AffiliateManager />
+                    </div>
                 )}
 
                 {activeTab === "newsroom" && (
@@ -952,6 +977,10 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                             )}
                         </GlassCard>
                     </div>
+                )}
+
+                {activeTab === "seo" && (
+                    <SEOManager dict={dict} lang={lang} />
                 )}
 
                 {activeTab === "tutorial" && (

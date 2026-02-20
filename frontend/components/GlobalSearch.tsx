@@ -16,12 +16,14 @@ interface GlobalSearchProps {
     placeholder?: string;
     variant?: "default" | "hero";
     className?: string;
+    lang?: string;
 }
 
 export function GlobalSearch({
     placeholder = "Search providers...",
     variant = "default",
-    className
+    className,
+    lang = "en"
 }: GlobalSearchProps) {
     const [open, setOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
@@ -88,7 +90,7 @@ export function GlobalSearch({
         setOpen(false);
         setSearchTerm("");
         const slug = result.slug || result.provider_name.toLowerCase().replace(/\s+/g, '-');
-        router.push(`/${type}/${slug}`);
+        router.push(`/${lang}/${type}/${slug}`);
     };
 
     return (

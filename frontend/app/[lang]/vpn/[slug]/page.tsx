@@ -14,6 +14,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { PerformanceBadge } from "@/components/ui/PerformanceBadge";
 import { ProsConsSection } from "@/components/ui/ProsConsSection";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
+import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; lang: string }> }) {
     const { slug, lang } = await params;
@@ -62,6 +63,26 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
     const features = provider.features || {};
     const raw = provider.raw_data || {};
 
+    // 2.5 Fetch Top Alternatives for Programmatic SEO Internal Linking (Deduplicated)
+    const { data: rawAlternatives } = await supabase
+        .from("vpn_providers")
+        .select("provider_name, slug, avg_speed_mbps, support_quality_score")
+        .neq("slug", provider.slug)
+        .order("support_quality_score", { ascending: false })
+        .limit(10);
+
+    const alternativesData = [];
+    const seenAltNames = new Set();
+    if (rawAlternatives) {
+        for (const alt of rawAlternatives) {
+            if (!seenAltNames.has(alt.provider_name.toLowerCase())) {
+                seenAltNames.add(alt.provider_name.toLowerCase());
+                alternativesData.push(alt);
+            }
+            if (alternativesData.length === 3) break;
+        }
+    }
+
     const renewalHikePercent = provider.renewal_price && provider.pricing_monthly
         ? Math.round(((provider.renewal_price - provider.pricing_monthly) / provider.pricing_monthly) * 100)
         : 0;
@@ -103,9 +124,9 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
             />
             <BreadcrumbJsonLd
                 items={[
-                    { name: "Home", item: "/" },
-                    { name: "VPN Reviews", item: "/vpn" },
-                    { name: provider.provider_name, item: `/vpn/${slug}` }
+                    { name: "Home", item: `/${lang}` },
+                    { name: "VPN Reviews", item: `/${lang}/vpn` },
+                    { name: provider.provider_name, item: `/${lang}/vpn/${slug}` }
                 ]}
             />
             <StickyBuyBar
@@ -280,6 +301,41 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                                 </div>
                             )}
                         </section>
+
+                        {/* Top Competitors (Programmatic SEO Internal Links) */}
+                        {alternativesData && alternativesData.length > 0 && (
+                            <section className="pt-12 border-t border-border/50">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-2xl font-bold tracking-tight">Top Alternatives</h3>
+                                    <Badge variant="outline" className="font-mono text-blue-500 border-blue-500/30">COMPARE</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {alternativesData.map((alt) => (
+                                        <Link 
+                                            key={alt.slug} 
+                                            href={`/${lang}/compare/${provider.slug}-vs-${alt.slug}`}
+                                            className="group block p-6 rounded-3xl border border-border/50 bg-card/30 hover:bg-card hover:shadow-xl hover:-translate-y-1 hover:border-blue-500/30 transition-all duration-300"
+                                        >
+                                            <div className="flex flex-col h-full justify-between gap-4">
+                                                <div>
+                                                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">{provider.provider_name} vs</div>
+                                                    <h4 className="text-xl font-black group-hover:text-blue-500 transition-colors">{alt.provider_name}</h4>
+                                                </div>
+                                                <div className="flex items-center justify-between mt-4">
+                                                    <div className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                                                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                                        {alt.avg_speed_mbps} Mbps
+                                                    </div>
+                                                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                        <ArrowRight className="w-4 h-4" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
                         {/* COMMENTS */}
                         <div className="pt-8 border-t border-border/30">

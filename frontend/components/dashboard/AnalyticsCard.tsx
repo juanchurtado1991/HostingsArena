@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus, Users, MousePointerClick, Smartphone, Laptop, Tablet } from "lucide-react";
+import { BarChart3, Eye, TrendingUp, Globe, ExternalLink, FileText, ArrowUpRight, ArrowDownRight, Minus, Users, MousePointerClick, Smartphone, Laptop, Tablet, Calendar } from "lucide-react";
+
 
 interface AnalyticsData {
     summary: {
@@ -12,6 +13,7 @@ interface AnalyticsData {
         clicksToday?: number;
         clicksWeek?: number;
         clicksMonth?: number;
+        avgVisitsPerDay?: number;
     };
     topPages: { path: string; views: number }[];
     topPosts: { post_slug: string; views: number }[];
@@ -67,15 +69,65 @@ export function AnalyticsCard() {
     const [loading, setLoading] = useState(true);
     const [activeView, setActiveView] = useState<"posts" | "pages" | "referrers" | "countries" | "visitors" | "clicks">("visitors");
 
-    useEffect(() => {
-        fetch("/api/admin/analytics")
-            .then(r => r.json())
-            .then(setData)
-            .catch(() => setData(null))
-            .finally(() => setLoading(false));
-    }, []);
+    const [timeframe, setTimeframe] = useState<"today" | "week" | "month" | "all" | "custom">("all");
+    const [customStart, setCustomStart] = useState<string>("");
+    const [customEnd, setCustomEnd] = useState<string>("");
 
-    if (loading) {
+    const fetchAnalytics = useCallback(async () => {
+        setLoading(true);
+        let url = "/api/admin/analytics";
+        const queryParams = new URLSearchParams();
+        
+        const now = new Date();
+        if (timeframe === "today") {
+            const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+            queryParams.append("startDate", todayStr);
+            queryParams.append("endDate", now.toISOString());
+        } else if (timeframe === "week") {
+            const weekStr = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            queryParams.append("startDate", weekStr);
+            queryParams.append("endDate", now.toISOString());
+        } else if (timeframe === "month") {
+            const monthStr = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+            queryParams.append("startDate", monthStr);
+            queryParams.append("endDate", now.toISOString());
+        } else if (timeframe === "all") {
+            // "Beginning of time" for the application
+            queryParams.append("startDate", new Date('2020-01-01T00:00:00.000Z').toISOString());
+            queryParams.append("endDate", now.toISOString());
+        } else if (timeframe === "custom" && customStart) {
+            queryParams.append("startDate", new Date(customStart).toISOString());
+            if (customEnd) {
+                queryParams.append("endDate", new Date(customEnd).toISOString());
+            }
+        }
+        
+        if (queryParams.toString()) {
+            url += `?${queryParams.toString()}`;
+        }
+        
+        try {
+            const r = await fetch(url);
+            const d = await r.json();
+            setData(d);
+        } catch(e) {
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [timeframe, customStart, customEnd]);
+
+    useEffect(() => {
+        if (timeframe !== "custom") {
+            fetchAnalytics();
+        }
+    }, [timeframe, fetchAnalytics]);
+
+    const handleApplyCustomDate = () => {
+        if (customStart) fetchAnalytics();
+    };
+
+    if (loading && !data) {
         return (
             <GlassCard className="p-8 mb-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -123,19 +175,62 @@ export function AnalyticsCard() {
     return (
         <GlassCard className="p-8 mb-8" hoverEffect={false}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary/10 rounded-xl text-primary">
                         <BarChart3 className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold">Performance & Analytics</h3>
+                        <h3 className="text-xl font-bold flex items-center gap-2">Performance & Analytics {loading && <span className="text-xs text-muted-foreground animate-pulse font-normal">(refreshing...)</span>}</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">Global CTR: <span className="text-primary font-bold">{globalCTR}%</span> across all tracking</p>
                     </div>
                 </div>
-                <div className="flex flex-col items-end">
-                    <TrendBadge current={thisWeek} previous={prevWeekNormalized} />
-                    <span className="text-[10px] text-muted-foreground">Views Trend</span>
+                
+                <div className="flex flex-col md:flex-row items-end md:items-center gap-3">
+                    {/* Timeframe Selector */}
+                    <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-xl border border-border/50">
+                        <Calendar className="w-4 h-4 text-muted-foreground ml-2" />
+                        <select
+                            value={timeframe}
+                            onChange={(e) => setTimeframe(e.target.value as any)}
+                            className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer outline-none"
+                        >
+                            <option value="today">Today</option>
+                            <option value="week">Last 7 Days</option>
+                            <option value="month">Last 30 Days</option>
+                            <option value="all">All Time</option>
+                            <option value="custom">Custom Range...</option>
+                        </select>
+                    </div>
+                    
+                    {timeframe === "custom" && (
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="date" 
+                                value={customStart}
+                                onChange={(e) => setCustomStart(e.target.value)}
+                                className="bg-muted/30 border border-border/50 rounded-lg px-2 py-1 text-sm font-medium"
+                            />
+                            <span className="text-muted-foreground">to</span>
+                            <input 
+                                type="date" 
+                                value={customEnd}
+                                onChange={(e) => setCustomEnd(e.target.value)}
+                                className="bg-muted/30 border border-border/50 rounded-lg px-2 py-1 text-sm font-medium"
+                            />
+                            <button 
+                                onClick={handleApplyCustomDate}
+                                className="bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1 rounded-lg text-sm font-bold transition-colors"
+                            >
+                                Apply
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col items-end ml-4">
+                        <TrendBadge current={thisWeek} previous={prevWeekNormalized} />
+                        <span className="text-[10px] text-muted-foreground">Views Trend</span>
+                    </div>
                 </div>
             </div>
 
@@ -147,7 +242,11 @@ export function AnalyticsCard() {
                         <Eye className="w-4 h-4" />
                         <span className="text-[10px] uppercase tracking-widest font-bold">Page Views</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
+                        <div className="text-center border-r border-border/50">
+                            <p className="text-lg font-bold">{data.summary.avgVisitsPerDay?.toLocaleString() || 0}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">Avg/Day</p>
+                        </div>
                         <div className="text-center">
                             <p className="text-lg font-bold">{data.summary.today.toLocaleString()}</p>
                             <p className="text-[9px] text-muted-foreground uppercase">Today</p>
@@ -158,7 +257,7 @@ export function AnalyticsCard() {
                         </div>
                         <div className="text-center">
                             <p className="text-lg font-bold">{data.summary.month.toLocaleString()}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">30d</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">Total</p>
                         </div>
                     </div>
                 </div>
