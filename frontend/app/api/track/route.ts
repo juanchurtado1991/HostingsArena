@@ -24,7 +24,12 @@ export async function POST(request: NextRequest) {
             request.headers.get("cf-ipcountry") || null;
 
         const IGNORED_IPS = ["190.150.105.226", "190.53.30.25"];
-        if (IGNORED_IPS.includes(ip)) {
+        const ignoreCookie = request.cookies.get("ha_ignore_tracking");
+
+        // Logger for debugging 'unknown' visits in Vercel
+        console.log(`[TRACK] ${path} - IP: ${ip} - UA: ${userAgent.substring(0, 50)} - Ignore: ${!!ignoreCookie}`);
+
+        if (IGNORED_IPS.includes(ip) || ignoreCookie) {
             return NextResponse.json({ ok: true, ignored: true });
         }
 
@@ -32,7 +37,11 @@ export async function POST(request: NextRequest) {
         let deviceType = 'desktop';
         if (/mobile/i.test(userAgent)) deviceType = 'mobile';
         if (/tablet|ipad/i.test(userAgent)) deviceType = 'tablet';
-        if (/bot|crawler|spider/i.test(userAgent)) deviceType = 'bot';
+        if (/bot|crawler|spider|googlebot|bingbot|yandexbot/i.test(userAgent)) deviceType = 'bot';
+
+        if (deviceType === 'bot') {
+             return NextResponse.json({ ok: true, isBot: true });
+        }
 
         await supabase.from("page_views").insert({
             path: path.slice(0, 500),

@@ -18,7 +18,12 @@ export async function POST(request: NextRequest) {
         const country = request.headers.get("x-vercel-ip-country") || request.headers.get("cf-ipcountry") || null;
 
         const IGNORED_IPS = ["190.150.105.226", "190.53.30.25"];
-        if (IGNORED_IPS.includes(ip)) {
+        const ignoreCookie = request.cookies.get("ha_ignore_tracking");
+
+        // Logger for debugging
+        console.log(`[CLICK] ${provider_name} - IP: ${ip} - Ignore: ${!!ignoreCookie}`);
+
+        if (IGNORED_IPS.includes(ip) || ignoreCookie) {
             return NextResponse.json({ ok: true, ignored: true });
         }
 

@@ -147,6 +147,10 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
     }>({ clicksToday: 0, clicksMonth: 0 });
 
     useEffect(() => {
+        // Set ignore tracking cookie for this session (24h)
+        // Helps differentiate admin visits even in incognito
+        document.cookie = "ha_ignore_tracking=true; path=/; max-age=86400; SameSite=Lax";
+        
         if (activeTab === "workflows") {
             fetchWorkflows();
         }
