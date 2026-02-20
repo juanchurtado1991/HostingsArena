@@ -1,0 +1,19 @@
+name: Slack Reminders Cron
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Runs every 30 minutes
+  workflow_dispatch:      # Allows manual trigger
+
+jobs:
+  dispatch-reminders:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Slack Reminders Endpoint
+      run: |
+        curl -X GET "${{ secrets.NEXT_PUBLIC_SITE_URL }}/api/cron/reminders?secret=${{ secrets.CRON_SECRET }}" \
+        -H "Accept: application/json"
+      env:
+        NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+        CRON_SECRET: ${{ secrets.CRON_SECRET }}

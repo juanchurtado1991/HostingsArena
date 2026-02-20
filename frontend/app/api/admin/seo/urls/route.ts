@@ -11,7 +11,7 @@ export async function GET(req: Request) {
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
 
         // 1. Get Blog Posts
-        const { data: posts } = await supabase.from('posts').select('slug').eq('status', 'published');
+        const { data: posts } = await supabase.from('posts').select('slug').eq('status', 'published').lte('published_at', new Date().toISOString());
         const postUrls = (posts || []).map(p => `${baseUrl}/en/news/${p.slug}`);
 
         // 2. Get Hosting Detail Pages

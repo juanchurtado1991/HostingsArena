@@ -7,3 +7,4 @@ export { PostEditor } from "./PostEditor";
 export { PublishSummaryModal } from "./PublishSummaryModal";
 export { HelpCenter } from "./HelpCenter";
 export { AffiliateLinkTester } from "./AffiliateLinkTester";
+export * from './RemindersManager';

@@ -30,7 +30,8 @@ async function getPublishedPosts(query?: string, category?: string) {
     let rpc = supabase
         .from('posts')
         .select('*')
-        .eq('status', 'published');
+        .eq('status', 'published')
+        .lte('published_at', new Date().toISOString());
 
     if (query) {
         rpc = rpc.or(`title.ilike.%${query}%,content.ilike.%${query}%`);

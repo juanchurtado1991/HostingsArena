@@ -32,6 +32,7 @@ async function getPost(slug: string) {
         `)
         .eq("slug", slug)
         .eq("status", "published")
+        .lte('published_at', new Date().toISOString())
         .single();
 
     if (error || !post) return null;

@@ -14,7 +14,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const { data: posts } = await supabase
         .from('posts')
         .select('slug, updated_at, published_at')
-        .eq('status', 'published');
+        .eq('status', 'published')
+        .lte('published_at', new Date().toISOString());
 
     const newsEntries: MetadataRoute.Sitemap = (posts || []).map((post) => ({
         url: `${baseUrl}/news/${post.slug}`,

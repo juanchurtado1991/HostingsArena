@@ -2,12 +2,12 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester } from "@/components/dashboard";
+import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import { SEOManager } from "@/components/dashboard/SEOManager";
@@ -459,6 +459,13 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                         >
                             <Globe className="w-4 h-4" />
                             {dict.dashboard.tabs.seo || "Indexing"}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("reminders")}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "reminders" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                        >
+                            <Bell className="w-4 h-4" />
+                            Recordatorios
                         </button>
                         <button
                             onClick={() => setActiveTab("tutorial")}
@@ -991,6 +998,9 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                     <HelpCenter dict={dict} lang={lang} />
                 )}
 
+                {activeTab === "reminders" && (
+                    <RemindersManager />
+                )}
             </div>
         </div>
     );

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks';
 import { logger } from '@/lib/logger';
 import { requireAuth } from '@/lib/auth/guard';
-import { personas, structures, narrativeArcs, stressTests } from './data';
 import { buildContentSystemPrompt, buildMetaSystemPrompt } from './prompts';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -18,33 +17,12 @@ export async function POST(request: NextRequest) {
         await writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
     };
 
-    const fetchOpenAI = async (apiKey: string, body: any) => {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify(body)
-        });
-        if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`OpenAI Error (${res.status}): ${errorText}`);
-        }
-        const json = await res.json();
-        return json.choices?.[0]?.message?.content || "";
-    };
-
-    const generateWithGemini = async (apiKey: string, model: string, systemPrompt: string, userPrompt?: string) => {
+    const generateWithGemini = async (apiKey: string, model: string, systemPrompt: string, userPrompt?: string, retries = 3, delay = 2000): Promise<string> => {
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
 
-            // Map UI model names to actual API model names available in this account
-            let modelName = model;
-            if (model.includes('2.0')) {
-                // gemini-2.0-flash-lite was found in the user's list
-                modelName = 'gemini-2.0-flash-lite';
-            } else if (model.includes('1.5') || model.includes('flash')) {
-                // gemini-flash-latest is the active 1.5 alias found in this account
-                modelName = 'gemini-flash-latest';
-            }
+            // Use the exact model name passed from the UI
+            const modelName = model;
 
             const modelInstance = genAI.getGenerativeModel({ model: modelName });
 
@@ -55,11 +33,16 @@ export async function POST(request: NextRequest) {
             const response = await result.response;
             return response.text();
         } catch (error: any) {
+            if ((error.message?.includes('503') || error.message?.includes('500') || error.message?.includes('high demand')) && retries > 0) {
+                logger.warn(`Gemini API overloaded (503). Retrying in ${delay}ms... (${retries} retries left)`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return generateWithGemini(apiKey, model, systemPrompt, userPrompt, retries - 1, delay * 2);
+            }
             if (error.message?.includes('429') || error.message?.includes('Quota')) {
-                throw new Error("Gemini Quota Exceeded (429). Tu cuenta gratuita de Google tiene el límite en 0 para este modelo. Prueba usando 'Gemini 1.5 Flash' en el selector.");
+                throw new Error(`Gemini Quota Exceeded (429). Tu cuenta probablemente tiene este modelo (${model}) limitado. Prueba seleccionando 'Gemini 1.5 Flash'.`);
             }
             if (error.message?.includes('404')) {
-                throw new Error(`Gemini 404: El modelo '${model}' no fue encontrado. Intenta con 'Gemini 1.5 Flash'.`);
+                throw new Error(`Gemini 404: El modelo '${model}' no fue encontrado. Puede que aún no esté disponible en tu región o plan.`);
             }
             if (error.message?.includes('400')) {
                 throw new Error("Gemini 400: Error en el formato de la solicitud. Intentando modo de compatibilidad...");
@@ -112,60 +95,21 @@ export async function POST(request: NextRequest) {
                 provider = allProviders[Math.floor(Math.random() * allProviders.length)];
             }
 
-            const specs = provider.type === 'hosting' ? {
-                price: provider.pricing_monthly || "Hidden",
-                renewal: provider.pricing_renewal || "Unknown",
-                disk: provider.disk_space || "Unknown",
-                bandwidth: provider.bandwidth || "Unknown",
-                upsell: provider.upsell_checked ? "Yes" : "No",
-                support: provider.support_24_7 ? "24/7" : "Limited",
-                locations: provider.server_locations || "Unknown"
-            } : {
-                price: provider.pricing_monthly || "Hidden",
-                devices: provider.simultaneous_connections || "Unknown",
-                streaming: provider.streaming_optimized ? "Yes" : "No",
-                logs: provider.no_logs_policy ? "Strict No-Logs" : "Unknown",
-                servers: provider.server_count || "Unknown"
-            };
-
-            const specsString = JSON.stringify(specs, null, 2);
-
-            const selectedArc = body.scenario && body.scenario !== 'random'
-                ? body.scenario
-                : narrativeArcs[Math.floor(Math.random() * narrativeArcs.length)];
-
-            const selectedTest = stressTests[Math.floor(Math.random() * stressTests.length)];
-
-            const selectedStructure = body.structure
-                ? structures.find(s => s.name === body.structure) || structures[0]
-                : structures[Math.floor(Math.random() * structures.length)];
-
-            const selectedPersona = body.persona && personas.includes(body.persona)
-                ? body.persona
-                : personas[Math.floor(Math.random() * personas.length)];
-
             const targetWordCount = body.target_word_count || 1500;
             const approxReadingTime = Math.ceil(targetWordCount / 200);
 
-            const extraInstructions = body.extra_instructions
-                ? `\n\n**SPECIAL USER INSTRUCTIONS (Must Follow):** ${body.extra_instructions}`
-                : "";
+            const customPrompt = body.extra_instructions || "Write an engaging, highly detailed tech review of this provider.";
 
             await sendProgress({
-                status: `Creating Story: ${provider.provider_name} | Arc: ${selectedArc} | Model: ${modelToUse}`,
+                status: `Creating Story: ${provider.provider_name} | Words: ${targetWordCount} | Model: ${modelToUse}`,
                 progress: 20
             });
 
             const contentSystemPrompt = buildContentSystemPrompt({
                 providerName: provider.provider_name,
-                specsString,
                 targetWordCount,
                 approxReadingTime,
-                structure: selectedStructure,
-                persona: selectedPersona,
-                arc: selectedArc,
-                test: selectedTest,
-                extraInstructions
+                customPrompt
             });
 
             let fullContent = await generateWithGemini(geminiKey!, modelToUse, contentSystemPrompt);
@@ -174,10 +118,8 @@ export async function POST(request: NextRequest) {
             await sendProgress({ status: `Generating Viral Metadata...`, progress: 80 });
 
             const metaSystemPrompt = buildMetaSystemPrompt({
-                structureName: selectedStructure.name,
                 providerName: provider.provider_name,
-                persona: selectedPersona,
-                extraInstructions,
+                customPrompt,
                 currentYear
             });
 
@@ -320,7 +262,13 @@ export async function POST(request: NextRequest) {
 
         } catch (error: any) {
             logger.error('Fatal error during AI generation:', error);
-            await sendProgress({ error: error.message || 'Generation failed' });
+            
+            // Si el error es 503 y agotamos los reintentos
+            if (error.message?.includes('503') || error.message?.includes('500') || error.message?.includes('high demand')) {
+                await sendProgress({ error: "Los servidores de IA (Gemini) están experimentando una alta demanda temporal y no pudieron procesar la solicitud tras varios intentos. Por favor, intenta de nuevo en unos minutos." });
+            } else {
+                await sendProgress({ error: error.message || 'Generation failed' });
+            }
         } finally {
             writer.close();
         }

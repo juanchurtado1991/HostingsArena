@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, Globe, ExternalLink, Copy, Check } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Globe, ExternalLink, Copy, Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PublishSummaryModalProps {
@@ -21,7 +21,9 @@ interface PublishSummaryModalProps {
     };
     indexingStatus?: 'idle' | 'loading' | 'success' | 'error';
     errorDetails?: string;
-}
+    isScheduled?: boolean;
+    scheduledDateStr?: string;
+};
 
 export function PublishSummaryModal({
     isOpen,
@@ -31,7 +33,9 @@ export function PublishSummaryModal({
     socialContent,
     socialContentEs,
     errorDetails,
-    indexingStatus = 'idle'
+    indexingStatus = 'idle',
+    isScheduled = false,
+    scheduledDateStr = ''
 }: PublishSummaryModalProps) {
     const [activeLang, setActiveLang] = useState<'en' | 'es'>('en');
     const [copiedTw, setCopiedTw] = useState(false);
@@ -115,14 +119,14 @@ export function PublishSummaryModal({
                     )}
 
                     <h2 className="text-2xl font-bold text-center text-zinc-900 dark:text-white">
-                        {status === 'loading' && "Publicando..."}
-                        {status === 'success' && "¡Publicado con éxito! 🚀"}
-                        {status === 'error' && "Error al publicar ❌"}
+                        {status === 'loading' && "Guardando..."}
+                        {status === 'success' && (isScheduled ? "¡Publicación programada! ⏳" : "¡Publicado con éxito! 🚀")}
+                        {status === 'error' && "Error al guardar ❌"}
                     </h2>
 
                     <p className="text-center text-zinc-500 mt-2 text-sm max-w-xs">
-                        {status === 'loading' && "Guardando el post y solicitando indexación en Google."}
-                        {status === 'success' && "Tu post ya está en vivo. Copia el contenido para tus redes sociales."}
+                        {status === 'loading' && "Guardando el post."}
+                        {status === 'success' && (isScheduled ? `Tu post está programado para publicarse en la fecha indicada.` : "Tu post ya está en vivo. Copia el contenido para redes sociales.")}
                         {status === 'error' && "El post fue guardado, pero hubo un error en el proceso."}
                     </p>
                 </div>
@@ -139,10 +143,10 @@ export function PublishSummaryModal({
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">HostingArena</span>
-                                        <span className="text-xs text-zinc-500">Post en vivo</span>
+                                        <span className="text-xs text-zinc-500">{isScheduled ? `Programado (${scheduledDateStr})` : "Post en vivo"}</span>
                                     </div>
                                 </div>
-                                {status === 'success' ? (
+                                {status === 'success' && !isScheduled ? (
                                     <a
                                         href={finalPostUrl}
                                         target="_blank"
@@ -151,9 +155,13 @@ export function PublishSummaryModal({
                                     >
                                         Ver Post <ExternalLink className="w-3.5 h-3.5" />
                                     </a>
+                                ) : (status === 'success' && isScheduled ? (
+                                    <span className="px-4 py-2 rounded-full bg-amber-50 text-amber-600 text-xs font-bold flex items-center gap-2">
+                                        Oculto <Clock className="w-3.5 h-3.5" /> 
+                                    </span>
                                 ) : (
                                     <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
-                                )}
+                                ))}
                             </div>
 
                             {/* Google Indexing Row */}

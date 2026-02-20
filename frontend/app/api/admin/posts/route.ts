@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
             title_es, content_es, excerpt_es,
             seo_title_es, seo_description_es,
             target_keywords_es,
-            social_tw_text_es, social_fb_text_es, social_li_text_es, social_hashtags_es
+            social_tw_text_es, social_fb_text_es, social_li_text_es, social_hashtags_es,
+            published_at
         } = body;
 
         if (!title) {
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
                 social_fb_text_es: social_fb_text_es || null,
                 social_li_text_es: social_li_text_es || null,
                 social_hashtags_es: social_hashtags_es || null,
-                published_at: postStatus === 'published' ? new Date().toISOString() : null,
+                published_at: postStatus === 'published' ? (published_at || new Date().toISOString()) : null,
             })
             .select()
             .single();
@@ -150,8 +151,13 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'id is required' }, { status: 400 });
         }
 
-        if (updates.status === 'published') {
-            updates.published_at = new Date().toISOString();
+        if (updates.status === 'published' && !updates.published_at) {
+            const { data: currentPost } = await supabase.from('posts').select('status, published_at').eq('id', id).single();
+            if (currentPost && currentPost.status !== 'published') {
+                updates.published_at = new Date().toISOString();
+            } else if (currentPost && currentPost.status === 'published') {
+                updates.published_at = currentPost.published_at;
+            }
         }
 
         if (!updates.is_ai_generated) {

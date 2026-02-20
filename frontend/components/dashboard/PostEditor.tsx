@@ -709,6 +709,30 @@ function PostEditorModal({
     const [status, setStatus] = useState(post?.status || "draft");
     const [relatedProvider, setRelatedProvider] = useState(post?.related_provider_name || "");
     const [saving, setSaving] = useState(false);
+    const [scheduledDate, setScheduledDate] = useState<string>("");
+
+    useEffect(() => {
+        if (post?.published_at) {
+            // Convert UTC to UTC-6 for display
+            const d = new Date(post.published_at);
+            // El Salvador offset is -6 hours (-360 minutes)
+            const svTime = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+            setScheduledDate(svTime.toISOString().slice(0, 16));
+        } else {
+            // Initialize with current SV time
+            const d = new Date();
+            const svTime = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+            setScheduledDate(svTime.toISOString().slice(0, 16));
+        }
+    }, [post]);
+
+    const getUtcPublishDate = () => {
+        if (!scheduledDate) return new Date().toISOString();
+        // scheduledDate is "YYYY-MM-DDTHH:mm" representing UTC-6
+        const dateObj = new Date(`${scheduledDate}:00-06:00`);
+        return dateObj.toISOString();
+    };
+
     const [error, setError] = useState<string | null>(null);
     const [activeSection, setActiveSection] = useState<"content" | "seo" | "social" | "image">("content");
     const [coverImageUrl, setCoverImageUrl] = useState(post?.cover_image_url || "");
@@ -1180,6 +1204,7 @@ function PostEditorModal({
                 excerpt,
                 category: category || null,
                 status: publish ? 'published' : (status || 'draft'),
+                published_at: publish ? getUtcPublishDate() : (post?.published_at || null),
                 seo_title: seoTitle || title,
                 seo_description: seoDesc || excerpt,
                 target_keywords: keywords ? keywords.split(",").map(k => k.trim()).filter(Boolean) : null,
@@ -1251,8 +1276,11 @@ function PostEditorModal({
             const postId = (savedPost as any)?.post?.id || post?.id;
 
             if (publish && postId) {
-                // Trigger Google Indexing only if enabled
-                if (shouldIndexGoogle) {
+                // Check if post is scheduled for the future
+                const isScheduledFuture = new Date(getUtcPublishDate()).getTime() > new Date().getTime();
+
+                // Trigger Google Indexing only if enabled AND post is not scheduled for future
+                if (shouldIndexGoogle && !isScheduledFuture) {
                     setIndexingStatus('loading');
                     try {
                         const idxRes = await fetch("/api/admin/posts/index-google", {
@@ -1277,7 +1305,7 @@ function PostEditorModal({
                         // We don't fail the whole publish for indexing, as the post is already live
                     }
                 } else {
-                    setIndexingStatus('idle'); // Ensure it stays idle if not enabled
+                    setIndexingStatus('idle'); // Ensure it stays idle if not enabled or if scheduled
                 }
 
                 setPublishStatus('success');
@@ -1347,6 +1375,19 @@ function PostEditorModal({
                                 <option value="published">✅ Published</option>
                             </select>
                         </div>
+
+                        {/* Publish Date (El Salvador) */}
+                        {status === 'published' && (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-muted/50 border border-border" title="Publish Date (El Salvador Time UTC-6)">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold hidden md:inline">Fecha (SV)</span>
+                                <input
+                                    type="datetime-local"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    className="bg-transparent text-sm font-semibold focus:outline-none cursor-pointer outline-none [color-scheme:dark] dark:[color-scheme:dark] light:[color-scheme:light]"
+                                />
+                            </div>
+                        )}
 
                         {/* Google Indexing Toggle */}
                         <div
@@ -1966,17 +2007,9 @@ function GenerationConfigModal({
     onClose: () => void;
     loading: boolean;
 }) {
-    const [category, setCategory] = useState("Hosting Reviews");
-    const [customCategory, setCustomCategory] = useState("");
     const [provider, setProvider] = useState("random");
     const [customProvider, setCustomProvider] = useState("");
-    const [scenario, setScenario] = useState("random"); // Narrative Arc
-    const [customScenario, setCustomScenario] = useState("");
-    const [persona, setPersona] = useState("random");
-    const [customPersona, setCustomPersona] = useState("");
-    const [structure, setStructure] = useState("random");
-    const [customStructure, setCustomStructure] = useState("");
-    const [model, setModel] = useState("gemini-1.5-flash");
+    const [model, setModel] = useState("gemini-2.5-flash");
     const [wordCount, setWordCount] = useState("1500");
     const [instructions, setInstructions] = useState("");
 
@@ -1984,11 +2017,7 @@ function GenerationConfigModal({
 
     const handleRun = () => {
         onGenerate({
-            category: category === "custom" ? customCategory : category,
             provider_name: provider === "custom" ? customProvider : (provider === "random" ? undefined : provider),
-            scenario: scenario === "custom" ? customScenario : (scenario === "random" ? undefined : scenario),
-            persona: persona === "custom" ? customPersona : (persona === "random" ? undefined : persona),
-            structure: structure === "custom" ? customStructure : (structure === "random" ? undefined : structure),
             model: model,
             target_word_count: parseInt(wordCount),
             extra_instructions: instructions
@@ -2013,123 +2042,25 @@ function GenerationConfigModal({
                 </div>
 
                 <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-                    {/* Category */}
+                    {/* Provider */}
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Category</label>
-                        <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLASS}>
-                            <option value="Hosting Reviews">Hosting Reviews</option>
-                            <option value="VPN Reviews">VPN Reviews</option>
-                            <option value="comparisons">Comparisons</option>
-                            <option value="guides">Guides</option>
-                            <option value="custom">✨ Custom Category</option>
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Provider</label>
+                        <select value={provider} onChange={(e) => setProvider(e.target.value)} className={INPUT_CLASS}>
+                            <option value="random">🎲 Random Affiliate</option>
+                            {affiliateLinks.map(a => (
+                                <option key={a.id} value={a.provider_name}>{a.provider_name}</option>
+                            ))}
+                            <option value="custom">✍️ Custom Name</option>
                         </select>
-                        {category === "custom" && (
+                        {provider === "custom" && (
                             <input
                                 type="text"
-                                placeholder="e.g. Cloud Gaming, DevOps Tools"
-                                value={customCategory}
-                                onChange={(e) => setCustomCategory(e.target.value)}
+                                placeholder="e.g. AWS, Vultr"
+                                value={customProvider}
+                                onChange={(e) => setCustomProvider(e.target.value)}
                                 className={`mt-2 ${INPUT_CLASS}`}
                             />
                         )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Provider */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Provider</label>
-                            <select value={provider} onChange={(e) => setProvider(e.target.value)} className={INPUT_CLASS}>
-                                <option value="random">🎲 Random Affiliate</option>
-                                {affiliateLinks.map(a => (
-                                    <option key={a.id} value={a.provider_name}>{a.provider_name}</option>
-                                ))}
-                                <option value="custom">✍️ Custom Name</option>
-                            </select>
-                            {provider === "custom" && (
-                                <input
-                                    type="text"
-                                    placeholder="e.g. AWS, Vultr"
-                                    value={customProvider}
-                                    onChange={(e) => setCustomProvider(e.target.value)}
-                                    className={`mt-2 ${INPUT_CLASS}`}
-                                />
-                            )}
-                        </div>
-
-                        {/* Narrative Arc (Scenario) */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Narrative Arc</label>
-                            <select value={scenario} onChange={(e) => setScenario(e.target.value)} className={INPUT_CLASS}>
-                                <option value="random">🎲 Random Arc</option>
-                                <option value="The 'Skeptic Converted'">😲 The Skeptic Converted</option>
-                                <option value="The 'Hidden Flaw'">🕵️ The Hidden Flaw</option>
-                                <option value="The 'David vs Goliath'">⚔️ David vs Goliath</option>
-                                <option value="The 'Migration Nightmare'">😫 Migration Nightmare</option>
-                                <option value="The 'Speed Freak'">🚀 The Speed Freak</option>
-                                <option value="custom">✨ Custom Arc</option>
-                            </select>
-                            {scenario === "custom" && (
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Underdog Story"
-                                    value={customScenario}
-                                    onChange={(e) => setCustomScenario(e.target.value)}
-                                    className={`mt-2 ${INPUT_CLASS}`}
-                                />
-                            )}
-                        </div>
-
-                        {/* Persona */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Persona</label>
-                            <select value={persona} onChange={(e) => setPersona(e.target.value)} className={INPUT_CLASS}>
-                                <option value="random">🎲 Random Persona</option>
-                                <option value="The Ruthless CTO">💼 The Ruthless CTO</option>
-                                <option value="The Privacy Paranoiac">🔒 The Privacy Paranoiac</option>
-                                <option value="The Startup Hustler">🚀 The Startup Hustler</option>
-                                <option value="The Gamer/Streamer">🎮 The Gamer/Streamer</option>
-                                <option value="The DevOps Wizard">👨‍💻 The DevOps Wizard</option>
-                                <option value="The WordPress Purist">📝 The WordPress Purist</option>
-                                <option value="The Encyclopedia">📚 The Encyclopedia</option>
-                                <option value="The Enthusiastic Futurist">🤩 The Enthusiastic Futurist</option>
-                                <option value="custom">✨ Custom Persona</option>
-                            </select>
-                            {persona === "custom" && (
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Angry Sysadmin"
-                                    value={customPersona}
-                                    onChange={(e) => setCustomPersona(e.target.value)}
-                                    className={`mt-2 ${INPUT_CLASS}`}
-                                />
-                            )}
-                        </div>
-
-                        {/* Structure */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Structure & Style</label>
-                            <select value={structure} onChange={(e) => setStructure(e.target.value)} className={INPUT_CLASS}>
-                                <option value="random">🎲 Random Style</option>
-                                <option value="The 'Vs. The World' Showdown">🥊 Vs. The World Showdown</option>
-                                <option value="The 24-Hour Stress Test Diary">⏱️ 24-Hour Stress Test</option>
-                                <option value="The 'Migrator's Nightmare' Log">🏚️ Migrator's Nightmare</option>
-                                <option value="The ROI Analysis Report">💰 ROI Analysis</option>
-                                <option value="The 'Explain It Like I'm 5' (ELI5)">👶 ELI5 (Simple)</option>
-                                <option value="The Q&A Interview">🎤 Q&A Interview</option>
-                                <option value="The 'TL;DR' Executive Brief">⚡ TL;DR Brief</option>
-                                <option value="The Hero's Journey">🦸 Hero's Journey</option>
-                                <option value="custom">✨ Custom Structure</option>
-                            </select>
-                            {structure === "custom" && (
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Socratic Dialogue"
-                                    value={customStructure}
-                                    onChange={(e) => setCustomStructure(e.target.value)}
-                                    className={`mt-2 ${INPUT_CLASS}`}
-                                />
-                            )}
-                        </div>
                     </div>
 
                     {/* Model & Length */}
@@ -2137,7 +2068,9 @@ function GenerationConfigModal({
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">AI Model</label>
                             <select value={model} onChange={(e) => setModel(e.target.value)} className={INPUT_CLASS}>
-                                <option value="gemini-1.5-flash">✨ Gemini 1.5 Flash (Default)</option>
+                                <option value="gemini-2.5-flash">🚀 Gemini 2.5 Flash</option>
+                                <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
+                                <option value="gemini-1.5-flash">✨ Gemini 1.5 Flash</option>
                             </select>
                         </div>
                         <div className="space-y-2">
@@ -2150,28 +2083,30 @@ function GenerationConfigModal({
                         </div>
                     </div>
 
-                    {/* Extra Instructions */}
+                    {/* Custom Prompt */}
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Extra Instructions (Optional)</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">What do you want the post to be about? <span className="text-red-500">*</span></label>
                         <textarea
                             value={instructions}
                             onChange={(e) => setInstructions(e.target.value)}
-                            placeholder="e.g. 'Focus heavily on the lack of backups' or 'Write in a very sarcastic tone'"
-                            className={`${INPUT_CLASS} h-24 resize-none`}
+                            placeholder="e.g. Write a tutorial on how to install WordPress on this provider, focusing on their custom dashboard. Keep the tone very upbeat."
+                            className={`${INPUT_CLASS} min-h-[120px] resize-y`}
+                            required
                         />
                     </div>
-                </div>
 
-                <div className="p-6 border-t border-border/50 bg-muted/20 flex justify-end gap-3">
-                    <Button variant="outline" onClick={onClose} className="rounded-xl">Cancel</Button>
-                    <Button
-                        onClick={handleRun}
-                        disabled={loading}
-                        className="rounded-xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/20"
-                    >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                        Generate Post
-                    </Button>
+                    {/* Footer */}
+                    <div className="pt-4 flex justify-end gap-3 border-t border-border/50">
+                        <Button variant="ghost" onClick={onClose} disabled={loading} className="rounded-xl">Cancel</Button>
+                        <Button
+                            onClick={handleRun}
+                            disabled={loading || !instructions.trim()}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-6"
+                        >
+                            {loading ? <Clock className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                            {loading ? "Generating..." : "Generate Post"}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2494,23 +2429,41 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {posts.map(post => (
                             <GlassCard key={post.id} className="flex flex-col hover:scale-[1.01] transition-transform">
-                                {/* Image Placeholder */}
-                                <div className="bg-gray-500/10 h-36 rounded-t-xl flex items-center justify-center p-4 relative overflow-hidden border-b border-border/50">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-gray-500/10 to-transparent" />
-                                    <div className="text-center relative z-10">
-                                        <ImageIcon className="w-6 h-6 mx-auto mb-1 text-muted-foreground/30" />
-                                        <p className="text-[10px] text-muted-foreground/40 line-clamp-2">
-                                            {post.image_prompt || "No image description"}
-                                        </p>
-                                    </div>
-                                    <span className={`absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full ${post.status === "published"
-                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
-                                        : "bg-amber-500/20 text-amber-400 border border-amber-500/20"
-                                        }`}>
-                                        {post.status === "published" ? "Published" : "Draft"}
+                                {/* Image Placeholder or Cover Image */}
+                                <div className="bg-gray-500/10 h-36 rounded-t-xl flex items-center justify-center relative overflow-hidden border-b border-border/50">
+                                    {post.cover_image_url ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img 
+                                            src={post.cover_image_url} 
+                                            alt={post.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <>
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-gray-500/10 to-transparent p-4" />
+                                            <div className="text-center relative z-10 p-4">
+                                                <ImageIcon className="w-6 h-6 mx-auto mb-1 text-muted-foreground/30" />
+                                                <p className="text-[10px] text-muted-foreground/40 line-clamp-2">
+                                                    {post.image_prompt || "No image description"}
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
+                                    <span className={`absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-md ${
+                                        post.status === "published"
+                                            ? (new Date(post.published_at || "").getTime() > new Date().getTime()
+                                                ? "bg-amber-500/90 text-amber-50 flex gap-1 items-center shadow-lg shadow-black/20" 
+                                                : "bg-emerald-500/90 text-emerald-50 shadow-lg shadow-black/20")
+                                            : "bg-amber-500/90 text-amber-50 shadow-lg shadow-black/20"
+                                    }`}>
+                                        {post.status === "published" 
+                                            ? (new Date(post.published_at || "").getTime() > new Date().getTime() 
+                                                ? <><Clock className="w-3 h-3" /> Programado para {new Date(post.published_at || "").toLocaleDateString('es-SV', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</> 
+                                                : "Published") 
+                                            : "Draft"}
                                     </span>
                                     {post.is_ai_generated && (
-                                        <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/20">
+                                        <span className={`absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/90 text-primary-foreground shadow-lg shadow-black/20 backdrop-blur-md`}>
                                             🤖 AI
                                         </span>
                                     )}
@@ -2533,41 +2486,43 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                                         <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{post.excerpt}</p>
                                     )}
 
-                                    <div className="mt-auto pt-3 border-t border-border/50 flex items-center justify-between">
-                                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown Date'}
-                                        </span>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => setSummaryPost(post)}
-                                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
-                                                title="Social Content"
-                                            >
-                                                <Share2 className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleManualIndex(post)}
-                                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-emerald-400"
-                                                title="Index Google"
-                                            >
-                                                <Globe className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={() => setEditingPost(post)}
-                                                className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                                                title="Edit"
-                                            >
-                                                <Edit3 className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(post.id)}
-                                                disabled={deletingId === post.id}
-                                                className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-400 disabled:opacity-50"
-                                                title="Delete"
-                                            >
-                                                {deletingId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                                            </button>
+                                    <div className="mt-auto pt-3 border-t border-border/50 flex flex-col gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown Date'}
+                                            </span>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => setSummaryPost(post)}
+                                                    className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+                                                    title="Social Content"
+                                                >
+                                                    <Share2 className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleManualIndex(post)}
+                                                    className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-emerald-400"
+                                                    title="Index Google"
+                                                >
+                                                    <Globe className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setEditingPost(post)}
+                                                    className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                                    title="Edit Post"
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(post.id)}
+                                                    disabled={deletingId === post.id}
+                                                    className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500"
+                                                    title="Delete Post"
+                                                >
+                                                    {deletingId === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
