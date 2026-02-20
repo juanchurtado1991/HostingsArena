@@ -5,8 +5,12 @@ import { logger } from './logger';
 const SCOPES = ['https://www.googleapis.com/auth/indexing'];
 
 export async function requestIndexing(url: string) {
-    const clientEmail = process.env.GOOGLE_SA_CLIENT_EMAIL;
+    let clientEmail = process.env.GOOGLE_SA_CLIENT_EMAIL;
     let privateKey = process.env.GOOGLE_SA_PRIVATE_KEY;
+
+    if (clientEmail) {
+        clientEmail = clientEmail.replace(/^"|"$/g, '');
+    }
 
     if (privateKey) {
         // Remove surrounding quotes if they exist
@@ -19,6 +23,8 @@ export async function requestIndexing(url: string) {
         logger.warn('Google Indexing skipped: Missing service account credentials');
         return null;
     }
+
+    logger.log('SYSTEM', `Attempting indexing for ${url} with SA: ${clientEmail.substring(0, 10)}...`);
 
     try {
         const jwtClient = new google.auth.JWT({

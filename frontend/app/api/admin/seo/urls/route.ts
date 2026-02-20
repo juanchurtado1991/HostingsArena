@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/tasks/supabaseAdmin';
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
         const supabase = createAdminClient();
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        
+        // Dynamic host detection for local vs prod
+        const host = req.headers.get('host');
+        const protocol = host?.includes('localhost') ? 'http' : 'https';
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
 
         // 1. Get Blog Posts
         const { data: posts } = await supabase.from('posts').select('slug').eq('status', 'published');

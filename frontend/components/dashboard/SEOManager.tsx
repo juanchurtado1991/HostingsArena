@@ -17,6 +17,20 @@ export function SEOManager({ lang, dict }: SEOManagerProps) {
     const [indexingMode, setIndexingMode] = useState<'sitemap' | 'manual'>('sitemap');
     const [status, setStatus] = useState<{url: string, status: 'pending' | 'success' | 'error', message?: string}[]>([]);
     const [progress, setProgress] = useState(0);
+    const [apiStatus, setApiStatus] = useState<{status: 'loading' | 'connected' | 'error' | 'disconnected', message?: string}>({ status: 'loading' });
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const res = await fetch('/api/admin/seo/status');
+                const data = await res.json();
+                setApiStatus(data);
+            } catch (e) {
+                setApiStatus({ status: 'error', message: 'Failed to check status' });
+            }
+        };
+        checkStatus();
+    }, []);
 
     const fetchSitemapUrls = async () => {
         setLoading(true);
@@ -141,11 +155,28 @@ export function SEOManager({ lang, dict }: SEOManagerProps) {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-muted-foreground">Google Service Account</span>
-                                <span className="text-emerald-500 font-bold flex items-center gap-1 text-[10px]">
-                                    <CheckCircle className="w-3 h-3" />
-                                    CONNECTED
-                                </span>
+                                {apiStatus.status === 'connected' ? (
+                                    <span className="text-emerald-500 font-bold flex items-center gap-1 text-[10px]">
+                                        <CheckCircle className="w-3 h-3" />
+                                        CONNECTED
+                                    </span>
+                                ) : apiStatus.status === 'loading' ? (
+                                    <span className="text-muted-foreground flex items-center gap-1 text-[10px]">
+                                        <RefreshCw className="w-3 h-3 animate-spin" />
+                                        CHECKING...
+                                    </span>
+                                ) : (
+                                    <span className="text-red-500 font-bold flex items-center gap-1 text-[10px]">
+                                        <AlertTriangle className="w-3 h-3" />
+                                        {apiStatus.status.toUpperCase()}
+                                    </span>
+                                )}
                             </div>
+                            {apiStatus.message && (
+                                <p className="text-[10px] text-red-400 italic bg-red-400/5 p-2 rounded border border-red-400/10">
+                                    {apiStatus.message}
+                                </p>
+                            )}
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-muted-foreground">Daily Quota Remain</span>
                                 <span className="font-mono text-[10px]">185 / 200</span>
