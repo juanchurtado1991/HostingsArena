@@ -712,6 +712,8 @@ function PostEditorModal({
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const lastSavedSnapshotRef = useRef<string>("");
+    const editLangRef = useRef<'en' | 'es'>(post ? 'en' : 'en'); // Track target lang for sync
+    const isSwappingLangRef = useRef(false); // Guard for programmatic updates
     const [scheduledDate, setScheduledDate] = useState<string>("");
 
     useEffect(() => {
@@ -765,8 +767,11 @@ function PostEditorModal({
     const [keywordsEs, setKeywordsEs] = useState(post?.target_keywords_es?.join(", ") || "");
 
     const handleLangSwitch = (targetLang: 'en' | 'es') => {
-        if (targetLang === editLang) return;
+        if (targetLang === editLang || isSwappingLangRef.current) return;
 
+        isSwappingLangRef.current = true;
+        editLangRef.current = targetLang;
+        
         // Save current editor content to state before switching
         if (editor) {
             const currentHTML = editor.getHTML();
@@ -785,6 +790,9 @@ function PostEditorModal({
         }
 
         setEditLang(targetLang);
+        setTimeout(() => {
+            isSwappingLangRef.current = false;
+        }, 100);
     };
 
     const handleTranslate = async (manual = true) => {
@@ -976,8 +984,10 @@ function PostEditorModal({
         ],
         content: post?.content || "",
         onUpdate: ({ editor }) => {
+            if (isSwappingLangRef.current) return;
+            
             const html = editor.getHTML();
-            if (editLang === 'en') {
+            if (editLangRef.current === 'en') {
                 setContentEn(html);
             } else {
                 setContentEs(html);

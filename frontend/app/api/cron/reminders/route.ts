@@ -6,6 +6,7 @@ import { addDays, addWeeks, addMonths } from 'date-fns';
 
 const CRON_SECRET = process.env.CRON_SECRET || 'fallback_secret_for_local_dev';
 const TIMEZONE = 'America/El_Salvador';
+const IGNORED_IPS = ["190.150.105.226", "190.53.30.25"];
 
 export async function GET(request: NextRequest) {
     try {
@@ -43,6 +44,47 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ message: 'No reminders to process', processed: 0 });
         }
 
+        // Fetch Analytics Data if placeholders exist in any message
+        const hasPlaceholders = allReminders.some(r => r.message.includes('{'));
+        let analytics: any = null;
+
+        if (hasPlaceholders) {
+            const now = new Date();
+            // Start of today in El Salvador (UTC-6)
+            const todayStart = new Date(toZonedTime(now, TIMEZONE)).setHours(0,0,0,0);
+            const todayUtcString = new Date(todayStart).toISOString();
+
+            const [todayViews, totalViews, todayClicks, totalClicks, topCountriesToday, topCountriesTotal] = await Promise.all([
+                supabase.from("page_views").select("id", { count: "exact", head: true }).not("ip_address", "in", `(${IGNORED_IPS.join(",")})`).gte("created_at", todayUtcString),
+                supabase.from("page_views").select("id", { count: "exact", head: true }).not("ip_address", "in", `(${IGNORED_IPS.join(",")})`),
+                supabase.from("affiliate_clicks").select("id", { count: "exact", head: true }).not("ip_address", "in", `(${IGNORED_IPS.join(",")})`).gte("created_at", todayUtcString),
+                supabase.from("affiliate_clicks").select("id", { count: "exact", head: true }).not("ip_address", "in", `(${IGNORED_IPS.join(",")})`),
+                supabase.from("page_views").select("country").not("ip_address", "in", `(${IGNORED_IPS.join(",")})`).gte("created_at", todayUtcString),
+                supabase.from("page_views").select("country").not("ip_address", "in", `(${IGNORED_IPS.join(",")})`).limit(1000), // Recent 1000 for total top
+            ]);
+
+            // Helper to get top country from data
+            const getTopCountry = (data: any[] | null) => {
+                const countryCounts: Record<string, number> = {};
+                data?.forEach(v => {
+                    if (v.country) countryCounts[v.country] = (countryCounts[v.country] || 0) + 1;
+                });
+                const sorted = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+                return sorted.length > 0 ? sorted[0][0] : null;
+            };
+
+            const todayTop = getTopCountry(topCountriesToday.data);
+            const totalTop = getTopCountry(topCountriesTotal.data);
+
+            analytics = {
+                today_views: todayViews.count || 0,
+                total_views: totalViews.count || 0,
+                today_clicks: todayClicks.count || 0,
+                total_clicks: totalClicks.count || 0,
+                today_top_country: todayTop || totalTop || 'N/A'
+            };
+        }
+
         const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
         if (!slackWebhookUrl) {
             logger.warn('SLACK_WEBHOOK_URL is missing.');
@@ -63,10 +105,20 @@ export async function GET(request: NextRequest) {
                                (rawMention.startsWith('U') && rawMention.length > 8) ? `<@${rawMention}>` :
                                rawMention;
 
+                let messageBody = reminder.message;
+                if (analytics) {
+                    messageBody = messageBody
+                        .replace(/{today_views}/g, analytics.today_views.toLocaleString())
+                        .replace(/{total_views}/g, analytics.total_views.toLocaleString())
+                        .replace(/{today_clicks}/g, analytics.today_clicks.toLocaleString())
+                        .replace(/{total_clicks}/g, analytics.total_clicks.toLocaleString())
+                        .replace(/{today_top_country}/g, analytics.today_top_country);
+                }
+
                 if (mention) {
-                    textContent = `🛎️ ¡Hola ${mention} ! \n\n${reminder.message}`;
+                    textContent = `🔔 *Friendly Reminder* ${mention}\n\n${messageBody}`;
                 } else {
-                    textContent = `🛎️ *Recordatorio*\n\n${reminder.message}`;
+                    textContent = `🔔 *Friendly Reminder*\n\n${messageBody}`;
                 }
 
                 // Send to Slack

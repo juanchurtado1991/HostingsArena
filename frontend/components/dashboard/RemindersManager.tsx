@@ -160,10 +160,30 @@ export function RemindersManager() {
                             <textarea 
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                placeholder="Ej: Revisar los precios de BanaHosting esta semana."
+                                placeholder="Ej: Reporte diario: {today_views} visitas y {today_clicks} clicks."
                                 className={`${INPUT_CLASS} min-h-[100px] resize-y`}
                                 required
                             />
+                            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 space-y-2">
+                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Métricas Dinámicas (Placeholders)</p>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
+                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                                        <span className="text-primary font-bold">{`{today_views}`}</span> Visitas hoy
+                                    </code>
+                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                                        <span className="text-primary font-bold">{`{total_views}`}</span> Visitas totales
+                                    </code>
+                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                                        <span className="text-primary font-bold">{`{today_clicks}`}</span> Clicks hoy
+                                    </code>
+                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                                        <span className="text-primary font-bold">{`{total_clicks}`}</span> Clicks totales
+                                    </code>
+                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
+                                        <span className="text-primary font-bold">{`{today_top_country}`}</span> País #1 hoy
+                                    </code>
+                                </div>
+                            </div>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
