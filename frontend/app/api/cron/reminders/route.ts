@@ -55,8 +55,16 @@ export async function GET(request: NextRequest) {
             try {
                 // Formatting message
                 let textContent = reminder.message;
-                if (reminder.mention_user) {
-                    textContent = `🛎️ ¡Hola ${reminder.mention_user} ! \n\n${reminder.message}`;
+                const rawMention = reminder.mention_user || '';
+                
+                // Smart mention formatting for Webhooks
+                const mention = rawMention === '@here' ? '<!here>' :
+                               rawMention === '@channel' ? '<!channel>' :
+                               (rawMention.startsWith('U') && rawMention.length > 8) ? `<@${rawMention}>` :
+                               rawMention;
+
+                if (mention) {
+                    textContent = `🛎️ ¡Hola ${mention} ! \n\n${reminder.message}`;
                 } else {
                     textContent = `🛎️ *Recordatorio*\n\n${reminder.message}`;
                 }
