@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { addDays, addWeeks, addMonths } from 'date-fns';
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createClient();
+        const supabase = await createAdminClient();
         
         // 1. Get One-time pending reminders
         const { data: oneTimeReminders, error: err1 } = await supabase

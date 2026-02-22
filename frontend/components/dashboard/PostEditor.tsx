@@ -709,6 +709,9 @@ function PostEditorModal({
     const [status, setStatus] = useState(post?.status || "draft");
     const [relatedProvider, setRelatedProvider] = useState(post?.related_provider_name || "");
     const [saving, setSaving] = useState(false);
+    const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const lastSavedSnapshotRef = useRef<string>("");
     const [scheduledDate, setScheduledDate] = useState<string>("");
 
     useEffect(() => {
@@ -972,6 +975,16 @@ function PostEditorModal({
             }),
         ],
         content: post?.content || "",
+        onUpdate: ({ editor }) => {
+            const html = editor.getHTML();
+            if (editLang === 'en') {
+                setContentEn(html);
+            } else {
+                setContentEs(html);
+            }
+            // Trigger a re-render for word counts etc
+            setTick(t => t + 1);
+        },
         editorProps: {
             attributes: {
                 class: "tiptap focus:outline-none min-h-[500px] px-8 py-6",
@@ -1008,6 +1021,21 @@ function PostEditorModal({
             setSocialLiEs(post.social_li_text_es || "");
             setSocialTagsEs(post.social_hashtags_es?.join(" ") || "");
             setKeywordsEs(post.target_keywords_es?.join(", ") || "");
+
+            // Initialize last saved snapshot to prevent immediate auto-save on load
+            const initialSnapshot = JSON.stringify({
+                title: post.title,
+                content: post.content,
+                content_es: post.content_es,
+                title_es: post.title_es,
+                slug: post.slug,
+                excerpt: post.excerpt,
+                category: post.category,
+                seo_title: post.seo_title,
+                seo_description: post.seo_description,
+                keywords: post.target_keywords?.join(","),
+            });
+            lastSavedSnapshotRef.current = initialSnapshot;
         }
     }, [post]); // Only re-run if post object changes (e.g. initial load or save)
 
@@ -1142,6 +1170,101 @@ function PostEditorModal({
         const file = e.target.files?.[0];
         if (file) handleImageUpload(file);
     };
+
+    const performAutoSave = useCallback(async () => {
+        if (!post?.id || !title.trim() || isAutoSaving) return;
+        
+        const currentHTML = editor?.getHTML() || "";
+        const finalContentEn = editLang === 'en' ? currentHTML : contentEn;
+        const finalContentEs = editLang === 'es' ? currentHTML : contentEs;
+
+        // Create snapshot of current data
+        const currentSnapshot = JSON.stringify({
+            title,
+            content: finalContentEn,
+            content_es: finalContentEs,
+            title_es: titleEs,
+            slug,
+            excerpt,
+            category,
+            seo_title: seoTitle,
+            seo_description: seoDesc,
+            keywords: keywords?.split(",").map(k => k.trim()).join(","),
+        });
+
+        // Only save if something has actually changed since last save
+        if (currentSnapshot === lastSavedSnapshotRef.current) {
+            return;
+        }
+
+        setIsAutoSaving(true);
+        try {
+            await onSave({
+                id: post.id,
+                title,
+                slug,
+                content: finalContentEn,
+                excerpt,
+                category: category || null,
+                status: status || 'draft',
+                published_at: post.published_at || null,
+                seo_title: seoTitle || title,
+                seo_description: seoDesc || excerpt,
+                target_keywords: keywords ? keywords.split(",").map(k => k.trim()).filter(Boolean) : null,
+                related_provider_name: relatedProvider || null,
+                image_prompt: imagePrompt || null,
+                cover_image_url: coverImageUrl || null,
+                social_tw_text: socialTw || null,
+                social_fb_text: socialFb || null,
+                social_li_text: socialLi || null,
+                social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
+                title_es: titleEs || null,
+                content_es: finalContentEs || null,
+                excerpt_es: excerptEs || null,
+                seo_title_es: seoTitleEs || null,
+                seo_description_es: seoDescEs || null,
+                social_tw_text_es: socialTwEs || null,
+                social_fb_text_es: socialFbEs || null,
+                social_li_text_es: socialLiEs || null,
+                social_hashtags_es: socialTagsEs ? socialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
+                target_keywords_es: keywordsEs ? keywordsEs.split(",").map(k => k.trim()).filter(Boolean) : null,
+            });
+            
+            lastSavedSnapshotRef.current = currentSnapshot;
+            setLastSavedAt(new Date());
+        } catch (err) {
+            console.error("Auto-save failed:", err);
+        } finally {
+            setIsAutoSaving(false);
+        }
+    }, [
+        post?.id, post?.published_at, title, slug, contentEn, contentEs, editLang, editor,
+        excerpt, category, status, seoTitle, seoDesc, keywords, 
+        relatedProvider, imagePrompt, coverImageUrl, 
+        socialTw, socialFb, socialLi, socialTags,
+        titleEs, excerptEs, seoTitleEs, seoDescEs, 
+        socialTwEs, socialFbEs, socialLiEs, socialTagsEs, keywordsEs,
+        onSave, isAutoSaving
+    ]);
+
+    // Auto-save debounce effect
+    useEffect(() => {
+        if (!post?.id) return;
+
+        const timer = setTimeout(() => {
+            performAutoSave();
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [
+        title, slug, contentEn, contentEs, excerpt, category, 
+        seoTitle, seoDesc, keywords, relatedProvider, 
+        imagePrompt, coverImageUrl, socialTw, socialFb, 
+        socialLi, socialTags, titleEs, excerptEs, 
+        seoTitleEs, seoDescEs, socialTwEs, socialFbEs, 
+        socialLiEs, socialTagsEs, keywordsEs,
+        performAutoSave, post?.id
+    ]);
 
     const handleSave = async (publish = false) => {
         if (!title.trim() && editLang === 'en') {
@@ -1356,8 +1479,22 @@ function PostEditorModal({
                                 {post?.is_ai_generated && (
                                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/15">🤖 AI Generated</span>
                                 )}
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-muted-foreground flex items-center gap-2">
                                     {wordCount} words · {charCount} chars
+                                    {(lastSavedAt || isAutoSaving) && (
+                                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                    )}
+                                    {isAutoSaving ? (
+                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary animate-pulse bg-primary/5 px-2 py-0.5 rounded-full border border-primary/20">
+                                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                            GUARDANDO...
+                                        </span>
+                                    ) : lastSavedAt ? (
+                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500/80 bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10 animate-in fade-in slide-in-from-right-1">
+                                            <CheckCircle className="w-2.5 h-2.5" />
+                                            ÚLTIMO GUARDADO: {lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    ) : null}
                                 </span>
                             </div>
                         </div>
