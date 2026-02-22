@@ -2,12 +2,12 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe, Bell } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe, Bell, Database } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager } from "@/components/dashboard";
+import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager, ProviderManager } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import { SEOManager } from "@/components/dashboard/SEOManager";
@@ -97,6 +97,23 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
             icon: Globe,
             category: dict.dashboard.tutorial.indexing.category,
             content: dict.dashboard.tutorial.indexing.content
+        },
+        {
+            id: "providers",
+            title: lang === 'es' ? "Gestión de Proveedores" : "Provider Management",
+            icon: Database,
+            category: lang === 'es' ? "Contenido" : "Content",
+            content: lang === 'es' ? `
+                El nuevo editor de proveedores soporta el 100% de los campos auditados en HostingArena.
+                \n• **Tabbed UI**: Organizado en General, Review, Pricing, Specs, Features y Scores.
+                \n• **Técnico**: Edita Inodes, Web Servers y VPN security audits directamente.
+                \n• **Matching**: Los cambios se sincronizan automáticamente con las tablas de comparación y páginas de detalle.
+            ` : `
+                The new provider editor supports 100% of the fields audited across HostingArena.
+                \n• **Tabbed UI**: Organized into General, Review, Pricing, Specs, Features, and Scores.
+                \n• **Technical**: Edit Inodes, Web Servers, and VPN security audits directly.
+                \n• **Matching**: Changes sync automatically with comparison tables and detail pages.
+            `
         },
         {
             id: "roadmap",
@@ -438,6 +455,13 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                         >
                             <Handshake className="w-4 h-4" />
                             <span className="hidden sm:inline">{dict.dashboard.tabs.affiliates}</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("providers")}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "providers" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                        >
+                            <Database className="w-4 h-4" />
+                            <span className="hidden sm:inline">Proveedores</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("newsroom")}
@@ -1087,6 +1111,10 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
                 {activeTab === "seo" && (
                     <SEOManager dict={dict} lang={lang} />
+                )}
+
+                {activeTab === "providers" && (
+                    <ProviderManager />
                 )}
 
                 {activeTab === "tutorial" && (
