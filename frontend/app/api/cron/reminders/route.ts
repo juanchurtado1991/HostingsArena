@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
                 // Formatting message
                 let textContent = reminder.message;
                 if (reminder.mention_user) {
-                    textContent = `🛎️ ¡Hola ${reminder.mention_user}!\n\n${reminder.message}`;
+                    textContent = `🛎️ ¡Hola ${reminder.mention_user} ! \n\n${reminder.message}`;
                 } else {
                     textContent = `🛎️ *Recordatorio*\n\n${reminder.message}`;
                 }
