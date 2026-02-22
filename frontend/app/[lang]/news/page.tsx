@@ -1,5 +1,6 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Clock, Tag, ExternalLink, Sparkles, ImageIcon, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { getAffiliateUrl } from "@/lib/affiliates";
 import { createClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/tracking/PageTracker";
@@ -11,6 +12,8 @@ import Image from "next/image";
 import { Metadata } from "next";
 
 import { NewsFilters } from "@/components/news/NewsFilters";
+import { Suspense } from "react";
+import { getCategoryColorClasses } from "@/lib/news-utils";
 
 export const revalidate = 300; // ISR: revalidate every 5 minutes
 
@@ -87,17 +90,17 @@ export default async function NewsPage({
     ]);
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden">
+        <div className="min-h-screen pt-20 md:pt-24 pb-12 px-4 md:px-6 relative overflow-hidden">
             <PageTracker />
 
             {/* Design Polish: Background Glows */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none -z-10" />
             <div className="absolute top-[20%] -right-20 w-80 h-80 bg-blue-500/5 blur-[100px] rounded-full pointer-events-none -z-10" />
 
-            <div className="container mx-auto lg:max-w-7xl">
+            <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-10 relative">
                     <div className="max-w-3xl mx-auto">
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 tracking-tight">
+                        <h1 className="text-3xl md:text-5xl lg:text-6xl font-black mb-3 md:mb-6 tracking-tight">
                             {dict.news.title_part1}{" "}
                             <span className="text-primary">{dict.news.title_part2}</span>
                         </h1>
@@ -106,15 +109,19 @@ export default async function NewsPage({
                         </p>
                     </div>
 
-                    <div className="max-w-3xl mx-auto">
-                        <NewsFilters
-                            categories={categories}
-                            lang={lang}
-                            dict={{
-                                searchPlaceholder: lang === 'es' ? "Buscar noticias..." : "Search news...",
-                                allCategories: lang === 'es' ? "Todas" : "All"
-                            }}
-                        />
+                    <div className="max-w-3xl mx-auto mt-4">
+                        <Suspense fallback={
+                            <div className="h-[120px] rounded-2xl bg-white/5 border border-primary/10 animate-pulse" />
+                        }>
+                            <NewsFilters
+                                categories={categories}
+                                lang={lang}
+                                dict={{
+                                    searchPlaceholder: lang === 'es' ? "Buscar noticias..." : "Search news...",
+                                    allCategories: lang === 'es' ? "Todas" : "All"
+                                }}
+                            />
+                        </Suspense>
                     </div>
                 </div>
 
@@ -129,7 +136,7 @@ export default async function NewsPage({
                         </p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 xl:gap-8">
                         {await Promise.all(posts.map(async (post) => {
                             const isEs = lang === 'es';
                             const displayTitle = (isEs && post.title_es) ? post.title_es : post.title;
@@ -141,10 +148,10 @@ export default async function NewsPage({
                                 : null;
 
                             return (
-                                <GlassCard key={post.id} className="flex flex-col h-full hover:scale-[1.01] transition-transform group">
-                                    <Link href={`/${lang}/news/${post.slug}`} className="block flex-1 group/link">
-                                        {/* Image Placeholder */}
-                                        <div className="bg-gray-500/10 h-48 w-full rounded-xl mb-6 flex items-center justify-center relative overflow-hidden p-4 group-hover/link:opacity-90 transition-opacity">
+                            <GlassCard key={post.id} className="flex flex-col h-full hover:scale-[1.01] sm:hover:scale-[1.01] transition-transform group">
+                                <Link href={`/${lang}/news/${post.slug}`} className="block flex-1 group/link">
+                                    {/* Image */}
+                                    <div className="bg-gray-500/10 h-36 md:h-48 w-full rounded-xl mb-4 md:mb-6 flex items-center justify-center relative overflow-hidden p-4 group-hover/link:opacity-90 transition-opacity">
                                             {post.cover_image_url ? (
                                                 <Image
                                                     src={post.cover_image_url}
@@ -165,9 +172,9 @@ export default async function NewsPage({
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-xs font-medium text-primary mb-3">
+                                        <div className="flex items-center gap-4 text-xs font-medium mb-3">
                                             {post.category && (
-                                                <span className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
+                                                <span className={cn("flex items-center gap-1 px-2 py-1 rounded-md border", getCategoryColorClasses(post.category))}>
                                                     <Tag className="w-3 h-3" /> {post.category}
                                                 </span>
                                             )}
@@ -176,12 +183,12 @@ export default async function NewsPage({
                                             </span>
                                         </div>
 
-                                        <h3 className="text-xl font-bold mb-3 leading-tight group-hover/link:text-primary transition-colors">{displayTitle}</h3>
-                                        <p className="text-muted-foreground text-sm line-clamp-3 mb-6">
+                                        <h3 className="text-base md:text-xl font-bold mb-2 md:mb-3 leading-tight group-hover/link:text-primary transition-colors">{displayTitle}</h3>
+                                        <p className="text-muted-foreground text-sm line-clamp-2 md:line-clamp-3 mb-4 md:mb-6">
                                             {displayExcerpt}
                                         </p>
                                     </Link>
-                                    <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-center text-xs text-muted-foreground">
+                                    <div className="mt-auto pt-3 md:pt-4 border-t border-white/5 flex justify-between items-center text-xs text-muted-foreground">
                                         <span>
                                             {post.published_at || post.created_at
                                                 ? new Date(post.published_at || post.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: '2-digit', year: 'numeric' })

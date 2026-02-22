@@ -107,20 +107,20 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
     const loser = p1Total < p2Total ? provider2.provider_name : provider1.provider_name;
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-6">
+        <div className="min-h-screen pt-20 pb-12 px-4 md:px-6">
             <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold mb-4">
+                <div className="text-center mb-8 md:mb-12">
+                    <h1 className="text-2xl md:text-4xl font-bold mb-3">
                         {dict.calculator.title}
                     </h1>
                     <p className="text-muted-foreground text-lg mb-8">
                         {dict.calculator.subtitle}
                     </p>
 
-                    {/* Money First: STOP THE BLEEDING Banner */}
-                    <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 max-w-2xl mx-auto flex items-center justify-center gap-3 animate-pulse">
-                        <AlertCircle className="w-6 h-6" />
-                        <span className="font-bold text-lg">
+                    {/* Stop the Bleeding Banner */}
+                    <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-3 md:p-4 max-w-2xl mx-auto flex items-start md:items-center justify-center gap-2 md:gap-3">
+                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 md:mt-0" />
+                        <span className="font-bold text-sm md:text-lg text-left">
                             {dict.calculator.stop_bleeding.replace('{amount}', formatCurrency(diff)).replace('{years}', years.toString())}
                         </span>
                     </div>
@@ -141,9 +141,9 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Controls */}
-                    <GlassCard className="lg:col-span-1 p-6 space-y-8 h-fit sticky top-24">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    {/* Controls Panel */}
+                    <GlassCard className="lg:col-span-1 p-4 md:p-6 space-y-6 md:space-y-8 h-fit lg:sticky lg:top-24">
                         <div className="space-y-6">
                             {/* Year Selector */}
                             <div>
@@ -239,13 +239,11 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
 
                     {/* Chart & Results */}
                     <div className="lg:col-span-2 space-y-6">
-                        <GlassCard className="p-6 md:p-8 min-h-[400px] flex flex-col justify-center relative overflow-hidden">
-                            {/* Money First: Watermark */}
-                            <div className="absolute top-4 right-4 text-xs font-mono text-muted-foreground/20 pointer-events-none">
+                        <GlassCard className="p-4 md:p-6 md:p-8 min-h-[300px] flex flex-col justify-center relative overflow-hidden">
+                            <div className="absolute top-3 right-3 text-xs font-mono text-muted-foreground/20 pointer-events-none hidden md:block">
                                 PREDICTIVE MODEL v2.1
                             </div>
-
-                            <div className="h-[350px] w-full">
+                            <div className="h-[220px] md:h-[350px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={data}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />

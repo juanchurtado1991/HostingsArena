@@ -178,22 +178,22 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                         </p>
 
                         {/* Feature Badges */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-12">
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <div className="text-3xl font-black text-primary">${provider.pricing_monthly}</div>
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Intro Price</div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-12">
+                            <GlassCard className="p-3 md:p-4 flex flex-col items-center justify-center gap-1 md:gap-2" hoverEffect={false}>
+                                <div className="text-2xl md:text-3xl font-black text-primary">${provider.pricing_monthly}</div>
+                                <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Intro Price</div>
                             </GlassCard>
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
+                            <GlassCard className="p-3 md:p-4 flex flex-col items-center justify-center gap-1 md:gap-2" hoverEffect={false}>
                                 <PerformanceBadge grade={provider.performance_grade || 'B'} size="md" />
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Speed Grade</div>
+                                <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Speed Grade</div>
                             </GlassCard>
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <div className="text-3xl font-black text-foreground">{provider.support_score || 85}%</div>
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Support</div>
+                            <GlassCard className="p-3 md:p-4 flex flex-col items-center justify-center gap-1 md:gap-2" hoverEffect={false}>
+                                <div className="text-2xl md:text-3xl font-black text-foreground">{provider.support_score || 85}%</div>
+                                <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Support</div>
                             </GlassCard>
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <div className="text-3xl font-black text-green-500">{provider.money_back_days}d</div>
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Guarantee</div>
+                            <GlassCard className="p-3 md:p-4 flex flex-col items-center justify-center gap-1 md:gap-2" hoverEffect={false}>
+                                <div className="text-2xl md:text-3xl font-black text-green-500">{provider.money_back_days}d</div>
+                                <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Guarantee</div>
                             </GlassCard>
                         </div>
 

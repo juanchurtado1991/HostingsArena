@@ -15,7 +15,8 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
+import { getCategoryColorClasses } from "@/lib/news-utils";
 import { Button } from "@/components/ui/button";
 import { PublishSummaryModal } from "./PublishSummaryModal";
 import {
@@ -1478,97 +1479,101 @@ function PostEditorModal({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* ── Premium Header ── */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/15 shadow-lg shadow-primary/10">
-                            <Edit3 className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold tracking-tight">{post ? "Edit Post" : "New Post"}</h2>
-                            <div className="flex items-center gap-3 mt-0.5">
-                                {post?.is_ai_generated && (
-                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/15">🤖 AI Generated</span>
-                                )}
-                                <span className="text-xs text-muted-foreground flex items-center gap-2">
-                                    {wordCount} words · {charCount} chars
-                                    {(lastSavedAt || isAutoSaving) && (
-                                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <div className="flex flex-col border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
+                    {/* Row 1 — Title + Close */}
+                    <div className="flex items-center justify-between px-4 md:px-6 pt-3 pb-2 md:pt-4 md:pb-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/15 shadow-lg shadow-primary/10 shrink-0">
+                                <Edit3 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                            </div>
+                            <div className="min-w-0">
+                                <h2 className="text-base md:text-xl font-bold tracking-tight">{post ? "Edit Post" : "New Post"}</h2>
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                    {post?.is_ai_generated && (
+                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/15">🤖 AI</span>
                                     )}
-                                    {isAutoSaving ? (
-                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary animate-pulse bg-primary/5 px-2 py-0.5 rounded-full border border-primary/20">
-                                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                                            GUARDANDO...
-                                        </span>
-                                    ) : lastSavedAt ? (
-                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500/80 bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10 animate-in fade-in slide-in-from-right-1">
-                                            <CheckCircle className="w-2.5 h-2.5" />
-                                            ÚLTIMO GUARDADO: {lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    ) : null}
-                                </span>
+                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                                        {wordCount}w
+                                        {(lastSavedAt || isAutoSaving) && (
+                                            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                        )}
+                                        {isAutoSaving ? (
+                                            <span className="flex items-center gap-1 text-[10px] font-bold text-primary animate-pulse">
+                                                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                                Saving...
+                                            </span>
+                                        ) : lastSavedAt ? (
+                                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500/80">
+                                                <CheckCircle className="w-2.5 h-2.5" />
+                                                Saved {lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        ) : null}
+                                    </span>
+                                </div>
                             </div>
                         </div>
+                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted/50 transition-all duration-200 group shrink-0">
+                            <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        </button>
                     </div>
-                    <div className="flex items-center gap-3">
+
+                    {/* Row 2 — Controls */}
+                    <div className="flex items-center gap-2 px-4 md:px-6 pb-3 overflow-x-auto scrollbar-hide">
                         {/* Status Toggle */}
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-muted/50 border border-border">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold">Status</span>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border shrink-0">
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                className="bg-transparent text-sm font-semibold focus:outline-none cursor-pointer"
+                                className="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer"
                             >
                                 <option value="draft">📝 Draft</option>
                                 <option value="published">✅ Published</option>
                             </select>
                         </div>
 
-                        {/* Publish Date (El Salvador) */}
+                        {/* Publish Date */}
                         {status === 'published' && (
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-muted/50 border border-border" title="Publish Date (El Salvador Time UTC-6)">
-                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold hidden md:inline">Fecha (SV)</span>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border shrink-0" title="Publish Date (El Salvador Time UTC-6)">
                                 <input
                                     type="datetime-local"
                                     value={scheduledDate}
                                     onChange={(e) => setScheduledDate(e.target.value)}
-                                    className="bg-transparent text-sm font-semibold focus:outline-none cursor-pointer outline-none [color-scheme:dark] dark:[color-scheme:dark] light:[color-scheme:light]"
+                                    className="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer outline-none [color-scheme:dark] dark:[color-scheme:dark] light:[color-scheme:light]"
                                 />
                             </div>
                         )}
 
                         {/* Google Indexing Toggle */}
                         <div
-                            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-muted/50 border border-border cursor-pointer hover:bg-muted/80 transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border cursor-pointer hover:bg-muted/80 transition-colors shrink-0"
                             onClick={() => setShouldIndexGoogle(!shouldIndexGoogle)}
                             title="Toggle Google Indexing on Publish"
                         >
-                            <span className={`w-3 h-3 rounded-full ${shouldIndexGoogle ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500/50'}`} />
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-bold">
-                                G-Index
-                            </span>
+                            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${shouldIndexGoogle ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500/50'}`} />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-bold">G-Index</span>
                         </div>
+
+                        {/* Spacer */}
+                        <div className="flex-1" />
+
                         {/* Save */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 shrink-0">
                             <Button
                                 onClick={() => handleSave()}
-                                className="rounded-2xl bg-muted hover:bg-muted/80 text-foreground border border-border shadow-sm text-sm font-semibold px-4 transition-all duration-200"
+                                className="rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border shadow-sm text-xs font-semibold px-3 h-8 transition-all duration-200"
                                 disabled={saving || (!title.trim() && editLang === 'en') || (!titleEs.trim() && editLang === 'es')}
                             >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 mr-1.5" /> Save Draft</>}
+                                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Save className="w-3.5 h-3.5" /><span className="hidden sm:inline ml-1.5">Save Draft</span></>}
                             </Button>
 
                             <Button
                                 onClick={() => handleSave(true)}
-                                className="rounded-2xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 text-sm font-semibold px-6 transition-all duration-200 hover:scale-105"
+                                className="rounded-xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 text-xs font-semibold px-3 h-8 transition-all duration-200"
                                 disabled={saving || (!title.trim() && editLang === 'en') || (!titleEs.trim() && editLang === 'es')}
                             >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-1.5" /> Publish & Share</>}
+                                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3.5 h-3.5" /><span className="ml-1.5">Publish</span></>}
                             </Button>
                         </div>
-                        {/* Close */}
-                        <button onClick={onClose} className="p-2.5 rounded-2xl hover:bg-muted/50 transition-all duration-200 group">
-                            <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                        </button>
                     </div>
                 </div>
 
@@ -1577,15 +1582,15 @@ function PostEditorModal({
                     {/* Left Panel — Editor */}
                     <div className="flex flex-col overflow-hidden border-r border-border/50">
                         {/* Title Area */}
-                        <div className="px-8 pt-6 pb-4 border-b border-border/50">
+                        <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-border/50">
                             <input
                                 type="text"
                                 value={editLang === 'es' ? titleEs : title}
                                 onChange={(e) => editLang === 'es' ? setTitleEs(e.target.value) : setTitle(e.target.value)}
                                 placeholder="Your article title..."
-                                className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/20 tracking-tight"
+                                className="w-full text-xl md:text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/20 tracking-tight"
                             />
-                            <div className="flex items-center gap-2 mt-3">
+                            <div className="flex items-center gap-2 mt-2">
                                 <span className="text-[10px] uppercase tracking-widest text-muted-foreground/40 font-bold">Slug</span>
                                 <input
                                     type="text"
@@ -1598,12 +1603,12 @@ function PostEditorModal({
                         </div>
 
                         {/* Section Tabs */}
-                        <div className="flex px-5 border-b border-border/50 bg-muted/20">
+                        <div className="flex overflow-x-auto scrollbar-hide px-3 md:px-5 border-b border-border/50 bg-muted/20">
                             {sectionTabs.map(tab => (
                                 <button
                                     key={tab.key}
                                     onClick={() => setActiveSection(tab.key)}
-                                    className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-all duration-200 border-b-2 ${activeSection === tab.key
+                                    className={`flex items-center gap-1.5 px-3 md:px-5 py-2.5 md:py-3 text-xs md:text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap shrink-0 ${activeSection === tab.key
                                         ? "border-primary text-primary"
                                         : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                                         }`}
@@ -2494,7 +2499,7 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                             value={search}
                             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             placeholder="Search posts..."
-                            className="pl-9 pr-4 py-2 w-64 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            className="pl-9 pr-4 py-2 w-full sm:w-64 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                         />
                     </div>
                     <select
@@ -2619,7 +2624,7 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                                 <div className="p-4 flex-1 flex flex-col">
                                     <div className="flex items-center gap-2 mb-2">
                                         {post.category && (
-                                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-primary/10 text-primary flex items-center gap-1">
+                                            <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-md border flex items-center gap-1", getCategoryColorClasses(post.category))}>
                                                 <Tag className="w-2.5 h-2.5" /> {post.category}
                                             </span>
                                         )}

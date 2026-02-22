@@ -20,6 +20,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Tree-shake large icon/animation libraries — reduces JS bundle size significantly
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons'],
+  },
+  // Enable gzip compression for all responses
+  compress: true,
 };
 
 export default nextConfig;

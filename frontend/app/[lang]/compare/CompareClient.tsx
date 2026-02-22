@@ -178,7 +178,7 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
 
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center relative">
                             {/* Provider 1 */}
-                            <div className={`p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p1 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
+                            <div className={`p-4 md:p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p1 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP1}
@@ -194,7 +194,7 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                             </div>
 
                             {/* Provider 2 */}
-                            <div className={`p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p2 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
+                            <div className={`p-4 md:p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p2 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
                                 <ProviderSelector
                                     type={category}
                                     onSelect={setP2}

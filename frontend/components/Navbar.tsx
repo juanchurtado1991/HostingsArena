@@ -138,6 +138,16 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
     };
   }, [supabase]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
+
   const handleSignOut = async () => {
     logger.log('AUTH', "Initiating Sign Out...");
     try {
@@ -172,7 +182,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             </span>
           </Link>
 
-          <div className="hidden xl:flex items-center gap-4 2xl:gap-8">
+          <div className="hidden lg:flex items-center gap-4 2xl:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -187,7 +197,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
             ))}
           </div>
 
-          <div className="hidden xl:flex items-center gap-2 2xl:gap-4">
+          <div className="hidden lg:flex items-center gap-2 2xl:gap-4">
             <GlobalSearch lang={lang} />
             <LocaleSwitcher />
 
@@ -227,7 +237,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           </div>
 
           <button
-            className="xl:hidden p-2 text-muted-foreground"
+            className="lg:hidden p-2 text-muted-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
@@ -236,14 +246,16 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="absolute top-20 left-6 right-6 rounded-3xl border border-border/40 bg-popover/95 p-6 shadow-xl backdrop-blur-2xl xl:hidden animate-in fade-in slide-in-from-top-4 z-40">
+        <div className="absolute top-20 left-3 right-3 rounded-3xl border border-border/40 bg-popover/95 p-5 shadow-xl backdrop-blur-2xl lg:hidden animate-in fade-in slide-in-from-top-4 z-40">
           <div className="flex flex-col gap-4">
-            <div className="mb-4 flex flex-col gap-4">
-              <GlobalSearch lang={lang} />
-              <div className="flex justify-start px-2">
-                <LocaleSwitcher />
+            <div className="mb-4 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <GlobalSearch lang={lang} onSelect={() => setIsMobileMenuOpen(false)} />
+                </div>
+                <div className="shrink-0">
+                  <LocaleSwitcher />
+                </div>
               </div>
-            </div>
             {navLinks.map((link) => (
               <Link
                 key={link.href}

@@ -327,24 +327,24 @@ export function AnalyticsCard() {
             <div className="space-y-1.5">
                 {activeView === "posts" && (
                     data.topPosts.length > 0 ? data.topPosts.map((p, i) => (
-                        <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-muted/30 transition-colors group">
+                        <div key={i} className="flex items-center justify-between px-3 md:px-4 py-2.5 rounded-xl hover:bg-muted/30 transition-colors group">
                             <div className="flex items-center gap-3 min-w-0">
-                                <span className="text-xs font-bold text-muted-foreground w-5">{i + 1}</span>
-                                <span className="text-sm truncate">{p.post_slug}</span>
+                                <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{i + 1}</span>
+                                <span className="text-xs md:text-sm truncate">{p.post_slug}</span>
                             </div>
-                            <span className="text-sm font-semibold tabular-nums">{p.views.toLocaleString()} <span className="text-muted-foreground text-xs">views</span></span>
+                            <span className="text-xs md:text-sm font-semibold tabular-nums shrink-0 ml-2">{p.views.toLocaleString()} <span className="text-muted-foreground text-[10px]">views</span></span>
                         </div>
                     )) : <p className="text-sm text-muted-foreground text-center py-6">No post views tracked yet.</p>
                 )}
 
                 {activeView === "pages" && (
                     data.topPages.length > 0 ? data.topPages.map((p, i) => (
-                        <div key={i} className="flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <span className="text-xs font-bold text-muted-foreground w-5">{i + 1}</span>
-                                <span className="text-sm truncate font-mono">{p.path}</span>
+                        <div key={i} className="flex items-center justify-between px-3 md:px-4 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
+                            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                                <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{i + 1}</span>
+                                <span className="text-[11px] md:text-sm truncate font-mono">{p.path}</span>
                             </div>
-                            <span className="text-sm font-semibold tabular-nums">{p.views.toLocaleString()}</span>
+                            <span className="text-xs md:text-sm font-semibold tabular-nums shrink-0 ml-2">{p.views.toLocaleString()}</span>
                         </div>
                     )) : <p className="text-sm text-muted-foreground text-center py-6">No page views tracked yet.</p>
                 )}
@@ -409,58 +409,80 @@ export function AnalyticsCard() {
 
                 {activeView === "visitors" && (
                     data.recentActivity?.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="text-xs text-muted-foreground border-b border-border/50">
-                                    <tr>
-                                        <th className="px-4 py-2 font-medium">Time</th>
-                                        <th className="px-4 py-2 font-medium">Action</th>
-                                        <th className="px-4 py-2 font-medium">Device</th>
-                                        <th className="px-4 py-2 font-medium">Location</th>
-                                        <th className="px-4 py-2 font-medium">Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/30">
-                                    {data.recentActivity.map((v, i) => (
-                                        <tr key={i} className="hover:bg-muted/30 transition-colors">
-                                            <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
-                                                {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>
-                                                    {v.type === 'click' ? <MousePointerClick className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                    {v.type === 'click' ? "Click" : "View"}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-2.5 text-muted-foreground">
-                                                {v.device_type === 'mobile' ? <span title="Mobile"><Smartphone className="w-3.5 h-3.5" /></span> :
-                                                    v.device_type === 'tablet' ? <span title="Tablet"><Tablet className="w-3.5 h-3.5" /></span> :
-                                                        <span title="Desktop"><Laptop className="w-3.5 h-3.5" /></span>}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                {v.country ? (
-                                                    <span className="flex items-center gap-1.5 cursor-help" title={v.ip_address || "Unknown IP"}>
-                                                        <img
-                                                            src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`}
-                                                            alt={v.country}
-                                                            className="w-4 h-3 object-cover rounded-[1px]"
-                                                            onError={(e) => e.currentTarget.style.display = 'none'}
-                                                        />
-                                                        <span className="truncate max-w-[100px] text-xs">{getCountryName(v.country)}</span>
-                                                    </span>
-                                                ) : <span className="text-muted-foreground text-xs">—</span>}
-                                            </td>
-                                            <td className="px-4 py-2.5 text-xs">
-                                                <div className="flex flex-col max-w-[200px]">
-                                                    <span className="truncate font-medium" title={v.detail}>{v.detail}</span>
-                                                    {v.source && <span className="text-muted-foreground truncate" title={v.source}>via {v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}</span>}
-                                                </div>
-                                            </td>
+                        <>
+                            {/* MOBILE: compact activity cards */}
+                            <div className="block md:hidden space-y-1.5">
+                                {data.recentActivity.map((v, i) => (
+                                    <div key={i} className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
+                                        {v.device_type === 'mobile' ? <Smartphone className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> :
+                                            v.device_type === 'tablet' ? <Tablet className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> :
+                                                <Laptop className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className={`text-[10px] font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>{v.type}</span>
+                                                {v.country && <img src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`} alt={v.country} className="w-3.5 h-2.5 object-cover rounded-[1px]" onError={(e) => e.currentTarget.style.display = 'none'} />}
+                                                <span className="text-[10px] text-muted-foreground truncate">{v.detail}</span>
+                                            </div>
+                                            <div className="text-[9px] text-muted-foreground/60">{new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {v.source ? `· via ${v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}` : ''}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* DESKTOP: full table */}
+                            <div className="hidden md:block overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="text-xs text-muted-foreground border-b border-border/50">
+                                        <tr>
+                                            <th className="px-4 py-2 font-medium">Time</th>
+                                            <th className="px-4 py-2 font-medium">Action</th>
+                                            <th className="px-4 py-2 font-medium">Device</th>
+                                            <th className="px-4 py-2 font-medium">Location</th>
+                                            <th className="px-4 py-2 font-medium">Details</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/30">
+                                        {data.recentActivity.map((v, i) => (
+                                            <tr key={i} className="hover:bg-muted/30 transition-colors">
+                                                <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
+                                                    {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>
+                                                        {v.type === 'click' ? <MousePointerClick className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        {v.type === 'click' ? "Click" : "View"}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-2.5 text-muted-foreground">
+                                                    {v.device_type === 'mobile' ? <span title="Mobile"><Smartphone className="w-3.5 h-3.5" /></span> :
+                                                        v.device_type === 'tablet' ? <span title="Tablet"><Tablet className="w-3.5 h-3.5" /></span> :
+                                                            <span title="Desktop"><Laptop className="w-3.5 h-3.5" /></span>}
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    {v.country ? (
+                                                        <span className="flex items-center gap-1.5 cursor-help" title={v.ip_address || "Unknown IP"}>
+                                                            <img
+                                                                src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`}
+                                                                alt={v.country}
+                                                                className="w-4 h-3 object-cover rounded-[1px]"
+                                                                onError={(e) => e.currentTarget.style.display = 'none'}
+                                                            />
+                                                            <span className="truncate max-w-[100px] text-xs">{getCountryName(v.country)}</span>
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground text-xs">—</span>}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-xs">
+                                                    <div className="flex flex-col max-w-[200px]">
+                                                        <span className="truncate font-medium" title={v.detail}>{v.detail}</span>
+                                                        {v.source && <span className="text-muted-foreground truncate" title={v.source}>via {v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}</span>}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     ) : <p className="text-sm text-muted-foreground text-center py-6">No recent activity tracked.</p>
                 )}
             </div>

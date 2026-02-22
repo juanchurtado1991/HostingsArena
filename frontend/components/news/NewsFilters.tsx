@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useTransition } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
+import { getCategoryColorClasses } from "@/lib/news-utils";
 
 interface NewsFiltersProps {
     categories: string[];
@@ -70,7 +71,7 @@ export function NewsFilters({ categories, lang, dict }: NewsFiltersProps) {
                     onClick={() => updateFilters(search, "all")}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${selectedCategory === "all"
                         ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                        : "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/50"
+                        : "bg-blue-500/10 border-blue-500/20 text-blue-500 hover:border-primary/50"
                         }`}
                 >
                     {dict.allCategories}
@@ -79,10 +80,7 @@ export function NewsFilters({ categories, lang, dict }: NewsFiltersProps) {
                     <button
                         key={cat}
                         onClick={() => updateFilters(search, cat)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${selectedCategory === cat
-                            ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                            : "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/50"
-                            }`}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${getCategoryColorClasses(cat, selectedCategory === cat)}`}
                     >
                         {cat}
                     </button>

@@ -166,22 +166,19 @@ export function RemindersManager() {
                             />
                             <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 space-y-2">
                                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Métricas Dinámicas (Placeholders)</p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
-                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                                        <span className="text-primary font-bold">{`{today_views}`}</span> Visitas hoy
-                                    </code>
-                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                                        <span className="text-primary font-bold">{`{total_views}`}</span> Visitas totales
-                                    </code>
-                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                                        <span className="text-primary font-bold">{`{today_clicks}`}</span> Clicks hoy
-                                    </code>
-                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                                        <span className="text-primary font-bold">{`{total_clicks}`}</span> Clicks totales
-                                    </code>
-                                    <code className="text-[9px] text-muted-foreground flex items-center gap-1.5">
-                                        <span className="text-primary font-bold">{`{today_top_country}`}</span> País #1 hoy
-                                    </code>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
+                                    {[
+                                        ['{today_views}', 'Visitas hoy'],
+                                        ['{total_views}', 'Visitas totales'],
+                                        ['{today_clicks}', 'Clicks hoy'],
+                                        ['{total_clicks}', 'Clicks totales'],
+                                        ['{today_top_country}', 'País #1 hoy'],
+                                    ].map(([placeholder, label]) => (
+                                        <div key={placeholder} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                            <span className="text-primary font-bold font-mono shrink-0">{placeholder}</span>
+                                            <span className="truncate opacity-70">{label}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>

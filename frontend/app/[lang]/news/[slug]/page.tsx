@@ -97,8 +97,8 @@ export default async function NewsPostPage({ params }: PageProps) {
             <JsonLd post={post} url={shareUrl} lang={lang} />
             <PageTracker postSlug={post.slug} />
 
-            <article className="mx-auto max-w-7xl px-6 md:px-12">
-                <GlassCard className="p-8 md:p-14 lg:p-16 shadow-2xl border-white/10 rounded-[2.5rem] mb-12 mt-3 overflow-hidden">
+            <article className="mx-auto max-w-7xl px-0 md:px-6">
+                <GlassCard className="p-4 md:p-10 lg:p-14 shadow-2xl border-white/10 rounded-2xl md:rounded-[2.5rem] mb-12 mt-3 overflow-hidden">
                     <header className="mb-10 text-center">
                         <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
                             <Link

@@ -17,13 +17,15 @@ interface GlobalSearchProps {
     variant?: "default" | "hero";
     className?: string;
     lang?: string;
+    onSelect?: () => void;
 }
 
 export function GlobalSearch({
     placeholder = "Search providers...",
     variant = "default",
     className,
-    lang = "en"
+    lang = "en",
+    onSelect
 }: GlobalSearchProps) {
     const [open, setOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
@@ -91,6 +93,7 @@ export function GlobalSearch({
         setSearchTerm("");
         const slug = result.slug || result.provider_name.toLowerCase().replace(/\s+/g, '-');
         router.push(`/${lang}/${type}/${slug}`);
+        if (onSelect) onSelect();
     };
 
     return (
@@ -103,7 +106,7 @@ export function GlobalSearch({
                     className={cn(
                         "justify-between text-muted-foreground transition-all duration-300",
                         variant === "default"
-                            ? "w-[200px] xl:w-[300px] bg-muted/50 border-input hover:bg-accent hover:text-accent-foreground"
+                            ? "w-[180px] lg:w-[280px] bg-muted/50 border-input hover:bg-accent hover:text-accent-foreground"
                             : "w-full max-w-2xl h-14 px-6 rounded-2xl bg-background/50 backdrop-blur-md border-primary/20 hover:border-primary/40 hover:bg-background/80 text-lg shadow-xl shadow-primary/5",
                         className
                     )}
@@ -122,7 +125,7 @@ export function GlobalSearch({
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] lg:w-[400px] p-0 backdrop-blur-xl bg-popover/95 border-border text-popover-foreground shadow-2xl">
+            <PopoverContent className="w-[min(400px,90vw)] p-0 backdrop-blur-xl bg-popover/95 border-border text-popover-foreground shadow-2xl">
                 <div className="flex items-center border-b px-3">
                     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                     <input

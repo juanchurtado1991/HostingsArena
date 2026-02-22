@@ -406,73 +406,73 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
     );
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-6 dashboard-content">
+        <div className="min-h-screen pt-20 pb-12 px-4 md:px-6 dashboard-content">
             <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-center mb-12">
+                <div className="flex flex-col gap-4 mb-8">
                     <div>
-                        <h1 className="text-4xl font-bold tracking-tight">{dict.dashboard.title}</h1>
-                        <p className="text-muted-foreground mt-2">{dict.dashboard.subtitle}</p>
+                        <h1 className="text-2xl md:text-4xl font-bold tracking-tight">{dict.dashboard.title}</h1>
+                        <p className="text-muted-foreground mt-1 text-sm">{dict.dashboard.subtitle}</p>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                         <button
                             onClick={() => setActiveTab("overview")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "overview" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "overview" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <LayoutDashboard className="w-4 h-4" />
-                            {dict.dashboard.tabs.overview}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.overview}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("tasks")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tasks" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "tasks" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Zap className="w-4 h-4" />
-                            {dict.dashboard.tabs.tasks}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.tasks}</span>
                             {tasks.length > 0 && (
-                                <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{tasks.length}</span>
+                                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{tasks.length}</span>
                             )}
                         </button>
                         <button
                             onClick={() => setActiveTab("affiliates")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "affiliates" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "affiliates" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Handshake className="w-4 h-4" />
-                            {dict.dashboard.tabs.affiliates}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.affiliates}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("newsroom")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "newsroom" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "newsroom" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Newspaper className="w-4 h-4" />
-                            {dict.dashboard.tabs.newsroom}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.newsroom}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("workflows")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "workflows" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "workflows" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <GitBranch className="w-4 h-4" />
-                            {dict.dashboard.tabs.workflows}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.workflows}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("seo")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "seo" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "seo" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Globe className="w-4 h-4" />
-                            {dict.dashboard.tabs.seo || "Indexing"}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.seo || "Indexing"}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("reminders")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "reminders" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "reminders" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <Bell className="w-4 h-4" />
-                            Recordatorios
+                            <span className="hidden sm:inline">Recordatorios</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("tutorial")}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "tutorial" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "tutorial" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
                         >
                             <HelpCircle className="w-4 h-4" />
-                            {dict.dashboard.tabs.tutorial}
+                            <span className="hidden sm:inline">{dict.dashboard.tabs.tutorial}</span>
                         </button>
                     </div>
                 </div>
@@ -526,12 +526,12 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                         <AnalyticsCard />
 
                         {/* Status Table */}
-                        <GlassCard className="p-8 border-white/[0.05] relative overflow-hidden">
+                        <GlassCard className="p-4 md:p-8 border-white/[0.05] relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/20 via-primary/20 to-purple-500/20" />
 
-                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
                                 <div>
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
                                         <Activity className="w-5 h-5 text-primary" />
                                         {dict.dashboard.scrapers.title}
                                     </h3>
@@ -539,13 +539,13 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {/* Filter Controls */}
-                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10 mr-2">
+                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
                                         {['all', 'online', 'failing', 'stale'].map((f) => (
                                             <button
                                                 key={f}
                                                 onClick={() => setScraperFilter(f as any)}
                                                 className={cn(
-                                                    "px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all",
+                                                    "px-2 md:px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all",
                                                     scraperFilter === f
                                                         ? "bg-primary text-white shadow-lg shadow-primary/20"
                                                         : "text-muted-foreground hover:text-white"
@@ -555,7 +555,11 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                                             </button>
                                         ))}
                                     </div>
-                                    <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={() => {
+                                    <Button size="sm" variant="outline" className="h-9 px-3 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={fetchScraperStatus}>
+                                        <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", loadingScrapers && "animate-spin")} />
+                                        <span className="text-[11px] font-bold uppercase tracking-wider">{dict.dashboard.scrapers.refresh}</span>
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="h-9 px-3 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hidden sm:flex" onClick={() => {
                                         const report = scraperStatuses.map(s =>
                                             `[${s.status.toUpperCase()}] ${s.provider_name} (${s.items_synced} items) - ${s.duration_seconds}s - ${s.error_message || 'OK'}`
                                         ).join('\n');
@@ -564,84 +568,111 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                                     }}>
                                         <span className="text-[11px] font-bold uppercase tracking-wider">{dict.dashboard.scrapers.copy_report}</span>
                                     </Button>
-                                    <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl border-white/10 bg-white/5 hover:bg-white/10" onClick={fetchScraperStatus}>
-                                        <RefreshCw className={cn("w-3.5 h-3.5 mr-2", loadingScrapers && "animate-spin")} />
-                                        <span className="text-[11px] font-bold uppercase tracking-wider">{dict.dashboard.scrapers.refresh}</span>
-                                    </Button>
                                 </div>
                             </div>
 
                             {loadingScrapers ? (
                                 <div className="text-center py-12 text-muted-foreground">Loading status...</div>
-                            ) : (
-                                <div className="overflow-x-auto max-h-[600px]">
-                                    <table className="w-full text-left">
-                                        <thead className="text-xs uppercase text-muted-foreground border-b border-white/10 sticky top-0 bg-background/95 backdrop-blur z-10">
-                                            <tr>
-                                                <th className="pb-4 pl-4">{dict.dashboard.scrapers.col_provider}</th>
-                                                <th className="pb-4">{dict.dashboard.scrapers.col_type}</th>
-                                                <th className="pb-4">{dict.dashboard.scrapers.col_status}</th>
-                                                <th className="pb-4">{dict.dashboard.scrapers.col_items}</th>
-                                                <th className="pb-4">{dict.dashboard.scrapers.col_duration}</th>
-                                                <th className="pb-4">{dict.dashboard.scrapers.col_last_update}</th>
-                                                <th className="pb-4 w-[200px]">{dict.dashboard.scrapers.col_message}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-white/5">
-                                            {scraperStatuses
-                                                .filter(s => {
-                                                    if (scraperFilter === 'all') return true;
-                                                    if (scraperFilter === 'online') return s.status === 'success';
-                                                    if (scraperFilter === 'failing') return s.status === 'error' || s.status === 'warning';
-                                                    if (scraperFilter === 'stale') return s.status === 'stale';
-                                                    return true;
-                                                })
-                                                .map((item) => {
-                                                    const cfg = SCRAPER_STATUS_CONFIG[item.status] || SCRAPER_STATUS_CONFIG.success;
-                                                    const StatusIcon = cfg.icon;
-                                                    return (
-                                                        <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                                                            <td className="py-4 pl-4">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[10px] font-bold text-muted-foreground group-hover:text-white transition-colors">
-                                                                        {item.provider_name.charAt(0)}
+                            ) : (() => {
+                                const filteredScrapers = scraperStatuses.filter(s => {
+                                    if (scraperFilter === 'all') return true;
+                                    if (scraperFilter === 'online') return s.status === 'success';
+                                    if (scraperFilter === 'failing') return s.status === 'error' || s.status === 'warning';
+                                    if (scraperFilter === 'stale') return s.status === 'stale';
+                                    return true;
+                                });
+                                return (
+                                    <>
+                                        {/* MOBILE: Compact card list */}
+                                        <div className="block md:hidden space-y-2 max-h-[500px] overflow-y-auto">
+                                            {filteredScrapers.map((item) => {
+                                                const cfg = SCRAPER_STATUS_CONFIG[item.status] || SCRAPER_STATUS_CONFIG.success;
+                                                const StatusIcon = cfg.icon;
+                                                return (
+                                                    <div key={item.id} className={`flex items-center justify-between p-3 rounded-xl border ${cfg.bg} gap-3`}>
+                                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                                                {item.provider_name.charAt(0)}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <div className="font-bold text-xs truncate">{item.provider_name}</div>
+                                                                <div className="text-[10px] text-muted-foreground">{item.items_synced} items · {item.duration_seconds}s</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border", cfg.bg, cfg.color)}>
+                                                                <StatusIcon className="w-2.5 h-2.5" />
+                                                                {cfg.label}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* DESKTOP: Full table */}
+                                        <div className="hidden md:block overflow-x-auto max-h-[600px]">
+                                            <table className="w-full text-left">
+                                                <thead className="text-xs uppercase text-muted-foreground border-b border-white/10 sticky top-0 bg-background/95 backdrop-blur z-10">
+                                                    <tr>
+                                                        <th className="pb-4 pl-4">{dict.dashboard.scrapers.col_provider}</th>
+                                                        <th className="pb-4">{dict.dashboard.scrapers.col_type}</th>
+                                                        <th className="pb-4">{dict.dashboard.scrapers.col_status}</th>
+                                                        <th className="pb-4">{dict.dashboard.scrapers.col_items}</th>
+                                                        <th className="pb-4">{dict.dashboard.scrapers.col_duration}</th>
+                                                        <th className="pb-4">{dict.dashboard.scrapers.col_last_update}</th>
+                                                        <th className="pb-4 w-[200px]">{dict.dashboard.scrapers.col_message}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-white/5">
+                                                    {filteredScrapers.map((item) => {
+                                                        const cfg = SCRAPER_STATUS_CONFIG[item.status] || SCRAPER_STATUS_CONFIG.success;
+                                                        const StatusIcon = cfg.icon;
+                                                        return (
+                                                            <tr key={item.id} className="hover:bg-white/5 transition-colors group">
+                                                                <td className="py-4 pl-4">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[10px] font-bold text-muted-foreground group-hover:text-white transition-colors">
+                                                                            {item.provider_name.charAt(0)}
+                                                                        </div>
+                                                                        <span className="font-bold text-sm">{item.provider_name}</span>
                                                                     </div>
-                                                                    <span className="font-bold text-sm">{item.provider_name}</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">{item.provider_type}</td>
-                                                            <td className="py-4">
-                                                                <span className={cn(
-                                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                                                                    cfg.bg
-                                                                )}>
-                                                                    <StatusIcon className="w-3 h-3" />
-                                                                    {cfg.label}
-                                                                </span>
-                                                            </td>
-                                                            <td className="py-4">
-                                                                <div className="flex flex-col">
-                                                                    <span className="font-mono text-xs font-bold">{item.items_synced} items</span>
-                                                                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
-                                                                        <div className="h-full bg-primary/40 rounded-full" style={{ width: `${Math.min(100, (item.items_synced / 50) * 100)}%` }} />
+                                                                </td>
+                                                                <td className="py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">{item.provider_type}</td>
+                                                                <td className="py-4">
+                                                                    <span className={cn(
+                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                                                                        cfg.bg
+                                                                    )}>
+                                                                        <StatusIcon className="w-3 h-3" />
+                                                                        {cfg.label}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="py-4">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-mono text-xs font-bold">{item.items_synced} items</span>
+                                                                        <div className="w-16 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
+                                                                            <div className="h-full bg-primary/40 rounded-full" style={{ width: `${Math.min(100, (item.items_synced / 50) * 100)}%` }} />
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-4 font-mono text-xs text-muted-foreground">{item.duration_seconds}s</td>
-                                                            <td className="py-4 text-muted-foreground text-[11px] font-medium">
-                                                                {new Date(item.last_run).toLocaleDateString()}
-                                                                <span className="block opacity-40 text-[9px]">{new Date(item.last_run).toLocaleTimeString()}</span>
-                                                            </td>
-                                                            <td className="py-4 text-[10px] text-red-400/80 font-medium truncate max-w-[240px]" title={item.error_message || undefined}>
-                                                                {item.error_message || <span className="text-muted-foreground/20 italic">No issues detected</span>}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                                                                </td>
+                                                                <td className="py-4 font-mono text-xs text-muted-foreground">{item.duration_seconds}s</td>
+                                                                <td className="py-4 text-muted-foreground text-[11px] font-medium">
+                                                                    {new Date(item.last_run).toLocaleDateString()}
+                                                                    <span className="block opacity-40 text-[9px]">{new Date(item.last_run).toLocaleTimeString()}</span>
+                                                                </td>
+                                                                <td className="py-4 text-[10px] text-red-400/80 font-medium truncate max-w-[240px]" title={item.error_message || undefined}>
+                                                                    {item.error_message || <span className="text-muted-foreground/20 italic">No issues detected</span>}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </GlassCard>
                     </>
                 )}
@@ -790,8 +821,56 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                             </GlassCard>
                         ) : (
                             <GlassCard className="overflow-hidden">
-                                {/* Task Table */}
-                                <div className="overflow-x-auto">
+                                {/* MOBILE: compact task cards */}
+                                <div className="block md:hidden divide-y divide-white/5">
+                                    {paginatedTasks.map(task => (
+                                        <div key={task.id} className="flex items-start justify-between p-4 hover:bg-white/5 transition-colors gap-3">
+                                            <div className="flex items-start gap-3 min-w-0">
+                                                <span className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-full text-sm ${
+                                                    task.priority === 'critical' ? 'bg-red-500/10' :
+                                                    task.priority === 'high' ? 'bg-orange-500/10' : 'bg-blue-500/10'
+                                                }`}>
+                                                    {task.priority === 'critical' && '🔥'}
+                                                    {task.priority === 'high' && '⚠️'}
+                                                    {task.priority === 'normal' && '📝'}
+                                                </span>
+                                                <div className="min-w-0">
+                                                    <div className="font-medium text-sm leading-tight line-clamp-2">{task.title}</div>
+                                                    <div className="flex items-center gap-1.5 mt-1">
+                                                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                            {task.task_type === 'affiliate_audit' && <><LinkIcon className="w-3 h-3" /> Link</>}
+                                                            {task.task_type === 'scraper_fix' && <><Server className="w-3 h-3" /> Scraper</>}
+                                                        </span>
+                                                    </div>
+                                                    {task.description && (
+                                                        <div className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{task.description}</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-1 shrink-0">
+                                                <Button
+                                                    size="sm"
+                                                    variant="default"
+                                                    onClick={() => setSelectedTask(task)}
+                                                    className="h-7 text-xs px-2"
+                                                >
+                                                    {dict.dashboard.tasks.btn_resolve}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => dismissTask(task.id!)}
+                                                    className="h-7 text-xs text-muted-foreground px-2"
+                                                >
+                                                    ✕
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* DESKTOP: full table */}
+                                <div className="hidden md:block overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead className="text-xs uppercase text-muted-foreground border-b border-white/10 bg-white/5">
                                             <tr>
@@ -904,49 +983,64 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
                 {activeTab === "newsroom" && (
                     <div className="space-y-6">
-                        <div className="flex justify-end mb-4">
-                            <Button
-                                onClick={handleMigrateTranslations}
-                                disabled={migratingTranslations}
-                                variant="outline"
-                                className="flex items-center gap-2 border-primary/20 hover:bg-primary/10"
-                            >
-                                {migratingTranslations ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
-                                {migratingTranslations ? (lang === 'es' ? 'Traduciendo...' : 'Translating...') : (lang === 'es' ? 'Traducir Posts Antiguos (Auto)' : 'Translate Old Posts (Auto)')}
-                            </Button>
-                        </div>
                         <PostEditor onNavigateToAffiliates={() => setActiveTab("affiliates")} />
                     </div>
                 )}
 
                 {activeTab === "workflows" && (
                     <div className="space-y-6">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                             <div>
-                                <h2 className="text-2xl font-bold">{dict.dashboard.tabs.workflows}</h2>
-                                <p className="text-muted-foreground">{lang === 'es' ? "Monitorea y dispara flujos de scraping directamente." : "Monitor and trigger scraping pipelines directly."}</p>
+                                <h2 className="text-xl md:text-2xl font-bold">{dict.dashboard.tabs.workflows}</h2>
+                                <p className="text-muted-foreground text-sm">{lang === 'es' ? "Monitorea y dispara flujos de scraping directamente." : "Monitor and trigger scraping pipelines directly."}</p>
                             </div>
-
                             <Button
                                 onClick={triggerWorkflow}
                                 disabled={triggering}
-                                className="flex items-center gap-2 bg-foreground text-background"
+                                className="flex items-center gap-2 bg-foreground text-background w-full sm:w-auto justify-center"
+                                size="sm"
                             >
                                 {triggering ? <Clock className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                                 {triggering ? (lang === 'es' ? "Iniciando..." : "Starting...") : (lang === 'es' ? "Ejecutar Actualización Manual" : "Run Manual Update")}
                             </Button>
                         </div>
 
-                        <GlassCard className="p-8">
-                            <div className="flex items-center gap-2 mb-6">
+                        <GlassCard className="p-4 md:p-8">
+                            <div className="flex items-center gap-2 mb-4 md:mb-6">
                                 <Github className="w-5 h-5" />
-                                <h3 className="text-lg font-bold">Recent Workflow Runs (daily_update.yml)</h3>
+                                <h3 className="text-base md:text-lg font-bold">Recent Workflow Runs (daily_update.yml)</h3>
                             </div>
 
                             {loadingWorkflows ? (
                                 <div className="py-12 flex justify-center text-muted-foreground">Loading runs...</div>
                             ) : (
-                                <div className="overflow-x-auto">
+                                <>
+                                    {/* MOBILE: compact card list */}
+                                    <div className="block md:hidden space-y-2">
+                                        {workflowRuns.length === 0 ? (
+                                            <p className="py-8 text-center text-muted-foreground text-sm">No recent runs found.</p>
+                                        ) : workflowRuns.map((run) => (
+                                            <div key={run.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                                                <div className="min-w-0">
+                                                    <div className="font-mono text-[10px] text-muted-foreground truncate">#{run.id}</div>
+                                                    <div className="text-xs font-medium mt-0.5">
+                                                        {run.conclusion === 'success' && <span className="text-green-500">✓ Success</span>}
+                                                        {run.conclusion === 'failure' && <span className="text-red-500">✗ Failed</span>}
+                                                        {!run.conclusion && <span className="text-blue-400 animate-pulse">{run.status}</span>}
+                                                    </div>
+                                                    <div className="text-[10px] text-muted-foreground">{run.created_at ? new Date(run.created_at).toLocaleString() : ''}</div>
+                                                </div>
+                                                {run.html_url && (
+                                                    <a href={run.html_url} target="_blank" rel="noopener noreferrer" className="ml-3 shrink-0 p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                                                        <Github className="w-4 h-4" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* DESKTOP: full table */}
+                                    <div className="hidden md:block overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead className="text-xs uppercase text-muted-foreground border-b border-border/10">
                                             <tr>
@@ -984,7 +1078,8 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                                             ))}
                                         </tbody>
                                     </table>
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </GlassCard>
                     </div>

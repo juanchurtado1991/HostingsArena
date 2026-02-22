@@ -13,6 +13,8 @@ import { Locale } from "@/i18n-config";
 
 import { GlobalSearch } from "@/components/GlobalSearch";
 
+export const revalidate = 3600; // ISR: revalidate every 1 hour
+
 export const metadata = {
   title: "Top Hosting Providers - Verified Benchmarks | HostingArena",
   description: "Browse 200+ hosting providers with real performance data. No fluff, just benchmarks.",
@@ -85,7 +87,7 @@ export default async function HostingPage({
   ) : new Map<string, string>();
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6">
+    <div className="min-h-screen pt-24 pb-12 px-4 md:px-6 overflow-x-hidden">
       <PageTracker />
       <div className="max-w-7xl mx-auto">
 
