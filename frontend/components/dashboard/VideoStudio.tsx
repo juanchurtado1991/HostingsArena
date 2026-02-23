@@ -37,6 +37,50 @@ export function VideoStudio({ dict, lang }: VideoStudioProps) {
     const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
     const [isPlayingPreview, setIsPlayingPreview] = useState(false);
     const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
+    const [scenes, setScenes] = useState<{speech: string, visual: string}[]>([]);
+    const [activeSceneIndex, setActiveSceneIndex] = useState(0);
+
+    useEffect(() => {
+        if (script) {
+            parseScenes(script);
+        }
+    }, [script]);
+
+    const parseScenes = (text: string) => {
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        const parsedScenes: {speech: string, visual: string}[] = [];
+        
+        let currentSpeech = "";
+        let currentVisual = "Generic Hosting Clip";
+
+        lines.forEach(line => {
+            if (line.includes('[Visual:')) {
+                if (currentSpeech) {
+                    parsedScenes.push({ speech: currentSpeech.trim(), visual: currentVisual });
+                }
+                currentVisual = line.match(/\[Visual: (.*?)\]/)?.[1] || "Generic Clip";
+                currentSpeech = "";
+            } else {
+                currentSpeech += " " + line;
+            }
+        });
+
+        if (currentSpeech) {
+            parsedScenes.push({ speech: currentSpeech.trim(), visual: currentVisual });
+        }
+        
+        setScenes(parsedScenes);
+    };
+
+    useEffect(() => {
+        let interval: any;
+        if (scenes.length > 0 && !isPlayingPreview) {
+            interval = setInterval(() => {
+                setActiveSceneIndex(prev => (prev + 1) % scenes.length);
+            }, 3000);
+        }
+        return () => clearInterval(interval);
+    }, [scenes, isPlayingPreview]);
 
     useEffect(() => {
         fetchProviders();
@@ -266,32 +310,70 @@ export function VideoStudio({ dict, lang }: VideoStudioProps) {
                 {/* Right Column: Preview & Action */}
                 <div className="lg:col-span-4 space-y-6">
                     <GlassCard className="p-4 flex flex-col items-center justify-center min-h-[400px] relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-purple-500/10 opacity-50" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-purple-500/20 opacity-50" />
                         
                         <div className={cn(
-                            "relative z-10 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-8 text-center transition-all bg-background/50 backdrop-blur-sm",
+                            "relative z-10 border border-white/10 rounded-2xl flex flex-col items-center justify-center overflow-hidden transition-all bg-black/40 backdrop-blur-md shadow-2xl",
                             format === "9:16" ? "aspect-[9/16] w-full max-w-[240px]" : "aspect-video w-full"
                         )}>
-                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Film className="w-8 h-8 text-primary" />
-                            </div>
-                            <h4 className="font-bold text-sm mb-2">Video Preview</h4>
-                            <p className="text-[10px] text-muted-foreground">The AI will compose clips, text overlays and voiceover in real-time.</p>
+                            {scenes.length > 0 ? (
+                                <div className="absolute inset-0 flex flex-col p-6 text-center justify-center items-center">
+                                    <div className="absolute top-4 left-4 right-4 flex gap-1">
+                                        {scenes.map((_, i) => (
+                                            <div key={i} className={cn(
+                                                "h-1 flex-1 rounded-full transition-all duration-300",
+                                                i === activeSceneIndex ? "bg-primary" : "bg-white/20"
+                                            )} />
+                                        ))}
+                                    </div>
+
+                                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mb-4 text-primary animate-pulse">
+                                        <Film className="w-6 h-6" />
+                                    </div>
+                                    
+                                    <p className="text-[10px] text-primary font-bold uppercase tracking-wider mb-2 opacity-70">
+                                        {scenes[activeSceneIndex].visual}
+                                    </p>
+                                    
+                                    <h5 className="text-sm font-bold text-white leading-tight animate-in fade-in slide-in-from-bottom-2 duration-700">
+                                        {scenes[activeSceneIndex].speech.length > 60 
+                                            ? scenes[activeSceneIndex].speech.substring(0, 60) + "..." 
+                                            : scenes[activeSceneIndex].speech}
+                                    </h5>
+
+                                    <div className="absolute bottom-4 left-0 right-0 flex justify-center py-2 px-4 gap-2 border-t border-white/5 bg-black/20">
+                                        <Type className="w-3.5 h-3.5 text-white/40" />
+                                        <Music className="w-3.5 h-3.5 text-white/40" />
+                                        <Smartphone className="w-3.5 h-3.5 text-white/40" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <Film className="w-8 h-8 text-primary" />
+                                    </div>
+                                    <h4 className="font-bold text-sm mb-2">Video Preview</h4>
+                                    <p className="text-[10px] text-muted-foreground px-4">Generate a script to see the scene-by-scene preview here.</p>
+                                </>
+                            )}
                         </div>
 
                         <div className="absolute bottom-6 left-6 right-6 z-20">
                             <Button 
-                                className="w-full py-6 rounded-2xl text-lg font-black shadow-2xl shadow-primary/30 gap-2"
+                                className="w-full py-6 rounded-2xl text-lg font-black shadow-2xl shadow-primary/30 gap-2 overflow-hidden relative group"
                                 disabled={!selectedProvider || !script || isGeneratingVideo}
                             >
-                                {isGeneratingVideo ? (
-                                    <RefreshCw className="w-6 h-6 animate-spin" />
-                                ) : (
-                                    <>
-                                        <Wand2 className="w-6 h-6" />
-                                        RENDER VIDEO
-                                    </>
-                                )}
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-500 to-primary bg-[length:200%_100%] animate-gradient group-hover:opacity-90" />
+                                <span className="relative z-10 flex items-center gap-2">
+                                    {isGeneratingVideo ? (
+                                        <RefreshCw className="w-6 h-6 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Wand2 className="w-6 h-6" />
+                                            RENDER MP4
+                                        </>
+                                    )}
+                                </span>
                             </Button>
                         </div>
                     </GlassCard>
