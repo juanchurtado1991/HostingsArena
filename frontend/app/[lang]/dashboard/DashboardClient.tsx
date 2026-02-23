@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager, ProviderManager } from "@/components/dashboard";
+import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager, ProviderManager, VideoStudio } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import { SEOManager } from "@/components/dashboard/SEOManager";
@@ -469,6 +469,13 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                         >
                             <Newspaper className="w-4 h-4" />
                             <span className="hidden sm:inline">{dict.dashboard.tabs.newsroom}</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("studio")}
+                            className={`flex-shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-colors flex items-center gap-1.5 ${activeTab === "studio" ? "bg-primary text-white" : "bg-white/5 hover:bg-white/10"}`}
+                        >
+                            <Play className="w-4 h-4" />
+                            <span className="hidden sm:inline">Studio</span>
                         </button>
                         <button
                             onClick={() => setActiveTab("workflows")}
