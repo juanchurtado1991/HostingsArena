@@ -1018,6 +1018,10 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                     </div>
                 )}
 
+                {activeTab === "studio" && (
+                    <VideoStudio dict={dict} lang={lang} />
+                )}
+
                 {activeTab === "workflows" && (
                     <div className="space-y-6">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">

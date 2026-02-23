@@ -203,11 +203,14 @@ export function VideoStudio({ dict, lang }: VideoStudioProps) {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {VOICES.map(voice => (
-                                    <button
+                                    <div
                                         key={voice.id}
                                         onClick={() => setSelectedVoice(voice.id)}
+                                        onKeyDown={(e) => e.key === 'Enter' && setSelectedVoice(voice.id)}
+                                        role="button"
+                                        tabIndex={0}
                                         className={cn(
-                                            "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
+                                            "flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer",
                                             selectedVoice === voice.id 
                                                 ? "bg-primary/20 border-primary" 
                                                 : "bg-white/5 border-transparent hover:bg-white/10"
@@ -229,7 +232,7 @@ export function VideoStudio({ dict, lang }: VideoStudioProps) {
                                             )}
                                         </div>
                                         <span className="text-[10px] text-muted-foreground">{voice.desc}</span>
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
                         </GlassCard>
