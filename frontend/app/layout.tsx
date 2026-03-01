@@ -55,7 +55,10 @@ export default function RootLayout({
             <head>
                 <meta name="impact-site-verification" {...({ "value": "cdd074e0-5799-410e-9f6c-38b9e7633a9b" } as any)} />
             </head>
-            <body className="min-h-screen bg-background text-foreground selection:bg-primary/30">
+            <body 
+                className="min-h-screen bg-background text-foreground selection:bg-primary/30"
+                suppressHydrationWarning
+            >
                 {children}
             </body>
         </html>

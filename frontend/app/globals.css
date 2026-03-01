@@ -34,12 +34,16 @@
     --ring: 240 10% 3.9%;
     --radius: 1rem;
 
-    /* Glassmorphism Variables */
+    /* 🍎 Video Studio - NEW Apple Light/Gray Aesthetic */
+    --studio-bg: 240 15% 96%;        /* #F5F5F7 (Apple Gray) */
+    --studio-surface: 0 0% 100%;       /* #FFFFFF */
+    --studio-border: 240 5.9% 90%;     /* Subtle gray border */
+    --studio-accent: 211 100% 50%;     /* System Blue */
+
+    /* Glassmorphism Variables - Light Mode */
     --glass-border: rgba(0, 0, 0, 0.08);
-    /* Darker border for light mode visibility */
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    /* More opaque white */
-    --glass-blur: 12px;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-blur: 24px;
   }
 
   .dark {
@@ -67,8 +71,14 @@
     --ring: 240 4.9% 83.9%;
 
     /* Dark Mode Glass */
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-bg: rgba(0, 0, 0, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(10, 10, 18, 0.6);
+
+    /* Apple Midnight Theme (Legacy Dark Mode) */
+    --studio-bg: 240 15% 3%;
+    --studio-surface: 240 15% 7%;
+    --studio-border: 240 10% 15%;
+    --studio-accent: 211 100% 50%;
   }
 }
 
@@ -108,16 +118,22 @@
 /* 🍎 Apple-style Utilities */
 
 .glass-panel {
-  @apply backdrop-blur-[var(--glass-blur)] bg-[length:200%_200%] border border-[color:var(--glass-border)];
+  @apply backdrop-blur-[var(--glass-blur)] bg-[length:200%_200%] border border-[color:var(--glass-border)] transition-all duration-500 rounded-2xl;
   background-color: var(--glass-bg);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
 }
 
 .glass-card {
-  /* Init glass panel styles directly */
-  @apply backdrop-blur-[var(--glass-blur)] bg-[length:200%_200%] border border-[color:var(--glass-border)] rounded-3xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl;
+  @apply backdrop-blur-[var(--glass-blur)] bg-[length:200%_200%] border border-[color:var(--glass-border)] rounded-2xl transition-all duration-300 hover:shadow-2xl;
   background-color: var(--glass-bg);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+
+.glass-vibrant {
+  @apply glass-card border-white/10;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
 .text-gradient {

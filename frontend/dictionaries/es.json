@@ -197,6 +197,11 @@
                 "title": "Hoja de Ruta de Innovación",
                 "category": "Estrategia",
                 "content": "Estas son las próximas funciones de alto impacto planificadas para aumentar la conversión y el tráfico:\n\n• **Cupones Exclusivos**: Negociación de descuentos directos con los mejores proveedores.\n• **Reseñas Verificadas**: Verificación impulsada por la comunidad de clientes reales.\n• **Alertas de Bajada de Precios**: Sistema de retargeting para notificar a los usuarios sobre ofertas."
+            },
+            "studio": {
+                "title": "Video Studio Pro",
+                "category": "Producción",
+                "content": "Genera videos automatizados para redes sociales con voces neuronales y clips de stock.\n\n• **Script de IA**: Genera guiones optimizados para retención basados en los últimos posts.\n• **Voces Neurales**: Elige entre múltiples voces profesionales. El sistema sincroniza automáticamente las escenas con la duración del audio.\n• **Multi-Segmentos**: Selecciona múltiples clips por escena. Cada segmento se ajusta automáticamente para cubrir el tiempo de narración.\n• **Renderizado Frame-Perfect**: El motor de Remotion genera videos con efectos de Ken Burns y sincronización milimétrica."
             }
         }
     }

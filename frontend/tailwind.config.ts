@@ -50,6 +50,12 @@ const config: Config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                studio: {
+                    bg: "hsl(var(--studio-bg))",
+                    surface: "hsl(var(--studio-surface))",
+                    border: "hsl(var(--studio-border))",
+                    accent: "hsl(var(--studio-accent))",
+                }
             },
             borderRadius: {
                 lg: "var(--radius)",

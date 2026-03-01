@@ -197,6 +197,11 @@
                 "title": "Innovation Roadmap",
                 "category": "Strategy",
                 "content": "These are the next high-impact features planned to increase conversion and traffic:\n\n• **Exclusive Coupons**: Negotiating direct discounts with top providers.\n• **User Verified Reviews**: Community-driven verification from real customers.\n• **Price Drop Alerts**: Retargeting system to notify users of deals."
+            },
+            "studio": {
+                "title": "Video Studio Pro",
+                "category": "Production",
+                "content": "Generate automated videos for social media with neural voices and stock clips.\n\n• **AI Script**: Generates retention-optimized scripts based on the latest posts.\n• **Neural Voices**: Choose from multiple professional voices. The system automatically syncs scenes with the audio duration.\n• **Multi-Segments**: Select multiple stock clips per scene. Each segment automatically adjusts to cover the narration time.\n• **Frame-Perfect Rendering**: The Remotion engine generates videos with Ken Burns effects and millisecond-sync."
             }
         }
     }

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { CheckCircle, XCircle, Loader2, Globe, ExternalLink, Copy, Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";

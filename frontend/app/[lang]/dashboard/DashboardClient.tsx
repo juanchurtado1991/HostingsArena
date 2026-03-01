@@ -2,7 +2,7 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe, Bell, Database } from "lucide-react";
+import { Activity, Server, DollarSign, Users, AlertCircle, CheckCircle, Link as LinkIcon, Plus, Play, Clock, Github, AlertTriangle, Zap, RefreshCw, Newspaper, LayoutDashboard, Handshake, GitBranch, HelpCircle, ChevronRight, BookOpen, MousePointerClick, Sparkles, Globe, Bell, Database, Monitor } from "lucide-react";
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
@@ -114,6 +114,13 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                 \n• **Technical**: Edit Inodes, Web Servers, and VPN security audits directly.
                 \n• **Matching**: Changes sync automatically with comparison tables and detail pages.
             `
+        },
+        {
+            id: "studio",
+            title: dict.dashboard.tutorial.studio.title,
+            icon: Play,
+            category: dict.dashboard.tutorial.studio.category,
+            content: dict.dashboard.tutorial.studio.content
         },
         {
             id: "roadmap",
@@ -1019,7 +1026,20 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
                 )}
 
                 {activeTab === "studio" && (
-                    <VideoStudio dict={dict} lang={lang} />
+                    <div className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-6 animate-in zoom-in-95 duration-500">
+                        <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-xl shadow-primary/5">
+                            <Play className="w-10 h-10 ml-2" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-bold tracking-tight">Focus Mode Essential</h2>
+                            <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
+                                The Video Studio requires a dedicated fullscreen experience to run the precision timeline and high-performance React renderer.
+                            </p>
+                        </div>
+                        <a href={`/${lang}/studio`} className="bg-primary hover:bg-primary/90 text-white font-bold h-14 px-8 rounded-2xl gap-3 inline-flex items-center transition-all shadow-xl shadow-primary/20 mt-4 hover:scale-105">
+                            <Monitor className="w-5 h-5" /> Launch Video Studio
+                        </a>
+                    </div>
                 )}
 
                 {activeTab === "workflows" && (

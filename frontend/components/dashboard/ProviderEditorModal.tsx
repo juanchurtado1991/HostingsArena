@@ -19,7 +19,7 @@ const TABS = [
     { id: 'content', label: 'Content (Review)', icon: Languages },
     { id: 'pricing', label: 'Pricing', icon: DollarSign },
     { id: 'specs', label: 'Technical Specs', icon: HardDrive },
-    { id: 'features', label: 'Features', icon: CheckCircle2 },
+    { id: 'features', label: 'Features', icon: CheckCircle },
     { id: 'scores', label: 'Scores', icon: Zap },
 ];
 

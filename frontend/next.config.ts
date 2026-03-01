@@ -24,6 +24,15 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-icons'],
   },
+  serverExternalPackages: [
+    '@remotion/bundler', 
+    '@remotion/renderer', 
+    'remotion', 
+    'esbuild',
+    '@remotion/google-fonts',
+    '@remotion/lottie',
+    'music-metadata'
+  ],
   // Enable gzip compression for all responses
   compress: true,
 };

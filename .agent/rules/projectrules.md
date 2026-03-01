@@ -9,6 +9,7 @@ Este documento define la filosofía de desarrollo, reglas técnicas y enfoque de
 Misión: Construir el "GSMArena del Cloud Hosting" — la plataforma de comparación más automatizada, precisa y actualizada del mercado.
 
 🚀 1. Reglas de Oro (Prime Directives)
+La belleza de un UI esta en la simetria, ten esto en cuenta para cualquier disenio
 Automatización Primero: No construir features que requieran mantenimiento manual constante. Si se puede scrapear o generar con IA, hazlo.
 Regla: "Datos frescos diarios, cero intervención humana."
 Infraestructura $0: Mantener la arquitectura Serverless (Vercel, GitHub Actions, Supabase Free Tier). Evitar costos fijos de servidores.

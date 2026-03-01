@@ -104,7 +104,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Provider not found or no changes made" }, { status: 404 });
     }
     
-    return NextResponse.json(data[0]);
+    return NextResponse.json(JSON.parse(JSON.stringify(data[0])));
 }
 
 export async function POST(request: Request) {
@@ -181,5 +181,5 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
     
-    return NextResponse.json(data[0]);
+    return NextResponse.json(JSON.parse(JSON.stringify(data[0])));
 }
