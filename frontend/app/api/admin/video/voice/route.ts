@@ -192,34 +192,41 @@ export async function POST(request: Request) {
             console.warn(`[EdgeTTS] Metadata processing error:`, metaErr.message);
         }
 
-        // --- PHYSICAL DURATION AUTHORITY ---
-        // Instead of relying on metadata which might be inaccurate, we physically trim 
-        // the leading and trailing silence from the file and then measure its TRUE duration.
+        // --- PHYSICAL DURATION AUTHORITY & TRIMMING ---
+        // Try to use FFmpeg if available (local dev), otherwise fallback to raw file + metadata duration
         try {
             tempRemux = tempBase + "_remux.webm";
             
             // 1. Strip silence from start and end. 
-            // stop_periods=-1 means remove all silence until the end once speech has stopped.
-            // window=0.1 is a small enough window to be tight but not cut syllables.
-            // Volvemos a un recorte agresivo pero limpio para que la caja en el timeline 
-            // no sea más larga que lo que se escucha. -45dB es el punto dulce.
             execSync(`ffmpeg -y -i "${rawWebmPath}" -af "silenceremove=start_periods=1:start_silence=0:start_threshold=-45dB:stop_periods=-1:stop_duration=0:stop_threshold=-45dB" -c:a libopus -b:a 48k "${tempRemux}"`, { stdio: 'ignore' });
             
             // 2. Measure the exact physical length of the trimmed file
             const physicalDurStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${tempRemux}"`).toString().trim();
-            const physicalDuration = parseFloat(physicalDurStr);
+            finalDuration = parseFloat(physicalDurStr);
             
-            console.log(`[EdgeTTS] Physical spoken duration detected: ${physicalDuration.toFixed(3)}s`);
+            console.log(`[EdgeTTS] Physical spoken duration detected (FFmpeg): ${finalDuration.toFixed(3)}s`);
             
             // 3. Move to final destination
             fs.copyFileSync(tempRemux, finalFilePath);
-            finalDuration = physicalDuration;
 
         } catch (err: any) {
-            console.error(`[EdgeTTS] Audio trimming failed, using raw output:`, err.message);
-            execSync(`ffmpeg -y -i "${rawWebmPath}" -c:a libopus -b:a 48k "${finalFilePath}"`, { stdio: 'ignore' });
-            const fallbackDurStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${finalFilePath}"`).toString().trim();
-            finalDuration = parseFloat(fallbackDurStr);
+            console.log(`[EdgeTTS] FFmpeg not available or failed (expected in Vercel). Falling back to raw file.`);
+            // Fallback: Just copy the raw file over directly
+            fs.copyFileSync(rawWebmPath, finalFilePath);
+            
+            // Fallback: Use logical duration parsed from word boundaries metadata, 
+            // plus a tiny buffer (0.1s) to account for natural trailing sound
+            finalDuration = logicalDuration > 0 ? logicalDuration + 0.1 : 0;
+            
+            if (finalDuration === 0) {
+               console.warn("[EdgeTTS] Metadata duration failed too. Using a rough estimate based on file size.");
+               const fallbackStats = fs.statSync(finalFilePath);
+               // Very rough estimate for 24kHz Mono Opus WebM (approx 32kbps)
+               // ~4KB per second. So bytes / 4000 = seconds roughly
+               finalDuration = Math.max((fallbackStats.size / 4000), 1.0);
+            }
+            
+            console.log(`[EdgeTTS] Fallback duration calculated: ${finalDuration.toFixed(3)}s`);
         }
 
         // Cleanup temp files
