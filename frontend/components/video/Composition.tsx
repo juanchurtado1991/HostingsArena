@@ -1,11 +1,14 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { AbsoluteFill, useVideoConfig, useCurrentFrame, interpolate, spring, Audio, Img, OffthreadVideo, Sequence, staticFile, prefetch } from 'remotion';
 import { ShieldCheck, Zap, Globe, Star, Server, Shield, Cpu } from 'lucide-react';
-import { findBestMedia, getImageUrl, getFallbackUrl } from './mediaLibrary';
+import { findBestMedia, getImageUrl, getFallbackUrl, getRandomMedia } from './mediaLibrary';
 
 import { Scene, Layer, Clip, MediaSegment as MediaSegmentDef } from '../../types/studio';
 import { SyncEngine } from '../../lib/video-sync/SyncEngine';
 import { resolveAsset } from '../../lib/video/asset-utils';
+import { loadFont as loadOrbitron } from '@remotion/google-fonts/Orbitron';
+
+const { fontFamily: orbitronFamily } = loadOrbitron();
 
 export interface CompositionProps {
     title: string;
@@ -15,7 +18,7 @@ export interface CompositionProps {
     bgMusicUrl?: string;
     bgMusicVolume?: number;
     transitionSfxUrl?: string;
-    subtitlesEnabled?: boolean;
+    outroSfxUrl?: string;
     voiceSpeed?: number;
     baseUrl?: string;
 }
@@ -27,8 +30,18 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     const { fps, durationInFrames } = useVideoConfig(); // Use actual clip duration
     const isPreview = !baseUrl;
     const [hasError, setHasError] = useState(false);
+    const [fallbackSrc, setFallbackSrc] = useState<string | null>(null);
 
     const resolvedSrc = useMemo(() => resolveAsset(clip.src, baseUrl), [clip.src, baseUrl]);
+
+    // If the asset fails to load, replace it with a random media item
+    const handleAssetError = useCallback(() => {
+        if (fallbackSrc) return; // avoid infinite retry loop
+        const fallback = getRandomMedia(false); // always fallback to image (more reliable)
+        const fbUrl = getImageUrl(fallback, 1920, 1080);
+        const resolvedFb = resolveAsset(fbUrl, baseUrl);
+        if (resolvedFb) setFallbackSrc(resolvedFb);
+    }, [fallbackSrc, baseUrl]);
     
     // v6 Whip Transition Logic (v6 Port)
     const transFrames = 12; 
@@ -108,14 +121,22 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
         opacity: vOpacity,
     };
 
-    // Linked SFX — plays at the START of the clip with customizable duration
+    // Linked SFX — plays at the START of the clip with customizable duration and fade
     const resolvedSfxSrc = clip.sfxUrl ? (resolveAsset(clip.sfxUrl, baseUrl) || clip.sfxUrl) : null;
+    const sfxDur = clip.sfxDurationFrames || 30;
+    const sfxBaseVol = clip.sfxVolume ?? 0.8;
+    const sfxFadeIn = clip.sfxFadeInFrames ?? 0;
+    const sfxFadeOut = clip.sfxFadeOutFrames ?? 8;
     
     const sfxElement = resolvedSfxSrc ? (
-        <Sequence from={0} durationInFrames={clip.sfxDurationFrames || 30}>
+        <Sequence from={0} durationInFrames={sfxDur}>
             <Audio 
                 src={resolvedSfxSrc} 
-                volume={clip.sfxVolume ?? 0.8}
+                volume={(f: number) => {
+                    const fadeInVol = sfxFadeIn > 0 ? interpolate(f, [0, sfxFadeIn], [0, sfxBaseVol], { extrapolateRight: 'clamp' }) : sfxBaseVol;
+                    const fadeOutVol = sfxFadeOut > 0 ? interpolate(f, [sfxDur - sfxFadeOut, sfxDur], [sfxBaseVol, 0], { extrapolateLeft: 'clamp' }) : sfxBaseVol;
+                    return Math.min(fadeInVol, fadeOutVol);
+                }}
                 pauseWhenBuffering={true}
                 acceptableTimeShiftInSeconds={0.5}
                 useWebAudioApi={true}
@@ -132,12 +153,17 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     if (clip.type === 'video') {
         return (
             <AbsoluteFill>
-                <OffthreadVideo 
-                    src={resolveAsset(clip.src, baseUrl) || ""} 
-                    style={styles}
-                    muted={true}
-                    volume={0}
-                />
+                {fallbackSrc ? (
+                    <Img src={fallbackSrc} style={styles} />
+                ) : (
+                    <OffthreadVideo 
+                        src={resolvedSrc || ""} 
+                        style={styles}
+                        muted={true}
+                        volume={0}
+                        onError={handleAssetError}
+                    />
+                )}
                 {sfxElement}
                 {transitionSfxElement}
             </AbsoluteFill>
@@ -146,9 +172,9 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     return (
         <AbsoluteFill>
             <Img 
-                src={resolveAsset(clip.src, baseUrl) || ""} 
+                src={fallbackSrc || resolvedSrc || ""} 
                 style={styles}
-                onError={() => setHasError(true)}
+                onError={handleAssetError}
             />
             {sfxElement}
             {transitionSfxElement}
@@ -211,14 +237,22 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
     const sfxOffset = durationInFrames - Math.floor(transFrames / 2);
     const showTransitionSfx = frame >= sfxOffset && frame < sfxOffset + 5 && transitionSfxUrl;
 
-    // Linked SFX — plays at the START of the clip
+    // Linked SFX — plays at the START of the clip with fade
     const resolvedSfxSrc = clip.sfxUrl ? (resolveAsset(clip.sfxUrl, baseUrl) || clip.sfxUrl) : null;
+    const sfxDur = clip.sfxDurationFrames || 30;
+    const sfxBaseVol = clip.sfxVolume ?? 0.8;
+    const sfxFadeIn = clip.sfxFadeInFrames ?? 0;
+    const sfxFadeOut = clip.sfxFadeOutFrames ?? 8;
     
     const sfxElement = resolvedSfxSrc ? (
-        <Sequence from={0} durationInFrames={clip.sfxDurationFrames || 30}>
+        <Sequence from={0} durationInFrames={sfxDur}>
             <Audio 
                 src={resolvedSfxSrc} 
-                volume={clip.sfxVolume ?? 0.8}
+                volume={(f: number) => {
+                    const fadeInVol = sfxFadeIn > 0 ? interpolate(f, [0, sfxFadeIn], [0, sfxBaseVol], { extrapolateRight: 'clamp' }) : sfxBaseVol;
+                    const fadeOutVol = sfxFadeOut > 0 ? interpolate(f, [sfxDur - sfxFadeOut, sfxDur], [sfxBaseVol, 0], { extrapolateLeft: 'clamp' }) : sfxBaseVol;
+                    return Math.min(fadeInVol, fadeOutVol);
+                }}
                 pauseWhenBuffering={true}
                 acceptableTimeShiftInSeconds={0.5}
             />
@@ -260,6 +294,23 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
             </AbsoluteFill>
         );
     }
+    if (clip.src === 'news-anchor') {
+        return null; // Removed — news anchor overlay disabled
+    }
+    if (clip.src === 'news-lower-third') {
+        return (
+            <AbsoluteFill>
+                <NewsLowerThirdOverlay 
+                    headline={clip.title || "LATEST UPDATE"}
+                    speech={clip.subtitle || ""}
+                    format={format}
+                    frame={frame}
+                    fps={fps}
+                    duration={clip.durationInFrames}
+                />
+            </AbsoluteFill>
+        );
+    }
 
     const opacity = spring({ frame, fps, config: { damping: 12, stiffness: 100 }, durationInFrames: 20 }); 
     const translateY = interpolate(opacity, [0, 1], [30, 0]); 
@@ -291,24 +342,23 @@ const NewsTitleCard: React.FC<{
     fps: number,
     duration?: number 
 }> = ({ headline, subHeadline, format, frame, fps, duration = 90 }) => {
-    // Entrance Animation (0-30 frames)
+    // Entrance Animation
     const entrance = spring({
         frame,
         fps,
-        config: { damping: 15, stiffness: 80, mass: 1 },
+        config: { damping: 14, stiffness: 80, mass: 0.9 },
         durationInFrames: 35
     });
 
-    // Content Staggering
     const stagger1 = spring({
-        frame: frame - 5,
+        frame: frame - 8,
         fps,
-        config: { damping: 12, stiffness: 100 },
+        config: { damping: 12, stiffness: 90 },
     });
     const stagger2 = spring({
-        frame: frame - 12,
+        frame: frame - 18,
         fps,
-        config: { damping: 12, stiffness: 100 },
+        config: { damping: 12, stiffness: 90 },
     });
 
     // Exit Animation (last 15 frames)
@@ -316,135 +366,364 @@ const NewsTitleCard: React.FC<{
     const exit = spring({
         frame: frame - exitStart,
         fps,
-        config: { damping: 20, stiffness: 120 },
+        config: { damping: 18, stiffness: 100 },
     });
 
     const isVertical = format === '9:16';
 
-    const translateY = interpolate(entrance, [0, 1], [isVertical ? -150 : -100, 0]) + interpolate(exit, [0, 1], [0, 100]);
+    // Scale up from center
     const opacity = entrance * (1 - exit);
-    const scale = interpolate(entrance, [0, 1], [0.85, 1]) * interpolate(exit, [0, 1], [1, 1.2]);
-    const blur = interpolate(exit, [0, 1], [0, 15]);
+    const scale = interpolate(entrance, [0, 1], [0.85, 1]) * interpolate(exit, [0, 1], [1, 1.15]);
+
+    // Neon accent pulse
+    const accentGlow = interpolate(frame % 40, [0, 20, 40], [0.5, 1, 0.5]);
+
+    // Scan line
+    const scanY = interpolate(frame % 80, [0, 80], [0, 100]);
 
     return (
         <AbsoluteFill style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             zIndex: 100,
             opacity,
-            transform: `translateY(${translateY}px) scale(${scale})`,
-            filter: blur > 0 ? `blur(${blur}px)` : 'none',
+            transform: `scale(${scale})`,
         }}>
-            {/* Unified Particle Background - Intense Apple Blue */}
-            <BackgroundParticles frame={frame} count={35} color="#007aff" />
-            
+            {/* Full-screen dark overlay */}
+            <AbsoluteFill style={{
+                background: 'radial-gradient(ellipse at 50% 40%, rgba(10, 22, 40, 0.92) 0%, rgba(3, 5, 8, 0.96) 100%)',
+                backdropFilter: 'blur(8px)',
+            }} />
+
+            {/* Grid Pattern */}
             <div style={{
-                background: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(60px) saturate(200%)',
-                border: '1px solid rgba(255, 255, 255, 0.6)',
-                padding: isVertical ? '3.5rem 2.8rem' : '4.5rem 7rem',
-                borderRadius: '2rem',
-                boxShadow: `
-                    0 50px 120px -30px rgba(0, 0, 0, 0.15),
-                    inset 0 0 30px rgba(255, 255, 255, 0.9),
-                    0 0 40px rgba(0, 122, 255, ${interpolate(entrance, [0.8, 1], [0, 0.3])}),
-                    0 0 ${interpolate(frame % 30, [0, 15, 30], [20, 45, 20])}px rgba(255, 255, 255, 0.4)
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `
+                    linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px)
                 `,
-                maxWidth: isVertical ? '88%' : '82%',
-                width: 'max-content',
-                position: 'relative',
-                overflow: 'hidden',
-                textAlign: 'center'
+                backgroundSize: '80px 80px',
+                pointerEvents: 'none',
+            }} />
+
+            {/* Horizontal Scan Line */}
+            <div style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: `${scanY}%`,
+                height: 2,
+                background: `linear-gradient(90deg, transparent, rgba(0, 212, 255, ${0.2 * accentGlow}), transparent)`,
+                boxShadow: `0 0 40px rgba(0, 212, 255, ${0.12 * accentGlow})`,
+                pointerEvents: 'none',
+                zIndex: 5,
+            }} />
+
+            {/* Centered Content */}
+            <AbsoluteFill style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: isVertical ? '3rem 2rem' : '4rem',
             }}>
-                {/* Metallic Glass Scanner Sweep */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: '-150%',
-                    width: '300%',
-                    height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                    transform: `translateX(${interpolate(frame % 45, [0, 45], [0, 100])}%) skewX(-30deg)`,
-                    pointerEvents: 'none',
-                    zIndex: 2
-                }} />
-
-                {/* Left Accent Neon Line */}
-                <div style={{
-                    position: 'absolute',
-                    top: '20%',
-                    left: 0,
-                    width: '4px',
-                    height: '60%',
-                    background: 'linear-gradient(to bottom, transparent, #007aff, transparent)',
-                    boxShadow: '0 0 20px rgba(0, 122, 255, 0.8)',
-                    borderRadius: '0 4px 4px 0'
-                }} />
-
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: isVertical ? '1.5rem' : '1.8rem'
+                {/* BREAKING Label */}
+                <div style={{ 
+                    opacity: stagger1, 
+                    transform: `translateY(${interpolate(stagger1, [0, 1], [20, 0])}px)`,
+                    marginBottom: isVertical ? '1.5rem' : '2rem',
                 }}>
-                    <div style={{ 
-                        opacity: stagger1, 
-                        transform: `translateY(${interpolate(stagger1, [0, 1], [25, 0])}px) scale(${interpolate(stagger1, [0, 1], [0.9, 1])})` 
+                    <div style={{
+                        background: 'rgba(0, 212, 255, 0.1)',
+                        border: `1px solid rgba(0, 212, 255, ${0.3 * accentGlow})`,
+                        borderRadius: '0.5rem',
+                        padding: isVertical ? '0.5rem 1.5rem' : '0.6rem 2rem',
+                        boxShadow: `0 0 ${20 * accentGlow}px rgba(0, 212, 255, ${0.1 * accentGlow})`,
                     }}>
                         <span style={{
-                            fontSize: isVertical ? '1.1rem' : '1.3rem',
+                            fontSize: isVertical ? '1rem' : '1.3rem',
                             fontWeight: 900,
-                            color: '#007aff',
+                            color: '#00d4ff',
                             textTransform: 'uppercase',
-                            letterSpacing: '0.45em',
-                            display: 'block',
-                            marginBottom: '0.4rem',
-                            filter: 'drop-shadow(0 0 10px rgba(0,122,255,0.3))'
+                            letterSpacing: '0.5em',
+                            textShadow: `0 0 20px rgba(0, 212, 255, ${0.5 * accentGlow})`,
                         }}>
-                            REAL TIME UPDATE
+                            ● BREAKING
                         </span>
                     </div>
+                </div>
 
-                    <div style={{ opacity: entrance, transform: `scale(${interpolate(entrance, [0, 1], [0.97, 1])})` }}>
-                        <h1 style={{
-                            fontSize: isVertical ? '3.5rem' : '5.5rem',
-                            fontWeight: 950,
+                {/* Headline — Large and centered */}
+                <div style={{ 
+                    opacity: entrance, 
+                    transform: `scale(${interpolate(entrance, [0, 1], [0.9, 1])})`,
+                    textAlign: 'center',
+                    maxWidth: isVertical ? '95%' : '85%',
+                }}>
+                    <h1 style={{
+                        fontSize: isVertical ? '3.5rem' : '5.5rem',
+                        fontWeight: 950,
+                        margin: 0,
+                        color: '#ffffff',
+                        lineHeight: 1.05,
+                        letterSpacing: '-0.03em',
+                        textShadow: '0 6px 30px rgba(0, 0, 0, 0.5)',
+                    }}>
+                        {headline.toUpperCase()}
+                    </h1>
+                </div>
+
+                {/* Neon Divider */}
+                <div style={{
+                    marginTop: isVertical ? '1.5rem' : '2rem',
+                    width: interpolate(stagger2, [0, 1], [0, isVertical ? 200 : 400]),
+                    height: 3,
+                    background: 'linear-gradient(90deg, transparent, #00d4ff, transparent)',
+                    boxShadow: `0 0 20px rgba(0, 212, 255, ${0.5 * accentGlow})`,
+                    borderRadius: 4,
+                }} />
+
+                {/* Sub-headline */}
+                {subHeadline && (
+                    <div style={{ 
+                        opacity: stagger2, 
+                        transform: `translateY(${interpolate(stagger2, [0, 1], [15, 0])}px)`,
+                        marginTop: isVertical ? '1.2rem' : '1.5rem',
+                        textAlign: 'center',
+                        maxWidth: isVertical ? '90%' : '75%',
+                    }}>
+                        <p style={{
+                            fontSize: isVertical ? '1.6rem' : '2rem',
+                            fontWeight: 500,
                             margin: 0,
-                            color: '#1d1d1f',
-                            lineHeight: 1.05,
-                            letterSpacing: '-0.04em',
-                            background: 'linear-gradient(to bottom, #1d1d1f 60%, #434345 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
+                            color: 'rgba(255, 255, 255, 0.5)',
+                            lineHeight: 1.3,
+                            letterSpacing: '0.01em',
                         }}>
-                            {headline.toUpperCase()}
-                        </h1>
+                            {subHeadline}
+                        </p>
                     </div>
+                )}
+            </AbsoluteFill>
 
-                    {subHeadline && (
-                        <div style={{ opacity: stagger2, transform: `translateY(${interpolate(stagger2, [0, 1], [20, 0])}px)` }}>
-                            <p style={{
-                                fontSize: isVertical ? '1.6rem' : '2rem',
+            {/* Bottom Accent Bar */}
+            <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '5px',
+                background: 'linear-gradient(90deg, transparent 5%, #00d4ff 30%, #007aff 50%, #00d4ff 70%, transparent 95%)',
+                boxShadow: `0 0 ${25 * accentGlow}px rgba(0, 212, 255, ${0.6 * accentGlow}), 0 -${15 * accentGlow}px ${40 * accentGlow}px rgba(0, 212, 255, ${0.15 * accentGlow})`,
+            }} />
+        </AbsoluteFill>
+    );
+};
+
+// NewsAnchorOverlay removed — no longer used.
+
+// ====== NEWS LOWER THIRD OVERLAY (v4 — Broadcast Ticker Style) ======
+const NewsLowerThirdOverlay: React.FC<{ 
+    headline: string, 
+    speech: string, 
+    format: '9:16' | '16:9', 
+    frame: number, 
+    fps: number,
+    duration: number
+}> = ({ headline, speech, format, frame, fps, duration }) => {
+    const isVertical = format === '9:16';
+    
+    // Entrance Animation (Slide up from bottom)
+    const entrance = spring({
+        frame,
+        fps,
+        config: { damping: 14, stiffness: 80, mass: 0.9 },
+        durationInFrames: 35
+    });
+
+    // Exit Animation (last 15 frames)
+    const exitStart = Math.max(0, duration - 15);
+    const exit = spring({
+        frame: frame - exitStart,
+        fps,
+        config: { damping: 18, stiffness: 100 },
+    });
+
+    const translateY = interpolate(entrance, [0, 1], [150, 0]) + interpolate(exit, [0, 1], [0, 150]);
+    const opacity = entrance * (1 - exit);
+    
+    // Extract first sentence for subtitle
+    const firstSentence = speech
+        ? (speech.match(/^[^.!?]+[.!?]?/)?.[0] || speech.substring(0, 120)).trim()
+        : "";
+
+    // Base dimensions optimized for the layout
+    const circleSize = isVertical ? 110 : 150; // VERY large for the logo
+    const barHeight = isVertical ? 75 : 95;
+    
+    // Logo entrance animation (slight rotation and pop)
+    const logoPop = spring({
+        frame: frame - 10,
+        fps,
+        config: { damping: 12, stiffness: 100 },
+    });
+    
+    // Continuous animations
+    const continuousRotation = (frame * 2) % 360; // Arc spins 2 degrees per frame
+    
+    // Logo heartbeat pulse (shrinks and returns every 90 frames)
+    const pulseCycle = frame % 90;
+    const continuousPulse = interpolate(pulseCycle, [0, 10, 20, 90], [1, 0.85, 1, 1], { extrapolateRight: 'clamp' });
+    
+    return (
+        <AbsoluteFill style={{
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            paddingBottom: isVertical ? '4.125%' : '2.2%', // Increased margin bottom by 10% from 3.75%/2%
+            zIndex: 100,
+            pointerEvents: 'none'
+        }}>
+            {/* Main Wrapper Box */}
+            <div style={{
+                position: 'relative',
+                width: isVertical ? '92%' : '84%',
+                height: circleSize,
+                opacity,
+                transform: `translateY(${translateY}px)`,
+                display: 'flex',
+                alignItems: 'center',
+                filter: `drop-shadow(0px 15px 30px rgba(0,0,0,0.4))`
+            }}>
+                
+                {/* ─── RIGHT SLANTED ACCENT LINES ─── */}
+                <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: (circleSize - barHeight) / 2,
+                    height: barHeight,
+                    width: 35,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 5,
+                    zIndex: 1,
+                }}>
+                    <div style={{ width: 6, height: '100%', backgroundColor: '#007aff', transform: 'skewX(-20deg)' }} />
+                    <div style={{ width: 4, height: '100%', backgroundColor: '#00d4ff', transform: 'skewX(-20deg)' }} />
+                    <div style={{ width: 3, height: '100%', backgroundColor: '#00bfff', transform: 'skewX(-20deg)' }} />
+                </div>
+
+                {/* ─── MAIN DARK TEXT BAR ─── */}
+                <div style={{
+                    position: 'absolute',
+                    left: isVertical ? 85 : 140, // Positioned specifically to hide slanted edge just barely under the opaque rim of the circle
+                    right: 30, // Stop before the accent lines
+                    top: (circleSize - barHeight) / 2,
+                    height: barHeight,
+                    background: 'linear-gradient(90deg, rgba(16, 24, 40, 0.95) 0%, rgba(20, 30, 50, 0.85) 100%)',
+                    backdropFilter: 'blur(16px)',
+                    transform: 'skewX(-20deg)', // Slanted edge
+                    zIndex: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    paddingLeft: isVertical ? 45 : 55, // Adjusted to bring text closer to the circle edge
+                    paddingRight: 40,
+                    border: '1px solid rgba(0, 212, 255, 0.2)', // Subtle blue glow
+                    borderLeft: 'none', // Remove left border so it blends smoothly from the circle
+                }}>
+                    {/* Top Blue Decorative Line */}
+                    <div style={{ position: 'absolute', top: Math.floor(barHeight * 0.08), left: 10, right: 0, height: 2, background: 'linear-gradient(90deg, #00d4ff, transparent)' }} />
+                    {/* Bottom Blue Decorative Line */}
+                    <div style={{ position: 'absolute', bottom: Math.floor(barHeight * 0.08), left: -10, right: 40, height: 2, background: 'linear-gradient(90deg, #007aff, transparent)' }} />
+                    
+                    {/* Text Content (un-skewed) */}
+                    <div style={{ 
+                        transform: 'skewX(20deg)', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        zIndex: 3
+                    }}>
+                        <span style={{
+                            fontSize: isVertical ? 24 : 34,
+                            fontWeight: 900,
+                            color: '#ffffff',
+                            lineHeight: 1.1,
+                            textTransform: 'uppercase',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            letterSpacing: '-0.02em',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                        }}>
+                            {headline}
+                        </span>
+                        {firstSentence && (
+                            <span style={{
+                                fontSize: isVertical ? 16 : 22,
                                 fontWeight: 500,
-                                margin: 0,
-                                color: 'rgba(0, 0, 0, 0.5)',
+                                color: '#00d4ff', 
                                 lineHeight: 1.2,
-                                letterSpacing: '0.01em',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                marginTop: 2,
+                                textShadow: '0 1px 3px rgba(0,0,0,0.8)'
                             }}>
-                                {subHeadline}
-                            </p>
-                        </div>
-                    )}
+                                {firstSentence}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* ─── LEFT CIRCULAR LOGO AREA ─── */}
+                <div style={{
+                    position: 'absolute',
+                    left: isVertical ? 5 : 20,
+                    width: circleSize,
+                    height: circleSize,
+                    zIndex: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}>
+                    {/* Outer Detached Blue Arc - Animates continuously */}
+                    <div style={{
+                        position: 'absolute',
+                        left: -12, top: -12, 
+                        width: circleSize + 24, height: circleSize + 24,
+                        borderRadius: '50%',
+                        border: '4px solid transparent',
+                        borderLeftColor: '#007aff',
+                        borderBottomColor: '#00d4ff',
+                        transform: `rotate(${interpolate(entrance, [0, 1], [-90, 15]) + continuousRotation}deg)`, // Spins continuously
+                    }} />
+
+                    {/* Main Inner Circle matching HA colors */}
+                    <div style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle at center, rgba(0, 122, 255, 0.4) 0%, rgba(16, 24, 40, 0.95) 100%)',
+                        border: '3px solid #000',
+                        boxShadow: 'inset 0 0 0 3px rgba(0,212,255,0.5), inset 0 0 0 5px #000, 0 5px 15px rgba(0,0,0,0.5)', 
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        transform: `scale(${logoPop * continuousPulse})` // Incorporates periodic shrinking
+                    }}>
+                        <Img 
+                            src={staticFile("/ha-logo.png")} 
+                            style={{
+                                width: '85%', // Increased significantly from 65% to fill space
+                                height: '85%',
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))'
+                            }}
+                        />
+                    </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes pulse-bg {
-                    0% { background-position: 0% 0%; }
-                    50% { background-position: 0% 100%; }
-                    100% { background-position: 0% 0%; }
-                }
-            `}</style>
         </AbsoluteFill>
     );
 };
@@ -460,7 +739,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
     bgMusicUrl = "/assets/bg-music.mp3",
     bgMusicVolume = 0.4,
     transitionSfxUrl = "/assets/click.mp3",
-    subtitlesEnabled = true,
+    outroSfxUrl,
     voiceSpeed = 1,
     baseUrl = '',
 }) => {
@@ -576,93 +855,6 @@ export const HostingComposition: React.FC<CompositionProps> = ({
         );
     };
 
-    const isNLEMode = layers.length > 0;
-
-    // Unify Engine: If not in NLE Mode, create a synthetic layer from scenes
-    const unifiedLayers = useMemo(() => {
-        if (isNLEMode) return layers;
-
-        // Legacy Phase 2 Conversion: Create a single synthetic layer
-        const syntheticClips: Clip[] = [];
-        
-        // Add Intro
-        if (introFrames > 0) {
-            syntheticClips.push({
-                id: 'legacy-intro',
-                type: 'overlay',
-                src: 'intro',
-                startFrame: 0,
-                durationInFrames: introFrames,
-                title: title,
-                opacity: 1, scale: 1, x: 50, y: 50
-            });
-        }
-
-        // Add Scenes
-        scenes.forEach((scene, i) => {
-            const start = introFrames + sceneTimings[i].startFrame;
-            const duration = sceneTimings[i].durationFrames;
-            
-            // Add News Title Card if enabled
-            const tcFrames = SyncEngine.secondsToFrames(SyncEngine.TITLE_CARD_SECONDS);
-            if (scene.titleCardEnabled) {
-                syntheticClips.push({
-                    id: `tc-${i}`,
-                    type: 'overlay',
-                    src: 'news-card',
-                    startFrame: start - tcFrames,
-                    durationInFrames: tcFrames,
-                    title: scene.headline || "Breaking News",
-                    subtitle: scene.subHeadline || "",
-                    opacity: 1, scale: 1, x: 50, y: 50
-                });
-            }
-
-            // Port scene to a clip
-            syntheticClips.push({
-                id: `scene-${i}`,
-                type: scene.assetType === 'video' ? 'video' : 'image',
-                src: scene.assetUrl || getFallbackUrl(i, format === '9:16' ? 1080 : 1920, format === '9:16' ? 1920 : 1080),
-                startFrame: start,
-                durationInFrames: duration,
-                motionEffect: scene.visualEffect || 'ken-burns',
-                opacity: 1, scale: 1, x: 50, y: 50
-            });
-
-            // Add Voiceover if exists
-            if (scene.voiceUrl) {
-                syntheticClips.push({
-                    id: `voice-${i}`,
-                    type: 'audio',
-                    src: scene.voiceUrl,
-                    startFrame: start,
-                    durationInFrames: duration,
-                    volume: 1,
-                });
-            }
-        });
-
-        // Add Outro
-        if (outroFrames > 0) {
-            syntheticClips.push({
-                id: 'legacy-outro',
-                type: 'overlay',
-                src: 'outro',
-                startFrame: introFrames + totalScriptFrames,
-                durationInFrames: outroFrames,
-                opacity: 1, scale: 1, x: 50, y: 50
-            });
-        }
-
-        return [{
-            id: 'unified-legacy-layer',
-            name: 'Main Content',
-            clips: syntheticClips,
-            isVisible: true
-        }];
-    }, [isNLEMode, layers, scenes, sceneTimings, title, introFrames, outroFrames, totalScriptFrames, format]);
-
-
     return (
         <AbsoluteFill style={{
             color: textColor,
@@ -676,8 +868,8 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                 background: 'radial-gradient(circle at center, #1c2a4d 0%, #050810 100%)' 
             }} />
 
-            {/* Render Layers (Unified Engine) */}
-            {renderLayers(unifiedLayers)}
+            {/* Render Layers (Strict NLE Engine - Single Source of Truth) */}
+            {renderLayers(layers)}
 
             {/* (Subtitles removed) */}
 
@@ -705,8 +897,21 @@ export const HostingComposition: React.FC<CompositionProps> = ({
 
             {/* === OUTRO SEQUENCE === */}
             {outroFrames > 0 && (
-                <Sequence from={introFrames + totalScriptFrames} durationInFrames={outroFrames} premountFor={30}>
-                    <OutroSequence format={format} fps={fps} />
+                <Sequence 
+                    from={durationInFrames - outroFrames} 
+                    durationInFrames={outroFrames} 
+                    premountFor={30} 
+                    style={{ zIndex: 9999 }} // Force top layer
+                >
+                    <AbsoluteFill>
+                        <OutroSequence format={format} fps={fps} />
+                        {outroSfxUrl && (
+                            <Audio 
+                                src={outroSfxUrl.startsWith('/') ? `${baseUrl}${outroSfxUrl}` : outroSfxUrl} 
+                                volume={0.8} 
+                            />
+                        )}
+                    </AbsoluteFill>
                 </Sequence>
             )}
         </AbsoluteFill>
@@ -716,32 +921,30 @@ export const HostingComposition: React.FC<CompositionProps> = ({
 // ====== INTRO SEQUENCE COMPONENT ======
 const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: number }> = ({ title, format, fps }) => {
     const frame = useCurrentFrame();
-    const { durationInFrames } = useVideoConfig();
 
-    const logoScale = spring({ frame, fps, config: { damping: 12, stiffness: 180, mass: 0.6 } });
-    const logoPulse = interpolate(frame % 30, [0, 15, 30], [1, 1.05, 1]);
-    const titleOpacity = interpolate(frame, [30, 50], [0, 1], { extrapolateRight: 'clamp' });
-    const titleY = interpolate(frame, [30, 50], [40, 0], { extrapolateRight: 'clamp' });
+    const logoScale = spring({ frame, fps, config: { damping: 14, stiffness: 150, mass: 0.7 } });
+    const logoPulse = interpolate(frame % 40, [0, 20, 40], [1, 1.03, 1]);
+    const titleOpacity = interpolate(frame, [25, 45], [0, 1], { extrapolateRight: 'clamp' });
+    const titleY = interpolate(frame, [25, 45], [30, 0], { extrapolateRight: 'clamp' });
     const fadeOut = interpolate(frame, [SyncEngine.getIntroFrames() - 10, SyncEngine.getIntroFrames()], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-    
-    // Shine / Glass Sweep Effect
-    const shineX = interpolate(frame, [15, 45], [-200, 600], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
-    // Extreme Chromatic Flare (v6)
-    const flareOpacity = interpolate(frame, [5, 15, 35], [0, 0.6, 0], { extrapolateRight: 'clamp' });
-    const flareScale = interpolate(frame, [5, 40], [0.7, 1.8]);
+    // Neon accent pulse
+    const neonGlow = interpolate(frame % 50, [0, 25, 50], [0.5, 1, 0.5]);
 
-    // Legacy Particle positions (Enhanced)
-    const particles = Array.from({ length: 16 }, (_, i) => ({
-        x: 10 + (i * 73) % 85,
-        y: 10 + (i * 51) % 80,
+    // Scan line position
+    const scanY = interpolate(frame % 90, [0, 90], [0, 100]);
+
+    // Particles
+    const particles = Array.from({ length: 20 }, (_, i) => ({
+        x: 5 + (i * 67) % 90,
+        y: 5 + (i * 43) % 90,
         delay: i * 2,
-        size: 4 + (i % 4) * 2,
+        size: 2 + (i % 3) * 2,
     }));
 
     return (
         <AbsoluteFill style={{
-            background: 'radial-gradient(ellipse at center, #1c2a4d 0%, #050810 100%)',
+            background: 'radial-gradient(ellipse at 30% 40%, #0a1628 0%, #030508 100%)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -749,14 +952,38 @@ const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: num
             opacity: fadeOut,
             zIndex: 50,
         }}>
-            {/* Glow particles (Faster/Bolder) */}
+            {/* Grid Overlay */}
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `
+                    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: '60px 60px',
+                pointerEvents: 'none',
+            }} />
+
+            {/* Horizontal Scan Line */}
+            <div style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: `${scanY}%`,
+                height: 2,
+                background: `linear-gradient(90deg, transparent, rgba(0, 212, 255, ${0.15 * neonGlow}), transparent)`,
+                boxShadow: `0 0 30px rgba(0, 212, 255, ${0.1 * neonGlow})`,
+                pointerEvents: 'none',
+                zIndex: 3,
+            }} />
+
+            {/* Particles */}
             {particles.map((p, idx) => {
                 const particleOpacity = interpolate(
-                    frame, [p.delay, p.delay + 10, p.delay + 30], [0, 1, 0],
+                    frame, [p.delay, p.delay + 12, p.delay + 35], [0, 0.8, 0],
                     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
                 );
-                const particleY = interpolate(frame, [p.delay, p.delay + 30], [p.y, p.y - 25], { extrapolateRight: 'clamp' });
-                const particleScale = interpolate(frame, [p.delay, p.delay + 30], [0.5, 1.5], { extrapolateRight: 'clamp' });
+                const particleY = interpolate(frame, [p.delay, p.delay + 35], [p.y, p.y - 20], { extrapolateRight: 'clamp' });
                 return (
                     <div key={idx} style={{
                         position: 'absolute',
@@ -765,55 +992,56 @@ const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: num
                         width: p.size,
                         height: p.size,
                         borderRadius: '50%',
-                        background: '#007aff',
-                        boxShadow: '0 0 20px 8px rgba(0, 122, 255, 0.5)',
+                        background: '#00d4ff',
+                        boxShadow: '0 0 12px 4px rgba(0, 212, 255, 0.4)',
                         opacity: particleOpacity,
-                        transform: `scale(${particleScale})`,
                         zIndex: 1,
                     }} />
                 );
             })}
 
-            {/* Logo Group (Horizontal Original with SHINE & HEARTBEAT) */}
+            {/* Logo Group */}
             <div style={{
                 transform: `scale(${logoScale * logoPulse})`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 25,
-                marginBottom: 30,
+                marginBottom: 35,
                 position: 'relative',
                 overflow: 'hidden',
-                padding: '24px 48px',
-                borderRadius: 24,
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                boxShadow: '0 30px 60px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02)'
+                padding: '28px 56px',
+                borderRadius: 16,
+                background: 'rgba(0, 212, 255, 0.04)',
+                backdropFilter: 'blur(12px)',
+                border: `1px solid rgba(0, 212, 255, ${0.15 * neonGlow})`,
+                boxShadow: `0 30px 80px rgba(0,0,0,0.6), 0 0 ${30 * neonGlow}px rgba(0, 212, 255, ${0.08 * neonGlow})`
             }}>
-                <Globe size={format === '9:16' ? 70 : 90} color="#007aff" style={{ filter: 'drop-shadow(0 0 30px rgba(0,122,255,0.7))' }} />
+                <Globe size={format === '9:16' ? 65 : 85} color="#00d4ff" style={{ 
+                    filter: `drop-shadow(0 0 ${20 * neonGlow}px rgba(0,212,255,0.6))` 
+                }} />
                 <span style={{
-                    fontSize: format === '9:16' ? 48 : 72,
+                    fontSize: format === '9:16' ? 46 : 68,
                     fontWeight: 950,
                     color: '#fff',
                     letterSpacing: -1.5,
-                    textShadow: '0 10px 40px rgba(0,0,0,0.6)'
+                    textShadow: '0 8px 30px rgba(0,0,0,0.5)'
                 }}>HostingArena</span>
                 
-                {/* Visual Shine Sweep (Glass Scanner) */}
+                {/* Sweep */}
                 <div style={{
                     position: 'absolute',
                     top: 0,
                     left: '-150%',
                     width: '300%',
                     height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                    transform: `translateX(${interpolate(frame % 60, [0, 60], [0, 100])}%) skewX(-30deg)`,
+                    background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.15), transparent)',
+                    transform: `translateX(${interpolate(frame % 70, [0, 70], [0, 100])}%) skewX(-25deg)`,
                     pointerEvents: 'none',
                     zIndex: 2
                 }} />
             </div>
 
-            {/* Animated title (Date) */}
+            {/* Title */}
             <div style={{
                 opacity: titleOpacity,
                 transform: `translateY(${titleY}px)`,
@@ -821,21 +1049,22 @@ const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: num
                 textAlign: 'center',
             }}>
                 <h1 style={{
-                    fontSize: format === '9:16' ? 32 : 44,
+                    fontSize: format === '9:16' ? 30 : 42,
                     fontWeight: 800,
-                    color: 'rgba(255,255,255,0.9)',
+                    color: 'rgba(255,255,255,0.85)',
                     lineHeight: 1.2,
                     margin: 0,
-                    textShadow: '0 5px 15px rgba(0,0,0,0.3)'
+                    textShadow: '0 4px 12px rgba(0,0,0,0.3)'
                 }}>{title}</h1>
             </div>
 
-            {/* Subtle line decoration */}
+            {/* Neon Divider */}
             <div style={{
-                marginTop: 30,
-                width: interpolate(frame, [30, 60], [0, format === '9:16' ? 240 : 400], { extrapolateRight: 'clamp' }),
-                height: 3,
-                background: 'linear-gradient(90deg, transparent, #3b82f6, transparent)',
+                marginTop: 28,
+                width: interpolate(frame, [30, 60], [0, format === '9:16' ? 200 : 350], { extrapolateRight: 'clamp' }),
+                height: 2,
+                background: `linear-gradient(90deg, transparent, #00d4ff, transparent)`,
+                boxShadow: `0 0 15px rgba(0, 212, 255, ${0.4 * neonGlow})`,
                 borderRadius: 4,
             }} />
         </AbsoluteFill>
@@ -851,9 +1080,13 @@ const OutroSequence: React.FC<{ format: '9:16' | '16:9'; fps: number }> = ({ for
     const ctaOpacity = interpolate(frame, [30, 50], [0, 1], { extrapolateRight: 'clamp' });
     const ctaY = interpolate(frame, [30, 50], [20, 0], { extrapolateRight: 'clamp' });
 
+    // Neon accent pulse
+    const neonGlow = interpolate(frame % 50, [0, 25, 50], [0.5, 1, 0.5]);
+    const scanY = interpolate(frame % 90, [0, 90], [0, 100]);
+
     return (
         <AbsoluteFill style={{
-            background: 'radial-gradient(ellipse at center, #1c2a4d 0%, #050810 100%)',
+            background: 'radial-gradient(ellipse at 70% 60%, #0a1628 0%, #030508 100%)',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -862,10 +1095,35 @@ const OutroSequence: React.FC<{ format: '9:16' | '16:9'; fps: number }> = ({ for
             opacity: fadeIn,
             zIndex: 50,
         }}>
-            {/* Glow particles (Consistent with Intro) */}
-            <BackgroundParticles frame={frame} count={16} color="#3b82f6" />
+            {/* Grid Overlay */}
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `
+                    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px)
+                `,
+                backgroundSize: '60px 60px',
+                pointerEvents: 'none',
+            }} />
 
-            {/* Final Logo Group */}
+            {/* Horizontal Scan Line */}
+            <div style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: `${scanY}%`,
+                height: 2,
+                background: `linear-gradient(90deg, transparent, rgba(0, 212, 255, ${0.12 * neonGlow}), transparent)`,
+                boxShadow: `0 0 25px rgba(0, 212, 255, ${0.08 * neonGlow})`,
+                pointerEvents: 'none',
+                zIndex: 3,
+            }} />
+
+            {/* Particles */}
+            <BackgroundParticles frame={frame} count={18} color="#00d4ff" />
+
+            {/* Logo Group */}
             <div style={{
                 transform: `scale(${scaleIn})`,
                 display: 'flex',
@@ -873,35 +1131,38 @@ const OutroSequence: React.FC<{ format: '9:16' | '16:9'; fps: number }> = ({ for
                 gap: 20,
             }}>
                 <div style={{
-                    width: format === '9:16' ? 100 : 120,
-                    height: format === '9:16' ? 100 : 120,
-                    borderRadius: '24%',
-                    background: 'linear-gradient(135deg, #007aff, #0051ff)',
+                    width: format === '9:16' ? 90 : 110,
+                    height: format === '9:16' ? 90 : 110,
+                    borderRadius: '20%',
+                    background: 'rgba(0, 212, 255, 0.08)',
+                    border: `1px solid rgba(0, 212, 255, ${0.2 * neonGlow})`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 25px 60px rgba(0, 122, 255, 0.6)',
+                    boxShadow: `0 20px 50px rgba(0, 0, 0, 0.5), 0 0 ${25 * neonGlow}px rgba(0, 212, 255, ${0.12 * neonGlow})`,
                     position: 'relative',
                     overflow: 'hidden'
                 }}>
-                    {/* Embedded Glass Sweep in Logo */}
+                    {/* Sweep in Logo */}
                     <div style={{
                         position: 'absolute',
                         top: 0,
                         left: '-100%',
                         width: '200%',
                         height: '100%',
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                        transform: `translateX(${interpolate(frame % 45, [0, 45], [0, 100])}%) skewX(-20deg)`,
+                        background: 'linear-gradient(90deg, transparent, rgba(0,212,255,0.2), transparent)',
+                        transform: `translateX(${interpolate(frame % 50, [0, 50], [0, 100])}%) skewX(-20deg)`,
                     }} />
-                    <Globe size={format === '9:16' ? 50 : 64} color="#fff" />
+                    <Globe size={format === '9:16' ? 45 : 58} color="#00d4ff" style={{
+                        filter: `drop-shadow(0 0 ${15 * neonGlow}px rgba(0,212,255,0.5))`
+                    }} />
                 </div>
                 <span style={{
-                    fontSize: format === '9:16' ? 48 : 64,
+                    fontSize: format === '9:16' ? 44 : 60,
                     fontWeight: 950,
                     color: '#fff',
                     letterSpacing: '-0.05em',
-                    textShadow: '0 15px 45px rgba(0,0,0,0.4)'
+                    textShadow: '0 10px 35px rgba(0,0,0,0.4)'
                 }}>HostingArena</span>
             </div>
 
@@ -915,47 +1176,49 @@ const OutroSequence: React.FC<{ format: '9:16' | '16:9'; fps: number }> = ({ for
                 gap: 24,
             }}>
                 <div style={{
-                    background: '#007aff',
-                    padding: format === '9:16' ? '24px 60px' : '20px 56px',
-                    borderRadius: '1.5rem',
-                    boxShadow: '0 20px 60px rgba(0, 122, 255, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    transform: `scale(${interpolate(frame % 30, [0, 15, 30], [1, 1.05, 1])})`,
+                    background: 'rgba(0, 212, 255, 0.1)',
+                    padding: format === '9:16' ? '22px 56px' : '18px 52px',
+                    borderRadius: '1rem',
+                    boxShadow: `0 15px 50px rgba(0, 0, 0, 0.4), 0 0 ${20 * neonGlow}px rgba(0, 212, 255, ${0.15 * neonGlow})`,
+                    border: `1px solid rgba(0, 212, 255, ${0.3 * neonGlow})`,
+                    transform: `scale(${interpolate(frame % 40, [0, 20, 40], [1, 1.04, 1])})`,
                 }}>
                     <span style={{
-                        fontSize: format === '9:16' ? 28 : 32,
+                        fontSize: format === '9:16' ? 26 : 30,
                         fontWeight: 950,
-                        color: '#fff',
+                        color: '#00d4ff',
                         textTransform: 'uppercase',
-                        letterSpacing: '0.15em',
+                        letterSpacing: '0.2em',
+                        textShadow: `0 0 15px rgba(0, 212, 255, ${0.4 * neonGlow})`,
                     }}>Visit Site</span>
                 </div>
 
                 <div style={{ textAlign: 'center' }}>
                     <span style={{
-                        fontSize: format === '9:16' ? 22 : 28,
-                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontSize: format === '9:16' ? 20 : 26,
+                        color: 'rgba(255, 255, 255, 0.8)',
                         fontWeight: 700,
                         display: 'block',
                         marginBottom: 6
                     }}>HostingArena.com</span>
                     <span style={{
-                        fontSize: format === '9:16' ? 16 : 18,
-                        color: 'rgba(255, 255, 255, 0.4)',
-                        letterSpacing: '0.1em',
+                        fontSize: format === '9:16' ? 14 : 16,
+                        color: 'rgba(0, 212, 255, 0.5)',
+                        letterSpacing: '0.15em',
                         fontWeight: 600,
                         textTransform: 'uppercase'
                     }}>PREMIUM CLOUD COMPARISONS</span>
                 </div>
             </div>
 
-            {/* Subtle Divider */}
+            {/* Neon Divider */}
             <div style={{
                 position: 'absolute',
                 bottom: format === '9:16' ? 120 : 80,
-                width: interpolate(frame, [25, 55], [0, 280], { extrapolateRight: 'clamp' }),
-                height: 3,
-                background: 'linear-gradient(90deg, transparent, #3b82f6, transparent)',
+                width: interpolate(frame, [25, 55], [0, 240], { extrapolateRight: 'clamp' }),
+                height: 2,
+                background: `linear-gradient(90deg, transparent, #00d4ff, transparent)`,
+                boxShadow: `0 0 15px rgba(0, 212, 255, ${0.3 * neonGlow})`,
                 borderRadius: 4,
             }} />
         </AbsoluteFill>

@@ -28,10 +28,8 @@ const EDGE_VOICES = [
     { id: "en-US-JennyNeural",        name: "Jenny",        lang: "en", gender: "female", accent: "US",         desc: "Assistant, Smooth" },
     { id: "en-US-AriaNeural",         name: "Aria",         lang: "en", gender: "female", accent: "US",         desc: "Confident, Clear" },
     { id: "en-US-GuyNeural",          name: "Guy",          lang: "en", gender: "male",   accent: "US",         desc: "Narrator, Calming" },
-    { id: "en-US-SaraNeural",         name: "Sara",         lang: "en", gender: "female", accent: "US",         desc: "Professional, Bright" },
     { id: "en-US-SteffanNeural",      name: "Steffan",      lang: "en", gender: "male",   accent: "US",         desc: "Dynamic, Young" },
     { id: "en-US-MichelleNeural",     name: "Michelle",     lang: "en", gender: "female", accent: "US",         desc: "Soft, Conversational" },
-    { id: "en-US-NathanNeural",       name: "Nathan",       lang: "en", gender: "male",   accent: "US",         desc: "Steady, Reliable" },
     { id: "en-GB-RyanNeural",         name: "Ryan",         lang: "en", gender: "male",   accent: "UK",         desc: "Standard British, News" },
     { id: "en-GB-SoniaNeural",        name: "Sonia",        lang: "en", gender: "female", accent: "UK",         desc: "Elegant, British" },
     { id: "en-GB-LibbyNeural",        name: "Libby",        lang: "en", gender: "female", accent: "UK",         desc: "Warm, UK Assistant" },
@@ -46,15 +44,8 @@ const EDGE_VOICES = [
     // Spanish (Popular & Professional - 20 Voices)
     { id: "es-MX-JorgeNeural",        name: "Jorge",        lang: "es", gender: "male",   accent: "Mexico",     desc: "Dynamic, News" },
     { id: "es-MX-DaliaNeural",        name: "Dalia",        lang: "es", gender: "female", accent: "Mexico",     desc: "Natural, Storytelling" },
-    { id: "es-MX-BeatrizNeural",      name: "Beatriz",      lang: "es", gender: "female", accent: "Mexico",     desc: "Professional, Clear" },
-    { id: "es-MX-CecilioNeural",      name: "Cecilio",      lang: "es", gender: "male",   accent: "Mexico",     desc: "Deep, Narrator" },
-    { id: "es-MX-LarissaNeural",      name: "Larissa",      lang: "es", gender: "female", accent: "Mexico",     desc: "Warm, Friendly" },
-    { id: "es-MX-PelayoNeural",       name: "Pelayo",       lang: "es", gender: "male",   accent: "Mexico",     desc: "Conversational" },
     { id: "es-ES-AlvaroNeural",       name: "Álvaro",       lang: "es", gender: "male",   accent: "Spain",      desc: "Castilian, Strong" },
     { id: "es-ES-ElviraNeural",       name: "Elvira",       lang: "es", gender: "female", accent: "Spain",      desc: "Calm, Professional" },
-    { id: "es-ES-AbrilNeural",        name: "Abril",        lang: "es", gender: "female", accent: "Spain",      desc: "Youthful, Spain" },
-    { id: "es-ES-ArnauNeural",        name: "Arnau",        lang: "es", gender: "male",   accent: "Spain",      desc: "Standard Peninsular" },
-    { id: "es-ES-EstrellaNeural",     name: "Estrella",     lang: "es", gender: "female", accent: "Spain",      desc: "Bright, Clear" },
     { id: "es-CO-GonzaloNeural",      name: "Gonzalo",      lang: "es", gender: "male",   accent: "Colombia",   desc: "Neutral Colombian" },
     { id: "es-CO-SalomeNeural",       name: "Salomé",       lang: "es", gender: "female", accent: "Colombia",   desc: "Soft, Warm" },
     { id: "es-AR-TomasNeural",        name: "Tomas",        lang: "es", gender: "male",   accent: "Argentina",  desc: "Friendly, Argentina" },
@@ -77,8 +68,6 @@ const EDGE_VOICES = [
     { id: "es-PY-MarioNeural",        name: "Mario",        lang: "es", gender: "male",   accent: "Paraguay",   desc: "Clear, Paraguayan" },
     { id: "es-PY-TaniaNeural",        name: "Tania",        lang: "es", gender: "female", accent: "Paraguay",   desc: "Bright, Paraguayan" },
     { id: "es-UY-MateoNeural",        name: "Mateo",        lang: "es", gender: "male",   accent: "Uruguay",    desc: "Conversational, Uruguayan" },
-    { id: "es-UY-BelenNeural",        name: "Belén",        lang: "es", gender: "female", accent: "Uruguay",    desc: "Professional, Uruguayan" },
-    { id: "es-PR-JulioNeural",        name: "Julio",        lang: "es", gender: "male",   accent: "Puerto Rico",desc: "Caribbean, Puerto Rican" },
     { id: "es-PR-KarinaNeural",       name: "Karina",       lang: "es", gender: "female", accent: "Puerto Rico",desc: "Energetic, Puerto Rican" },
     { id: "es-HN-CarlosNeural",       name: "Carlos",       lang: "es", gender: "male",   accent: "Honduras",   desc: "Clear, Honduran" },
     { id: "es-HN-KarlaNeural",        name: "Karla",        lang: "es", gender: "female", accent: "Honduras",   desc: "Warm, Honduran" },
@@ -109,7 +98,7 @@ export async function GET(request: Request) {
         use_case: "general",
         category: "premade",
         description: v.desc,
-        preview_url: null,
+        preview_url: `/voices/previews/${v.id}.webm`,
         is_multilingual: true,
     }));
 
@@ -139,7 +128,7 @@ export async function POST(request: Request) {
     let tempBase = "";
 
     try {
-        const voicesDir = path.join(process.cwd(), "public", "voices");
+        const voicesDir = path.join(process.cwd(), "public", "temp");
         if (!fs.existsSync(voicesDir)) {
             fs.mkdirSync(voicesDir, { recursive: true });
         }
@@ -244,7 +233,7 @@ export async function POST(request: Request) {
             throw new Error(`Generated audio file is too small (${stats.size} bytes). API blocked.`);
         }
 
-        const url = `/voices/${finalFileName}`;
+        const url = `/temp/${finalFileName}`;
         return NextResponse.json({ 
             url, 
             duration: finalDuration,
@@ -271,9 +260,9 @@ export async function POST(request: Request) {
         // Provide helpful error message
         const is403 = err.message?.includes("403") || err.message?.includes("Forbidden");
         const details = is403
-            ? "Microsoft Edge TTS API returned 403 Forbidden. This can happen if Microsoft has blocked server-side access."
-            : err.message;
+            ? `Microsoft Edge TTS API returned 403 Forbidden for voice "${voiceId}". Try a different voice.`
+            : `Voice "${voiceId}" failed: ${err.message}`;
 
-        return NextResponse.json({ error: details }, { status: 500 });
+        return NextResponse.json({ error: details, details }, { status: 500 });
     }
 }

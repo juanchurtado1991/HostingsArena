@@ -6,7 +6,7 @@ import { resolveAsset } from '@/lib/video/asset-utils';
 
 interface MediaBlockProps {
     id: string;
-    type: 'image' | 'video' | 'audio' | 'effect' | 'music' | 'overlay';
+    type: 'image' | 'video' | 'audio' | 'effect' | 'music' | 'overlay' | 'sfx';
     url?: string;
     label?: string;
     startFrame: number;
@@ -47,7 +47,8 @@ export const MediaBlock = memo(({
         audio: 'bg-zinc-50 border-black/5 text-zinc-400',
         music: 'bg-blue-50 border-blue-200 text-blue-600',
         effect: 'bg-amber-50 border-amber-200 text-amber-600',
-        overlay: 'bg-blue-50 border-blue-200 text-blue-600'
+        overlay: 'bg-blue-50 border-blue-200 text-blue-600',
+        sfx: 'bg-zinc-50 border-black/5 text-zinc-400'
     }[type];
 
     const Icon = {
@@ -56,15 +57,16 @@ export const MediaBlock = memo(({
         audio: Mic,
         music: Music,
         effect: Sparkles,
-        overlay: Layers
+        overlay: Layers,
+        sfx: Mic
     }[type];
 
     // Detection for symbolic/special clips to avoid 404s and show premium placeholders
-    const isSpecialClip = url === 'intro' || url === 'outro' || url === 'news-card';
+    const isSpecialClip = url === 'intro' || url === 'outro' || url === 'news-card' || url === 'news-anchor' || url === 'news-lower-third';
     
     // Improved thumbnail logic
     const renderThumbnail = () => {
-        if (!url || type === 'audio' || type === 'music') return null;
+        if (!url || type === 'audio' || type === 'music' || type === 'sfx') return null;
 
         if (isSpecialClip) {
             // High-Lux Placeholder for special segments

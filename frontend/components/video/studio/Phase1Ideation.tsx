@@ -10,6 +10,7 @@ import { SyncEngine } from '@/lib/video-sync/SyncEngine';
 
 export function Phase1Ideation() {
     const { 
+        title, setTitle,
         format, setFormat, scriptLang, setScriptLang, newsFocus, setNewsFocus, 
         setScenes, setCurrentPhase, isGeneratingScript, setIsGeneratingScript,
         error, setError, targetDuration, setTargetDuration,
@@ -54,6 +55,7 @@ export function Phase1Ideation() {
             visual: string;
             headline?: string;
             subHeadline?: string;
+            displayHeadline?: string;
             pexelsQuery?: string;
             transition: TransitionType;
             duration: number;
@@ -89,6 +91,11 @@ export function Phase1Ideation() {
             return match ? match[1].trim() : undefined;
         };
 
+        const extractDisplayHeadline = (block: string): string | undefined => {
+            const match = /\[DisplayHeadline:\s*(.*?)\]/i.exec(block);
+            return match ? match[1].trim() : undefined;
+        };
+
         const cleanSpeech = (block: string): string => {
             return block
                 .replace(/\[.*?\]/g, '')
@@ -113,12 +120,13 @@ export function Phase1Ideation() {
                 
                 const headline = extractHeadline(fullBlock);
                 const subHeadline = extractSubHeadline(fullBlock);
+                const displayHeadline = extractDisplayHeadline(fullBlock);
                 const pexelsQuery = extractPexelsQuery(fullBlock);
                 const speech = cleanSpeech(fullBlock);
                 const transition = extractTransition(fullBlock);
 
                 if (speech && speech.length > 10) {
-                    parsedScenes.push({ speech, visual, headline, subHeadline, pexelsQuery, transition, duration: calcDuration(speech) });
+                    parsedScenes.push({ speech, visual, headline, subHeadline, displayHeadline, pexelsQuery, transition, duration: calcDuration(speech) });
                 }
             });
         }
@@ -402,6 +410,19 @@ export function Phase1Ideation() {
                 </div>
 
                 <div className="space-y-4">
+                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.25em] px-2">Project Name</h3>
+                    <div className="relative group">
+                        <input
+                            className="w-full bg-zinc-50 border border-black/10 rounded-2xl px-6 py-5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:ring-4 focus:ring-studio-accent/10 focus:border-studio-accent/20 transition-all outline-none"
+                            placeholder="e.g. Apple M5 Chip News, Weekly Tech Roundup..."
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
+                        <div className="absolute inset-0 rounded-2xl pointer-events-none border border-studio-accent/0 group-focus-within:border-studio-accent/10 transition-all" />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
                     <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.25em] px-2">Strategic Focus</h3>
                     <div className="relative group">
                         <input
@@ -482,7 +503,7 @@ export function Phase1Ideation() {
                         )}
                         <Button
                             onClick={handleGenerateScript}
-                            disabled={isGeneratingScript || rssHeadlines.length === 0}
+                            disabled={isGeneratingScript || rssHeadlines.length === 0 || !title.trim()}
                             className={cn(
                                 "w-full h-16 rounded-2xl text-[11px] font-bold uppercase tracking-wider gap-3 transition-all active:scale-95 text-white",
                                 error 

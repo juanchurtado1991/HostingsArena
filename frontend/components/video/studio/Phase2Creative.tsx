@@ -21,7 +21,7 @@ export function Phase2Creative() {
         scriptLang, format,
         customVoiceUrl, setCustomVoiceUrl, setSelectedVoice, selectedVoice,
         bgMusicUrl, setBgMusicUrl, bgMusicVolume, setBgMusicVolume,
-        subtitlesEnabled, setSubtitlesEnabled,
+
         introSfxUrl, setIntroSfxUrl,
         outroSfxUrl, setOutroSfxUrl,
         newsCardSfxUrl, setNewsCardSfxUrl
@@ -163,21 +163,7 @@ export function Phase2Creative() {
                     <p className="text-[11px] text-zinc-500 font-medium mt-1 uppercase tracking-widest">Master Studio Controller</p>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
-                        className={cn(
-                            "h-12 px-8 rounded-full border transition-all gap-3 text-xs font-black uppercase tracking-widest",
-                            subtitlesEnabled 
-                                ? "bg-studio-accent text-white border-transparent shadow-[0_4px_16px_rgba(0,122,255,0.3)] hover:bg-studio-accent/90" 
-                                : "bg-zinc-100 border-zinc-200/50 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/50 hover:border-zinc-300/50 shadow-sm"
-                        )}
-                    >
-                        <Type className="w-4 h-4" />
-                        Captions: {subtitlesEnabled ? 'ON' : 'OFF'}
-                    </Button>
-                </div>
+                <div className="flex items-center gap-4" />
             </div>
 
             {/* Global Selections Grid */}

@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { SyncEngine } from "@/lib/video-sync/SyncEngine";
 import { findBestMixedMediaBatch, type MediaItem } from '@/components/video/mediaLibrary';
 import { useStudioStore } from '@/store/useStudioStore';
+import { clearAssetCache } from '@/lib/video/assetCache';
 
 interface MediaSegment {
     id: string;
@@ -66,6 +67,7 @@ interface Scene {
     titleCardEnabled?: boolean;
     headline?: string;
     subHeadline?: string;
+    displayHeadline?: string;
     voiceSpeed?: number;
 }
 
@@ -125,8 +127,6 @@ interface VideoStudioContextValue {
     setOutroSfxUrl: (v: string | undefined) => void;
     newsCardSfxUrl?: string;
     setNewsCardSfxUrl: (v: string | undefined) => void;
-    subtitlesEnabled: boolean;
-    setSubtitlesEnabled: (v: boolean) => void;
     voiceSpeed: number;
     setVoiceSpeed: (v: number) => void;
 
@@ -202,7 +202,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     const [introSfxUrl, setIntroSfxUrl] = useState<string>();
     const [outroSfxUrl, setOutroSfxUrl] = useState<string>();
     const [newsCardSfxUrl, setNewsCardSfxUrl] = useState<string>();
-    const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
     const [voiceSpeed, setVoiceSpeed] = useState(1.0);
 
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
@@ -332,7 +331,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 if (data.introSfxUrl) setIntroSfxUrl(data.introSfxUrl);
                 if (data.outroSfxUrl) setOutroSfxUrl(data.outroSfxUrl);
                 if (data.newsCardSfxUrl) setNewsCardSfxUrl(data.newsCardSfxUrl);
-                if (data.subtitlesEnabled !== undefined) setSubtitlesEnabled(data.subtitlesEnabled);
                 if (data.newsFocus) setNewsFocus(data.newsFocus);
                 if (data.selectedVoice) setSelectedVoice(data.selectedVoice);
                 if (data.customVoiceUrl) setCustomVoiceUrl(data.customVoiceUrl);
@@ -353,7 +351,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             selectedVoice, format, currentPhase, scriptLang,
             title, bgMusicUrl, bgMusicVolume, transitionSfxUrl,
             introSfxUrl, outroSfxUrl, newsCardSfxUrl,
-            subtitlesEnabled, newsFocus, customVoiceUrl, voiceSpeed, targetDuration
+            newsFocus, customVoiceUrl, voiceSpeed, targetDuration
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     }, [
@@ -361,7 +359,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         selectedVoice, format, currentPhase, scriptLang,
         title, bgMusicUrl, bgMusicVolume, transitionSfxUrl,
         introSfxUrl, outroSfxUrl, newsCardSfxUrl,
-        subtitlesEnabled, newsFocus, customVoiceUrl, voiceSpeed, targetDuration, isLoaded
+        newsFocus, customVoiceUrl, voiceSpeed, targetDuration, isLoaded
     ]);
 
     // Actions
@@ -454,16 +452,29 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             setSyncEta(Math.ceil(validScenes.length * 2));
 
             // ─── STEP 1: Generate audio for EACH scene in parallel ───
-            const sceneAudioData = await Promise.all(validScenes.map(async (scene, i) => {
-                const res = await fetch('/api/admin/video/voice', {
+            const FALLBACK_VOICES: Record<string, string> = {
+                es: 'es-MX-JorgeNeural',
+                en: 'en-US-AndrewNeural',
+            };
+            const voiceLang = selectedVoice.startsWith('es') ? 'es' : 'en';
+
+            const generateVoice = async (text: string, voice: string): Promise<Response> => {
+                return fetch('/api/admin/video/voice', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        text: scene.speech, 
-                        voice: selectedVoice,
-                        rate: 1.0 
-                    })
+                    body: JSON.stringify({ text, voice, rate: 1.0 })
                 });
+            };
+
+            const sceneAudioData = await Promise.all(validScenes.map(async (scene, i) => {
+                let res = await generateVoice(scene.speech, selectedVoice);
+
+                // Retry with fallback voice if the primary voice fails
+                if (!res.ok) {
+                    const fallback = FALLBACK_VOICES[voiceLang] || FALLBACK_VOICES.en;
+                    console.warn(`[StudioVoice] Scene ${i+1} failed with ${selectedVoice}, retrying with fallback ${fallback}...`);
+                    res = await generateVoice(scene.speech, fallback);
+                }
 
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
@@ -488,10 +499,35 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             // ─── STEP 2: Position audio and video clips ───
             const updatedScenes = [...scenes];
             let activeValidIdx = 0;
-            updatedScenes.forEach((scene, i) => {
+            
+            // Generate visual context (Assets API) in parallel with Audio 
+            // but we'll do it sequentially here for simplicity and to avoid rate limits
+            for (let i = 0; i < updatedScenes.length; i++) {
+                const scene = updatedScenes[i];
                 const isSpeechless = !scene.speech.trim();
                 const sceneDurationSec = isSpeechless ? 3 : (sceneAudioData[activeValidIdx]?.duration || 3);
                 
+                // Fetch dynamic asset if not manually overridden
+                let dynamicAssetUrl = scene.assetUrl;
+                if (!dynamicAssetUrl && scene.speech.trim()) {
+                    try {
+                        const assetRes = await fetch('/api/admin/video/assets', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: scene.visual || scene.speech, type: 'both', count: 1 })
+                        });
+                        if (assetRes.ok) {
+                            const assetData = await assetRes.json();
+                            if (assetData.results && assetData.results.length > 0) {
+                                dynamicAssetUrl = assetData.results[0].url;
+                                console.log(`[Studio Context] Fetched dynamic asset for scene ${i}: ${dynamicAssetUrl} (Source: ${assetData.results[0].source || 'pexels'})`);
+                            }
+                        }
+                    } catch (e) {
+                         console.warn(`[Studio Context] Failed to fetch dynamic asset for scene ${i}`, e);
+                    }
+                }
+
                 if (!isSpeechless) {
                     const audioData = sceneAudioData[activeValidIdx];
                     updatedScenes[i] = {
@@ -499,14 +535,19 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         voiceUrl: audioData.url,
                         wordTimestamps: audioData.wordTimestamps,
                         duration: sceneDurationSec,
+                        assetUrl: dynamicAssetUrl || scene.visual, // Fallback to visual (which might be a static URL)
                         titleCardEnabled: true // FORCE News Title Card for narrator scenes
                     };
                     activeValidIdx++;
                 } else {
                     // Speechless scenes only need 1s of breathing room, not 3s.
-                    updatedScenes[i] = { ...scene, duration: 1 };
+                    updatedScenes[i] = { 
+                        ...scene, 
+                        duration: 1,
+                        assetUrl: dynamicAssetUrl || scene.visual
+                    };
                 }
-            });
+            }
 
             const timings = SyncEngine.calculateTimings(updatedScenes);
 
@@ -529,6 +570,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             console.log(`[Phase3Assembly] Timing Debug: Intro=${introFrames}, Outro=${outroFrames}, Total=${totalProjectFrames}`);
 
             const newVideoTrack: Clip[] = [];
+            const newLowerThirdClips: Clip[] = [];
             const newAudioClips: Clip[] = [];
 
             // 1. Add Intro Clip
@@ -548,13 +590,15 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 });
             }
 
-            // 2. Add Scene Clips (Video & Audio)
+            // 2. Add Scene Clips (Video & Audio & Overlays)
             const usedUrls = new Set<string>();
             const titleCardFrames = SyncEngine.secondsToFrames(SyncEngine.TITLE_CARD_SECONDS);
 
             timings.forEach((timing, i) => {
                 const scene = updatedScenes[i];
                 
+                const isTitleCardEnabled = scene.titleCardEnabled !== false;
+
                 // Audio (Starts exactly at timing.startFrame, which accounts for Title Card offset)
                 if (scene.voiceUrl && scene.speech.trim()) {
                     newAudioClips.push({
@@ -565,16 +609,29 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         durationInFrames: timing.durationInFrames,
                         volume: 1,
                     });
+                    
+                    if (isTitleCardEnabled) {
+                        // News Lower Third Overlay
+                        newLowerThirdClips.push({
+                            id: `lower-third-${i}`,
+                            type: 'overlay',
+                            src: 'news-lower-third',
+                            startFrame: timing.startFrame,
+                            durationInFrames: timing.durationInFrames,
+                            title: scene.displayHeadline || scene.headline || "LATEST UPDATE", 
+                            subtitle: scene.speech || "",
+                            opacity: 1, scale: 1, x: 50, y: 50
+                        } as any);
+                    }
                 }
 
                 // Title Card Overlay Clip (Inserted into Video Track Layer 1)
-                const isTitleCardEnabled = scene.titleCardEnabled !== false;
                 if (isTitleCardEnabled) {
                     newVideoTrack.push({
                         id: `v-title-${i}`,
                         type: 'overlay',
                         src: 'news-card',
-                        title: scene.headline || scene.visual.split(',')[0],
+                        title: scene.displayHeadline || scene.headline || scene.visual.split(',')[0],
                         subtitle: scene.subHeadline,
                         startFrame: timing.startFrame - titleCardFrames,
                         durationInFrames: titleCardFrames,
@@ -582,10 +639,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         animation: 'slide-up',
                         ...(newsCardSfxUrl ? { sfxUrl: newsCardSfxUrl, sfxDurationFrames: Math.min(titleCardFrames, 45), sfxVolume: 0.7 } : {})
                     } as any);
-                    
-                    // We set it to false in the updatedScenes so it doesn't double-render 
-                    // in the Composition if it's already a clip in the timeline.
-                    updatedScenes[i] = { ...updatedScenes[i], titleCardEnabled: false };
                 }
 
                 // Video/Image Segments (Start at timing.startFrame)
@@ -624,18 +677,8 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 });
             });
 
-            // 3. Add Outro Clip
-            if (outroFrames > 0) {
-                newVideoTrack.push({
-                    id: 'c-outro',
-                    type: 'overlay',
-                    src: 'outro',
-                    startFrame: totalProjectFrames - outroFrames,
-                    durationInFrames: outroFrames,
-                    title: 'Outro',
-                    ...(outroSfxUrl ? { sfxUrl: outroSfxUrl, sfxDurationFrames: Math.min(outroFrames, 60), sfxVolume: 0.8 } : {})
-                });
-            }
+            // 3. Outro is now rendered dynamically at the end of Composition.tsx
+            // and no longer inserted into the NLE track to prevent overlapping issues.
 
             setScenes(updatedScenes);
 
@@ -650,17 +693,32 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 volume: bgMusicVolume,
             }];
 
+            // Add Outro SFX if exists
+            if (outroSfxUrl) {
+                const outroFrames = SyncEngine.getOutroFrames();
+                newAudioClips.push({
+                    id: `sfx-outro`,
+                    type: 'sfx',
+                    src: outroSfxUrl,
+                    startFrame: totalProjectFrames - outroFrames,
+                    durationInFrames: outroFrames,
+                    volume: 0.8,
+                });
+            }
+
             console.group('🎞️ NLE Timeline - Final Assembly');
             console.log('Video Track:', newVideoTrack);
-            console.log('Audio Clips:', newAudioClips);
+            console.log('Lower Third Clips:', newLowerThirdClips);
+            console.log('Voice/SFX Clips:', newAudioClips);
             console.log('Music Track:', newMusicTrack);
             console.groupEnd();
 
             const finalLayers: Layer[] = [
                 { id: 'l1', name: 'Imagen / Video', clips: newVideoTrack },
-                { id: 'l2', name: 'Narración',      clips: newAudioClips },
-                { id: 'l3', name: 'Música',         clips: newMusicTrack },
-            ].filter(l => l.clips.length > 0);
+                { id: 'l2', name: 'Cintillo',       clips: newLowerThirdClips },
+                { id: 'l3', name: 'Voz / SFX',      clips: newAudioClips },
+                { id: 'l4', name: 'Música',         clips: newMusicTrack },
+            ];
 
             setLayers(finalLayers);
             setDurationInFrames(totalProjectFrames);
@@ -727,7 +785,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                     voiceSpeed,
                     format: latestState.format || format,
                     durationInFrames: finalDurationFrames,
-                    subtitlesEnabled,
                     exportSettings,
                 })
             });
@@ -818,7 +875,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         } finally {
             setIsGeneratingVideo(false);
         }
-    }, [scenes, durationInFrames, title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, selectedVoice, voiceSpeed, format, subtitlesEnabled]);
+    }, [scenes, durationInFrames, title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, selectedVoice, voiceSpeed, format]);
 
     const addLayer = useCallback(() => {
         setLayers(prev => {
@@ -985,6 +1042,9 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         // 3. Clear all persistence keys
         localStorage.removeItem(STORAGE_KEY); // "hostingarena_studio_v2"
         localStorage.removeItem('hostingarena_editor_draft'); // Phase 3 Editor specific key
+
+        // 4. Clear persistent asset cache (images, videos, SFX)
+        clearAssetCache();
     }, []);
 
     const handleDownload = useCallback(() => {
@@ -1018,7 +1078,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         introSfxUrl, setIntroSfxUrl,
         outroSfxUrl, setOutroSfxUrl,
         newsCardSfxUrl, setNewsCardSfxUrl,
-        subtitlesEnabled, setSubtitlesEnabled,
         voiceSpeed, setVoiceSpeed,
         isGeneratingScript, setIsGeneratingScript,
         isPreparingAssembly, syncEta, prepareAssemblyData,
@@ -1039,7 +1098,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         title, format, scriptLang, newsFocus, targetDuration, currentPhase, error, isLoaded, scenes, layers, durationInFrames,
         selectedVoice, customVoiceUrl, bgMusicUrl, bgMusicVolume, transitionSfxUrl,
         introSfxUrl, outroSfxUrl, newsCardSfxUrl,
-        subtitlesEnabled,
         isGeneratingScript, isPreparingAssembly, syncEta, isGeneratingVideo, renderProgress, renderStep,
         renderEta, videoUrl, renderFinished, isPlayingPreview, historyIndex, history.length,
         exportSettings,

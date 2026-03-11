@@ -24,12 +24,25 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
     if (url.startsWith('http') && !url.includes('localhost') && !url.includes('127.0.0.1')) {
         let finalUrl = url;
         
-        // [PERF UPGRADE] If we are in PREVIEW mode, we use low-res versions for Supabase/External assets
+        // [PERF UPGRADE] If we are in PREVIEW mode, we use low-res versions for faster caching
         if (isPreview) {
-            if (url.includes('supabase.co')) {
+            if (url.includes('images.pexels.com')) {
+                // Pexels images: force small dimensions via query params
+                try {
+                    const u = new URL(url);
+                    u.searchParams.set('auto', 'compress');
+                    u.searchParams.set('cs', 'tinysrgb');
+                    u.searchParams.set('w', '640');
+                    u.searchParams.set('h', '360');
+                    u.searchParams.set('fit', 'crop');
+                    finalUrl = u.toString();
+                } catch { /* pass through */ }
+            } else if (url.includes('pexels.com') && /\.(mp4|webm)/i.test(url)) {
+                // Pexels videos: swap HD for SD
+                finalUrl = url.replace(/hd_1920_1080/gi, 'sd_640_360')
+                              .replace(/hd_1280_720/gi, 'sd_640_360');
+            } else if (url.includes('supabase.co')) {
                 finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
-            } else if (url.includes('pexels.com')) {
-                finalUrl = url.replace('original', 'medium').replace('large', 'medium');
             }
         }
 

@@ -30,6 +30,8 @@ export interface Clip {
     sfxUrl?: string;
     sfxDurationFrames?: number; // How many frames to play the SFX (default: 30 = 1 sec at 30fps)
     sfxVolume?: number; // 0.0 to 1.0 (default: 0.8)
+    sfxFadeInFrames?: number;  // 0..sfxDurationFrames (default: 0)
+    sfxFadeOutFrames?: number; // 0..sfxDurationFrames (default: 8)
 }
 
 export interface Layer {
@@ -70,5 +72,6 @@ export interface Scene {
     titleCardEnabled?: boolean;
     headline?: string;
     subHeadline?: string;
+    displayHeadline?: string;
     voiceSpeed?: number;
 }

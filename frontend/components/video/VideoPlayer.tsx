@@ -7,6 +7,8 @@ import { HostingComposition } from "./Composition";
 import { Scene, Layer } from "../../types/studio";
 import { SyncEngine } from "../../lib/video-sync/SyncEngine";
 import { useStudioStore } from "../../store/useStudioStore";
+import { prewarmCache } from "../../lib/video/assetCache";
+import { resolveAsset } from "../../lib/video/asset-utils";
 
 export interface VideoPlayerProps {
     title: string;
@@ -17,8 +19,8 @@ export interface VideoPlayerProps {
     bgMusicUrl?: string;
     bgMusicVolume?: number;
     transitionSfxUrl?: string;
+    outroSfxUrl?: string;
     playing?: boolean;
-    subtitlesEnabled?: boolean;
     voiceSpeed?: number;
     showSafeAreas?: boolean;
     // Note: currentTime y onTimeUpdate se manejan vía Zustand para evitar re-renders.
@@ -33,15 +35,15 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
     bgMusicUrl,
     bgMusicVolume = 0.15,
     transitionSfxUrl,
+    outroSfxUrl,
     playing = false,
-    subtitlesEnabled = true,
+
     voiceSpeed = 1,
     showSafeAreas = false,
 }, ref) => {
     const playerRef = useRef<PlayerRef>(null);
     const setCurrentTime = useStudioStore(s => s.setCurrentTime);
     const setIsPlayingPreview = useStudioStore(s => s.setIsPlayingPreview);
-    const [isBuffering, setIsBuffering] = useState(false);
 
     // Prefetch State
     const [isPrefetching, setIsPrefetching] = useState(false);
@@ -63,6 +65,27 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         if (normalizedUrl.includes("/public/")) return "/" + normalizedUrl.split("/public/").pop();
         if (normalizedUrl.startsWith("public/")) return "/" + normalizedUrl.replace("public/", "");
         return normalizedUrl;
+    };
+
+    // Downscale Pexels media for faster preview prefetching
+    const toPreviewUrl = (url: string): string => {
+        try {
+            const u = new URL(url);
+            // Pexels images: force small dimensions
+            if (u.hostname === 'images.pexels.com') {
+                u.searchParams.set('auto', 'compress');
+                u.searchParams.set('cs', 'tinysrgb');
+                u.searchParams.set('w', '640');
+                u.searchParams.set('h', '360');
+                u.searchParams.set('fit', 'crop');
+                return u.toString();
+            }
+            // Pexels videos: swap HD for SD
+            if (u.hostname.includes('pexels.com') && /hd_1920_1080/i.test(u.pathname)) {
+                return url.replace(/hd_1920_1080/gi, 'sd_640_360');
+            }
+        } catch { /* non-URL strings pass through */ }
+        return url;
     };
 
     const sanitizedScenes = useMemo(() => 
@@ -92,7 +115,8 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         // From layers
         sanitizedLayers.forEach(layer => {
             layer.clips.forEach(clip => {
-                if (clip.src && clip.src !== 'intro' && clip.src !== 'outro' && clip.src !== 'news-card') {
+                const isSystemClip = clip.src === 'intro' || clip.src === 'outro' || clip.src === 'news-card' || clip.src === 'news-anchor' || clip.src === 'news-lower-third';
+                if (clip.src && !isSystemClip) {
                     urls.add(clip.src);
                 }
                 if (clip.sfxUrl) urls.add(clip.sfxUrl);
@@ -106,10 +130,13 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         if (sfx) urls.add(sfx);
 
         // Only include remote URLs (http/https) — local files don't need prefetch
-        return Array.from(urls).filter(u => u.startsWith('http'));
+        // Note: resolveAsset already applies preview downscaling when isPreview=true
+        return Array.from(urls)
+            .filter(u => u.startsWith('http'));
     }, [sanitizedScenes, sanitizedLayers, bgMusicUrl, transitionSfxUrl]);
 
-    // Prefetch all media assets
+    // Prefetch media assets in sequential batches of 3 (non-blocking)
+    // Assets load in timeline order so the first scenes can play immediately.
     useEffect(() => {
         if (allMediaUrls.length === 0) return;
 
@@ -122,35 +149,51 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         setPrefetchTotal(allMediaUrls.length);
         setPrefetchDone(0);
 
-        let completed = 0;
+        let cancelled = false;
         const freeCallbacks: (() => void)[] = [];
 
-        const prefetchAll = async () => {
-            const promises = allMediaUrls.map(async (url) => {
-                try {
-                    const { free, waitUntilDone } = prefetch(url, {
-                        method: 'blob-url',
-                    });
-                    freeCallbacks.push(free);
-                    await waitUntilDone();
-                } catch (e) {
-                    // Silently fail for individual assets (CORS issues, etc.)
-                    console.warn('[Prefetch] Failed:', url, e);
-                } finally {
-                    completed++;
-                    setPrefetchDone(completed);
-                    setPrefetchProgress(Math.round((completed / allMediaUrls.length) * 100));
-                }
-            });
+        const prefetchSequential = async () => {
+            const BATCH_SIZE = 3;
+            let completed = 0;
 
-            await Promise.all(promises);
-            prefetchFreeRefs.current = freeCallbacks;
-            setIsPrefetching(false);
+            for (let i = 0; i < allMediaUrls.length; i += BATCH_SIZE) {
+                if (cancelled) break;
+                const batch = allMediaUrls.slice(i, i + BATCH_SIZE);
+
+                // Download this batch in parallel (small batch = fast)
+                await Promise.all(batch.map(async (url) => {
+                    if (cancelled) return;
+                    try {
+                        // 1. Pre-warm the persistent Cache API (survives refresh)
+                        const proxyUrl = resolveAsset(url) || url;
+                        await prewarmCache(proxyUrl);
+                        
+                        // 2. Remotion in-memory prefetch (instant thanks to Cache API hit)
+                        const { free, waitUntilDone } = prefetch(url, {
+                            method: 'blob-url',
+                        });
+                        freeCallbacks.push(free);
+                        await waitUntilDone();
+                    } catch (e) {
+                        console.warn('[Prefetch] Failed:', url, e);
+                    } finally {
+                        completed++;
+                        setPrefetchDone(completed);
+                        setPrefetchProgress(Math.round((completed / allMediaUrls.length) * 100));
+                    }
+                }));
+            }
+
+            if (!cancelled) {
+                prefetchFreeRefs.current = freeCallbacks;
+                setIsPrefetching(false);
+            }
         };
 
-        prefetchAll();
+        prefetchSequential();
 
         return () => {
+            cancelled = true;
             freeCallbacks.forEach(fn => fn());
         };
     }, [allMediaUrls]);
@@ -206,15 +249,11 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         player.addEventListener('frameupdate', handleFrameUpdate);
         player.addEventListener('play', handlePlay);
         player.addEventListener('pause', handlePause);
-        player.addEventListener('waiting', () => setIsBuffering(true));
-        player.addEventListener('resume', () => setIsBuffering(false));
 
         return () => {
             player.removeEventListener('frameupdate', handleFrameUpdate);
             player.removeEventListener('play', handlePlay);
             player.removeEventListener('pause', handlePause);
-            player.removeEventListener('waiting', () => setIsBuffering(true));
-            player.removeEventListener('resume', () => setIsBuffering(false));
         };
     }, [setCurrentTime, setIsPlayingPreview]);
 
@@ -246,9 +285,8 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         bgMusicUrl: sanitize(bgMusicUrl),
         bgMusicVolume,
         transitionSfxUrl: sanitize(transitionSfxUrl),
-        subtitlesEnabled,
         voiceSpeed,
-    }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, subtitlesEnabled, voiceSpeed]);
+    }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, voiceSpeed]);
 
     return (
         <div className="w-full h-full rounded-none overflow-hidden shadow-2xl relative bg-black">
@@ -284,59 +322,20 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
                 </div>
             )}
 
-            {/* Prefetch Progress Overlay */}
+            {/* Non-Blocking Prefetch Progress Bar */}
             {isPrefetching && (
-                <div className="absolute inset-0 z-[95] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl pointer-events-none">
-                    <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-500">
-                        {/* Animated Icon */}
-                        <div className="relative">
-                            <div className="w-20 h-20 rounded-full border-[3px] border-white/5 flex items-center justify-center">
-                                <div className="w-16 h-16 rounded-full border-[3px] border-studio-accent/30 border-t-studio-accent animate-spin" />
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 bg-studio-accent text-white text-[9px] font-black rounded-full w-8 h-8 flex items-center justify-center shadow-lg shadow-studio-accent/40">
-                                {prefetchProgress}%
-                            </div>
-                        </div>
-
-                        {/* Text */}
-                        <div className="text-center space-y-2">
-                            <p className="text-[11px] font-black uppercase tracking-[0.4em] text-white/80">
-                                Caching Media Assets
-                            </p>
-                            <p className="text-[10px] font-medium text-white/30 tracking-wider">
-                                {prefetchDone} / {prefetchTotal} resources loaded
-                            </p>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="absolute bottom-0 left-0 right-0 z-[95] pointer-events-none">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/70 backdrop-blur-md">
+                        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
                             <div 
-                                className="h-full bg-gradient-to-r from-studio-accent to-blue-400 rounded-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(0,122,255,0.5)]"
+                                className="h-full bg-gradient-to-r from-studio-accent to-blue-400 rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(0,122,255,0.4)]"
                                 style={{ width: `${prefetchProgress}%` }}
                             />
                         </div>
+                        <span className="text-[9px] font-bold text-white/50 tabular-nums whitespace-nowrap">
+                            {prefetchDone}/{prefetchTotal}
+                        </span>
                     </div>
-                </div>
-            )}
-
-            {/* Buffering Overlay */}
-            {isBuffering && !isPrefetching && (
-                <div className="absolute inset-0 z-[90] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md pointer-events-none">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="w-12 h-12 border-[3px] border-white/10 border-t-studio-accent rounded-full animate-spin" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/50">Caching Media…</span>
-                        <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full bg-studio-accent rounded-full animate-[buffer_2s_ease-in-out_infinite]" 
-                                 style={{ animation: 'buffer 2s ease-in-out infinite' }} />
-                        </div>
-                    </div>
-                    <style>{`
-                        @keyframes buffer {
-                            0% { width: 0%; margin-left: 0%; }
-                            50% { width: 60%; margin-left: 20%; }
-                            100% { width: 0%; margin-left: 100%; }
-                        }
-                    `}</style>
                 </div>
             )}
         </div>

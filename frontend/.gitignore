@@ -42,3 +42,8 @@ next-env.d.ts
 
 # renders
 public/renders/*.mp4
+
+# video studio temp files (auto-cleaned on restart)
+public/temp/
+public/uploads/
+public/voices/*.webm

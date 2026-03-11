@@ -55,7 +55,9 @@ export function Phase3Editor() {
         scenes: ctxScenes, 
         title: ctxTitle, 
         format: ctxFormat, 
-        durationInFrames: ctxDuration 
+        durationInFrames: ctxDuration,
+        setLayers: setCtxLayers,
+        setScenes: setCtxScenes,
     } = useVideoStudio();
 
     // Auto-Save Status
@@ -115,26 +117,56 @@ export function Phase3Editor() {
         }
     }, [ctxDuration, durationInFrames, setDurationInFramesStore]);
 
-    // 3. Auto-Save Effect (Debounced)
+    // 2c. Sync Zustand layers → Context (fixes SFX persistence across both save paths)
+    // When Phase3Editor edits clips (e.g. SFX attach), updateClip only touches Zustand.
+    // This effect keeps Context's layers in sync so its auto-save also captures SFX data.
+    useEffect(() => {
+        if (layers.length > 0) {
+            setCtxLayers(layers);
+        }
+    }, [layers, setCtxLayers]);
+
+    useEffect(() => {
+        if (scenes.length > 0) {
+            setCtxScenes(scenes as any);
+        }
+    }, [scenes, setCtxScenes]);
+
+    // 3. Auto-Save Effect (Debounced + beforeunload support)
     useEffect(() => {
         if (layers.length === 0) return;
 
-        const timer = setTimeout(() => {
-            setIsSaving(true);
-            const data = {
-                layers,
-                scenes,
-                title,
-                format,
-                durationInFrames,
-                timestamp: Date.now()
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        const dataToSave = {
+            layers,
+            scenes,
+            title,
+            format,
+            durationInFrames,
+            timestamp: Date.now()
+        };
+
+        const executeSave = () => {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
             setLastSaved(new Date());
             setIsSaving(false);
-        }, 2000); // 2 second debounce
+        };
 
-        return () => clearTimeout(timer);
+        const timer = setTimeout(() => {
+            setIsSaving(true);
+            executeSave();
+        }, 1500); // 1.5 second debounce
+
+        const handleBeforeUnload = () => {
+             // Synchronous save before page unloads to prevent losing quick edits like slider drags
+             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
     }, [layers, scenes, title, format, durationInFrames]);
 
     const canUndo = historyIndex > 0;
@@ -550,7 +582,10 @@ export function Phase3Editor() {
                                                         variant="ghost" 
                                                         size="icon" 
                                                         className="h-12 w-12 rounded-none bg-red-50 text-red-400 hover:bg-red-500 hover:text-white border border-red-100"
-                                                        onClick={() => updateClip(selectedClip.id, { sfxUrl: undefined, sfxDurationFrames: undefined, sfxVolume: undefined })}
+                                                        onClick={() => {
+                                            updateClip(selectedClip.id, { sfxUrl: undefined, sfxDurationFrames: undefined, sfxVolume: undefined });
+                                            pushToHistory();
+                                        }}
                                                     >
                                                         <Trash className="w-4 h-4" />
                                                     </Button>
@@ -589,6 +624,41 @@ export function Phase3Editor() {
                                                             step="1" 
                                                             value={Math.round((selectedClip.sfxVolume ?? 0.8) * 100)} 
                                                             onChange={(e) => updateClip(selectedClip.id, { sfxVolume: parseInt(e.target.value) / 100 })}
+                                                            className="w-full h-1 bg-black/5 rounded-full appearance-none accent-studio-accent cursor-pointer"
+                                                        />
+                                                    </div>
+                                                    {/* SFX Fade Controls */}
+                                                    <div className="flex justify-between items-center px-1 pt-2">
+                                                        <span className="text-[9px] font-black uppercase text-zinc-400 tracking-widest">Fade In</span>
+                                                        <span className="text-[10px] font-mono font-bold text-studio-accent bg-studio-accent/5 px-2 py-0.5 rounded-md border border-studio-accent/20">
+                                                            {((selectedClip.sfxFadeInFrames ?? 0) / fps).toFixed(1)}s
+                                                        </span>
+                                                    </div>
+                                                    <div className="relative h-6 flex items-center px-1">
+                                                        <input 
+                                                            type="range" 
+                                                            min={0}
+                                                            max={selectedClip.sfxDurationFrames || 30}
+                                                            step="1" 
+                                                            value={selectedClip.sfxFadeInFrames ?? 0} 
+                                                            onChange={(e) => updateClip(selectedClip.id, { sfxFadeInFrames: parseInt(e.target.value) })}
+                                                            className="w-full h-1 bg-black/5 rounded-full appearance-none accent-studio-accent cursor-pointer"
+                                                        />
+                                                    </div>
+                                                    <div className="flex justify-between items-center px-1 pt-1">
+                                                        <span className="text-[9px] font-black uppercase text-zinc-400 tracking-widest">Fade Out</span>
+                                                        <span className="text-[10px] font-mono font-bold text-studio-accent bg-studio-accent/5 px-2 py-0.5 rounded-md border border-studio-accent/20">
+                                                            {((selectedClip.sfxFadeOutFrames ?? 8) / fps).toFixed(1)}s
+                                                        </span>
+                                                    </div>
+                                                    <div className="relative h-6 flex items-center px-1">
+                                                        <input 
+                                                            type="range" 
+                                                            min={0}
+                                                            max={selectedClip.sfxDurationFrames || 30}
+                                                            step="1" 
+                                                            value={selectedClip.sfxFadeOutFrames ?? 8} 
+                                                            onChange={(e) => updateClip(selectedClip.id, { sfxFadeOutFrames: parseInt(e.target.value) })}
                                                             className="w-full h-1 bg-black/5 rounded-full appearance-none accent-studio-accent cursor-pointer"
                                                         />
                                                     </div>
@@ -711,6 +781,7 @@ export function Phase3Editor() {
                                 sfxUrl: url,
                                 sfxDurationFrames: selectedClip.sfxDurationFrames || 30,
                             } as any);
+                            pushToHistory();
                         }
                     } else if (addingToTrack) {
                         const newClip: Clip = {

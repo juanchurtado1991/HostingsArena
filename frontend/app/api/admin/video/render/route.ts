@@ -5,13 +5,12 @@ import path from "path";
 import fs from "fs";
 
 export const dynamic = "force-dynamic";
-
 export async function POST(request: Request) {
     const body = await request.json();
     const { 
         title, script, scenes, layers, format,
-        bgMusicUrl, bgMusicVolume, transitionSfxUrl,
-        subtitlesEnabled, exportSettings,
+        bgMusicUrl, bgMusicVolume, transitionSfxUrl, outroSfxUrl,
+        exportSettings,
         durationInFrames = 1800
     } = body;
 
@@ -45,6 +44,7 @@ export async function POST(request: Request) {
 
         const relBgMusicUrl = resolveRelativePath(bgMusicUrl);
         const relTransitionSfxUrl = resolveRelativePath(transitionSfxUrl);
+        const relOutroSfxUrl = resolveRelativePath(outroSfxUrl);
 
         // Sanitize scene voice URLs
         const sanitizedScenes = (scenes || []).map((scene: any) => ({
@@ -62,7 +62,8 @@ export async function POST(request: Request) {
         
         console.log(`[VideoRender] Using relative assets for secure browser rendering: 
           Music: ${relBgMusicUrl}
-          SFX: ${relTransitionSfxUrl}`);
+          SFX: ${relTransitionSfxUrl}
+          Outro: ${relOutroSfxUrl}`);
 
         // Determine base URL for proxy
         const protocol = request.headers.get("x-forwarded-proto") || "http";
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
                 bgMusicUrl: relBgMusicUrl,
                 bgMusicVolume,
                 transitionSfxUrl: relTransitionSfxUrl,
-                subtitlesEnabled: subtitlesEnabled ?? true,
+                outroSfxUrl: relOutroSfxUrl,
                 baseUrl,
             },
         });
@@ -137,8 +138,8 @@ export async function POST(request: Request) {
                         bgMusicUrl: relBgMusicUrl,
                         bgMusicVolume,
                         transitionSfxUrl: relTransitionSfxUrl,
+                        outroSfxUrl: relOutroSfxUrl,
                         durationInFrames,
-                        subtitlesEnabled: subtitlesEnabled ?? true,
                         baseUrl,
                     },
                     onProgress: ({ progress }) => {

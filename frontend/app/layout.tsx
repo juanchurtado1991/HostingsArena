@@ -9,7 +9,8 @@ export const metadata: Metadata = {
     },
     description: "Stop relying on fake reviews. We verified 50+ providers with deep data extraction. Real uptime, real speeds, real hidden fees revealed.",
     icons: {
-        icon: "/swords-icon.svg",
+        icon: "/ha-logo.png",
+        apple: "/apple-icon.png",
     },
     openGraph: {
         type: 'website',

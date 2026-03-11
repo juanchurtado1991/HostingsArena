@@ -215,13 +215,15 @@ export async function POST(request: Request) {
             - Ejemplos: "OpenAI" → "Ópen Ái", "NVIDIA" → "Envidia", "Microsoft" → "Máicrosoft", "Google" → "Gúgol", "Apple" → "Ápol", "iPhone" → "Áifon", "Cloud" → "Cláud", "Streaming" → "Estríming", "Hardware" → "Járduer", "Software" → "Sófuer", "Data Center" → "Déita Sénter", "Machine Learning" → "Mashín Lérning", "Blockchain" → "Blókchein", "Startup" → "Estártap"
             - EXCEPCIÓN: "HostingArena" se mantiene igual (es nuestra marca).
             - Aplica esto a TODAS las palabras en inglés que aparezcan en el script.
+            - IMPORTANTE: Los tags [Headline:] y [Subheadline:] PUEDEN contener fonética para TTS.
+              Agrega SIEMPRE un tag [DisplayHeadline:] con el headline ESCRITO CORRECTAMENTE (ej: "Apple" no "Ápol", "NVIDIA" no "Envidia"). Este tag se usa SOLO para texto en pantalla.
             ` : ''}
             
             MANDATORY OUTPUT FORMAT:
-            [Headline: 3-5 word high-impact headline] [Subheadline: 5-10 word supporting data] [Visual: cinematic shot description] [PexelsQuery: 2-4 word stock media search query] [Transition: crossfade|zoom|none] Spoken content.
+            [Headline: 3-5 word high-impact headline] [Subheadline: 5-10 word supporting data] [DisplayHeadline: correctly spelled headline for display (only if different from Headline)] [Visual: cinematic shot description] [PexelsQuery: 2-4 word stock media search query] [Transition: crossfade|zoom|none] Spoken content.
             
             EXAMPLE (Spanish):
-            [Headline: RUPTURA CUÁNTICA] [Subheadline: Google confirma que el cifrado de 30 años ha sido vulnerado] [Visual: Aerial view of Silicon Valley at golden hour with data streams] [PexelsQuery: silicon valley aerial technology] [Transition: crossfade] Google acaba de confirmarlo. La computación cuántica rompió oficialmente un estándar de cifrado de 30 años. Mientras el mundo cripto entra en pánico, el hardware necesario para esto ya está aquí.
+            [Headline: RUPTURA CUÁNTICA DE GÚGOL] [Subheadline: Gúgol confirma que el cifrado de 30 años ha sido vulnerado] [DisplayHeadline: RUPTURA CUÁNTICA DE GOOGLE] [Visual: Aerial view of Silicon Valley at golden hour with data streams] [PexelsQuery: silicon valley aerial technology] [Transition: crossfade] Gúgol acaba de confirmarlo. La computación cuántica rompió oficialmente un estándar de cifrado de 30 años. Mientras el mundo cripto entra en pánico, el járduer necesario para esto ya está aquí.
 
         `;
 
