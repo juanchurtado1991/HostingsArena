@@ -121,9 +121,11 @@ export async function POST(request: Request) {
                     codec: "h264",
                     crf,
                     pixelFormat: "yuv420p",
-                    timeoutInMilliseconds: 60000, // 60s failsafe for slow CDNs
+                    timeoutInMilliseconds: 300000, // 5 mins failsafe for Vercel
+                    concurrency: 1, // Vercel strict limits: 1 CPU core, avoid multi-threading RAM spikes
                     chromiumOptions: {
                         disableWebSecurity: true, // Crucial for direct Pexels/Jamendo fetching
+                        gl: "angle", // better compatibility with headless linux
                     },
                     inputProps: {
                         title: title || "Tech News Summary",
@@ -188,8 +190,9 @@ export async function POST(request: Request) {
                 
                 await writer.close();
             } catch (error: any) {
-                console.error("Video Render Streaming Error:", error);
-                await writer.write(encoder.encode(`data: ${JSON.stringify({ error: true, details: error.message })}\n\n`));
+                console.error("Video Render Streaming Error Details:", error);
+                const errorMsg = error.stack || error.message || String(error);
+                await writer.write(encoder.encode(`data: ${JSON.stringify({ error: true, details: errorMsg })}\n\n`));
                 await writer.close();
             }
         })();
@@ -208,7 +211,7 @@ export async function POST(request: Request) {
         console.error("Video Render API Init Error:", error);
         return NextResponse.json({ 
             error: "Failed to initialize render stream", 
-            details: error.message 
+            details: error.stack || error.message || String(error)
         }, { status: 500 });
     }
 }
