@@ -33,6 +33,8 @@ interface AffiliatePartner {
     minimum_payout_currency?: string;
     reminder_at?: string;
     reminder_note?: string;
+    promo_code?: string;
+    promo_discount?: string;
 }
 
 interface AffiliateStats {
@@ -173,6 +175,8 @@ export function AffiliateManager() {
             minimum_payout_currency: aff.minimum_payout_currency || "USD",
             reminder_at: aff.reminder_at || "",
             reminder_note: aff.reminder_note || "",
+            promo_code: aff.promo_code || "",
+            promo_discount: aff.promo_discount || "",
         });
         setShowModal(true);
     };
@@ -541,6 +545,11 @@ export function AffiliateManager() {
                                         {aff.payment_method && (
                                             <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/10">
                                                 {aff.payment_method}
+                                            </span>
+                                        )}
+                                        {aff.promo_code && (
+                                            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                                Code: {aff.promo_code} {aff.promo_discount && `(${aff.promo_discount}% off)`}
                                             </span>
                                         )}
                                     </div>

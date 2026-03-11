@@ -42,7 +42,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Locale 
   const supabase = createAdminClient();
   const { data: activeAffiliates } = await supabase
       .from('affiliate_partners')
-      .select('provider_name, affiliate_link')
+      .select('provider_name, affiliate_link, promo_code, promo_discount, homepage_rank')
       .eq('status', 'active');
 
   const providerNames = activeAffiliates?.map(a => a.provider_name) || [];
@@ -50,18 +50,35 @@ export default async function Home({ params }: { params: Promise<{ lang: Locale 
   const { data: providersData } = await supabase
       .from('hosting_providers')
       .select('*')
-      .in('provider_name', providerNames)
-      .order('support_score', { ascending: false });
+      .in('provider_name', providerNames);
+
+  // Combine data, prioritizing manual homepage ranks
+  const combinedProviders = (providersData || []).map(p => {
+      const aff = activeAffiliates?.find(a => a.provider_name.toLowerCase() === p.provider_name.toLowerCase());
+      return {
+          ...p,
+          homepage_rank: aff?.homepage_rank || null,
+          affiliate_link: aff?.affiliate_link,
+          promo_code: aff?.promo_code,
+          promo_discount: aff?.promo_discount
+      };
+  });
+
+  // Sort logic: 1. By manual rank (if exists), 2. By support_score (fallback)
+  const sortedProviders = combinedProviders.sort((a, b) => {
+      if (a.homepage_rank && b.homepage_rank) return a.homepage_rank - b.homepage_rank;
+      if (a.homepage_rank && !b.homepage_rank) return -1;
+      if (!a.homepage_rank && b.homepage_rank) return 1;
+      return (b.support_score || 0) - (a.support_score || 0); // Both null ranks, use fallback
+  });
 
   const uniqueProviders: TopProviderData[] = [];
   const seenNames = new Set();
   
-  for (const p of (providersData || [])) {
+  for (const p of sortedProviders) {
       const lowerName = p.provider_name.toLowerCase();
       if (!seenNames.has(lowerName)) {
           seenNames.add(lowerName);
-          
-          const aff = activeAffiliates?.find(a => a.provider_name.toLowerCase() === lowerName);
           
           uniqueProviders.push({
               rank: uniqueProviders.length + 1,
@@ -78,7 +95,9 @@ export default async function Home({ params }: { params: Promise<{ lang: Locale 
               ],
               color: uniqueProviders.length === 0 ? "from-purple-500/20 to-blue-500/20" : uniqueProviders.length === 1 ? "from-orange-500/20 to-red-500/20" : "from-blue-400/20 to-cyan-400/20",
               badge: uniqueProviders.length === 0 ? "Best Overall 2026" : uniqueProviders.length === 1 ? "Fastest Speed" : "Best Value",
-              affiliateLink: aff?.affiliate_link || "#"
+              affiliateLink: p.affiliate_link || "#",
+              promoCode: p.promo_code || undefined,
+              promoDiscount: p.promo_discount || undefined
           });
           
           if (uniqueProviders.length === 3) break;

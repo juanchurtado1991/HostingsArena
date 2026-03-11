@@ -168,8 +168,20 @@ export function AnalyticsCard() {
         { label: "countries", title: "Countries", icon: <Globe className="w-3.5 h-3.5" /> },
     ] as const;
 
-    const globalCTR = data.summary.month > 0
-        ? ((data.summary.clicksMonth || 0) / data.summary.month * 100).toFixed(2)
+    const totalViewsPeriod = data.dailyTraffic.reduce((sum, item) => sum + item.views, 0);
+    const totalClicksPeriod = data.dailyClicks?.reduce((sum, item) => sum + item.count, 0) || 0;
+    
+    const calculatedDays = Math.max(1, data.dailyTraffic.length || 1);
+    const avgClicksPerDay = (totalClicksPeriod / calculatedDays).toFixed(1);
+
+    let periodLabel = "Period";
+    if (timeframe === "today") periodLabel = "Today";
+    else if (timeframe === "week") periodLabel = "7 Days";
+    else if (timeframe === "month") periodLabel = "30 Days";
+    else if (timeframe === "all") periodLabel = "All Time";
+
+    const dynamicCTR = totalViewsPeriod > 0
+        ? ((totalClicksPeriod / totalViewsPeriod) * 100).toFixed(2)
         : "0.00";
 
     return (
@@ -182,7 +194,7 @@ export function AnalyticsCard() {
                     </div>
                     <div>
                         <h3 className="text-xl font-bold flex items-center gap-2">Performance & Analytics {loading && <span className="text-xs text-muted-foreground animate-pulse font-normal">(refreshing...)</span>}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">Global CTR: <span className="text-primary font-bold">{globalCTR}%</span> across all tracking</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Click-Through Rate: <span className="text-primary font-bold">{dynamicCTR}%</span> in selected period</p>
                     </div>
                 </div>
                 
@@ -242,22 +254,18 @@ export function AnalyticsCard() {
                         <Eye className="w-4 h-4" />
                         <span className="text-[10px] uppercase tracking-widest font-bold">Page Views</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                        <div className="text-center border-r border-border/50">
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center">
                             <p className="text-lg font-bold">{data.summary.avgVisitsPerDay?.toLocaleString() || 0}</p>
                             <p className="text-[9px] text-muted-foreground uppercase">Avg/Day</p>
+                        </div>
+                        <div className="text-center border-x border-border/50">
+                            <p className="text-lg font-bold text-primary">{totalViewsPeriod.toLocaleString()}</p>
+                            <p className="text-[9px] text-primary uppercase font-bold">{periodLabel}</p>
                         </div>
                         <div className="text-center">
                             <p className="text-lg font-bold">{data.summary.today.toLocaleString()}</p>
                             <p className="text-[9px] text-muted-foreground uppercase">Today</p>
-                        </div>
-                        <div className="text-center border-x border-border/50">
-                            <p className="text-lg font-bold">{data.summary.week.toLocaleString()}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">7d</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-lg font-bold">{data.summary.month.toLocaleString()}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">Total</p>
                         </div>
                     </div>
                 </div>
@@ -270,16 +278,16 @@ export function AnalyticsCard() {
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                         <div className="text-center">
-                            <p className="text-lg font-bold">{data.summary.clicksToday?.toLocaleString() || 0}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">Today</p>
+                            <p className="text-lg font-bold">{avgClicksPerDay}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">Avg/Day</p>
                         </div>
                         <div className="text-center border-x border-border/50">
-                            <p className="text-lg font-bold">{data.summary.clicksWeek?.toLocaleString() || 0}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">7d</p>
+                            <p className="text-lg font-bold text-green-500">{totalClicksPeriod.toLocaleString()}</p>
+                            <p className="text-[9px] text-green-500 uppercase font-bold">{periodLabel}</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-lg font-bold">{data.summary.clicksMonth?.toLocaleString() || 0}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">30d</p>
+                            <p className="text-lg font-bold">{data.summary.clicksToday?.toLocaleString() || 0}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">Today</p>
                         </div>
                     </div>
                 </div>
@@ -287,7 +295,7 @@ export function AnalyticsCard() {
                 {/* Conversion Summary */}
                 <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-primary mb-1" />
-                    <p className="text-2xl font-black text-primary">{globalCTR}%</p>
+                    <p className="text-2xl font-black text-primary">{dynamicCTR}%</p>
                     <p className="text-[10px] uppercase tracking-widest text-primary/70 font-bold">Avg. Conversion Rate</p>
                 </div>
             </div>

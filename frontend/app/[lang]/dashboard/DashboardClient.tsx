@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager, ProviderManager, VideoStudio } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
 import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
+import { Top3Manager } from "@/components/dashboard/Top3Manager";
 import { SEOManager } from "@/components/dashboard/SEOManager";
 import type { AdminTask, TaskType, TaskPriority, ScraperStatus } from "@/lib/tasks/types";
 
@@ -562,6 +563,9 @@ export default function DashboardClient({ dict, lang }: { dict: any; lang: strin
 
                         {/* Analytics Card */}
                         <AnalyticsCard />
+
+                        {/* Top 3 Homepage Selection */}
+                        <Top3Manager />
 
                         {/* Status Table */}
                         <GlassCard className="p-4 md:p-8 border-white/[0.05] relative overflow-hidden">

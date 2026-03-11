@@ -56,6 +56,18 @@ export async function POST(request: NextRequest) {
             utm_campaign: utm_campaign?.slice(0, 100),
         });
 
+        // Trigger async RPC without waiting for it to finish the request immediately
+        if (post_slug) {
+            (async () => {
+                try {
+                    const { error } = await supabase.rpc('increment_post_views', { p_slug: post_slug });
+                    if (error) console.error('[TRACK] Error incrementing views:', error);
+                } catch (err) {
+                    console.error('[TRACK] RPC Exception:', err);
+                }
+            })();
+        }
+
         return NextResponse.json({ ok: true });
     } catch {
         return NextResponse.json({ ok: false }, { status: 500 });

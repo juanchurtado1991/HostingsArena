@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         const {
             title, slug, content, excerpt, category,
             status: postStatus, seo_title, seo_description,
-            target_keywords, related_provider_name, image_prompt,
+            target_keywords, related_provider_name, image_prompt, cover_image_url,
             is_ai_generated, ai_quality_score,
             social_tw_text, social_fb_text, social_li_text, social_hashtags,
             title_es, content_es, excerpt_es,
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
                 target_keywords_es: target_keywords_es || null,
                 related_provider_name: related_provider_name || null,
                 image_prompt: image_prompt || null,
+                cover_image_url: cover_image_url || null,
                 is_ai_generated: is_ai_generated || false,
                 ai_quality_score: ai_quality_score || null,
                 social_tw_text: social_tw_text || null,
@@ -126,10 +127,10 @@ export async function POST(request: NextRequest) {
         if (error) throw error;
 
         return NextResponse.json({ post: data, message: 'Post created' }, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Posts API] POST error:', error);
         return NextResponse.json(
-            { error: 'Failed to create post', details: String(error) },
+            { error: 'Failed to create post', details: error.message || error.details || String(error) },
             { status: 500 }
         );
     }
@@ -174,10 +175,10 @@ export async function PATCH(request: NextRequest) {
         if (error) throw error;
 
         return NextResponse.json({ post: data, message: 'Post updated' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Posts API] PATCH error:', error);
         return NextResponse.json(
-            { error: 'Failed to update post', details: String(error) },
+            { error: 'Failed to update post', details: error.message || error.details || String(error) },
             { status: 500 }
         );
     }

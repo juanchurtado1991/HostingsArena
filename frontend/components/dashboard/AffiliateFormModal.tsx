@@ -25,6 +25,8 @@ export interface AffiliateFormData {
     minimum_payout_currency?: string;
     reminder_at?: string;
     reminder_note?: string;
+    promo_code?: string;
+    promo_discount?: string;
 }
 
 export const EMPTY_AFFILIATE_FORM: AffiliateFormData = {
@@ -44,6 +46,8 @@ export const EMPTY_AFFILIATE_FORM: AffiliateFormData = {
     minimum_payout_currency: "USD",
     reminder_at: "",
     reminder_note: "",
+    promo_code: "",
+    promo_discount: "",
 };
 
 export interface ProviderOption {
@@ -346,6 +350,36 @@ export function AffiliateFormModal({
                                         className={`${INPUT_CLASS} pl-10 font-mono text-[13px] bg-gray-50 focus:bg-white`}
                                         required
                                     />
+                                </div>
+                            </div>
+
+                            {/* Promo Code & Discount */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className={LABEL_CLASS}>Promo Code (Optional)</label>
+                                    <div className="relative group">
+                                        <input
+                                            type="text"
+                                            value={formData.promo_code || ""}
+                                            onChange={(e) => update("promo_code", e.target.value)}
+                                            className={`${INPUT_CLASS} text-xs`}
+                                            placeholder="e.g. HOSTING2026"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 mt-1 ml-1">Displayed on Top 3 section.</p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className={LABEL_CLASS}>Discount % (Optional)</label>
+                                    <div className="relative group">
+                                        <input
+                                            type="text"
+                                            value={formData.promo_discount || ""}
+                                            onChange={(e) => update("promo_discount", e.target.value)}
+                                            className={`${INPUT_CLASS} text-xs`}
+                                            placeholder="e.g. 20"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 mt-1 ml-1">Example: "20" (Get 20% off)</p>
                                 </div>
                             </div>
 

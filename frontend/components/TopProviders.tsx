@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Trophy, ArrowRight } from "lucide-react";
+import { Check, Star, Trophy, ArrowRight, Copy } from "lucide-react";
 import Link from "next/link";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
@@ -52,10 +53,72 @@ export interface TopProviderData {
     color: string;
     badge?: string;
     affiliateLink: string;
+    promoCode?: string;
+    promoDiscount?: string;
 }
 
+// Placeholder for defaultText, assuming it would be imported or defined elsewhere
+// For the purpose of this edit, we'll define a minimal one to avoid errors.
+const defaultText = {
+    en: {
+        top_providers: {
+            price_monthly: "/mo",
+            view_deal: "View Deal",
+            read_review: "Read detailed review"
+        }
+    }
+};
+
 export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lang?: string, providers?: TopProviderData[] }) {
-    const displayProviders = providers || TOP_PROVIDERS;
+    const locale = (lang || 'en') as keyof typeof defaultText;
+    const text = dict?.top_providers || defaultText[locale]?.top_providers || defaultText.en.top_providers;
+
+    const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    const handleCopy = (code: string) => {
+        if (!code) return;
+        navigator.clipboard.writeText(code);
+        setCopiedCode(code);
+        setTimeout(() => setCopiedCode(null), 2000);
+    };
+
+    const defaultProviders: TopProviderData[] = [
+        {
+            rank: 1,
+            name: "Hostinger",
+            slug: "hostinger",
+            price: "2.99",
+            discount: "75%",
+            features: ["Free Domain", "Unmetered Bandwidth", "24/7 Support"],
+            color: "from-purple-500/20 to-blue-500/20",
+            badge: "Best Overall 2026",
+            affiliateLink: "https://www.hostg.xyz/SH..." // Placeholder for real link
+        },
+        {
+            rank: 2,
+            name: "A2 Hosting",
+            slug: "a2-hosting",
+            price: "2.99",
+            discount: "66%",
+            features: ["20x Faster Turbo", "Free Migration", "Money Back Guarantee"],
+            color: "from-orange-500/20 to-red-500/20",
+            badge: "Fastest Speed",
+            affiliateLink: "#"
+        },
+        {
+            rank: 3,
+            name: "Bluehost",
+            slug: "bluehost",
+            price: "2.95",
+            discount: "70%",
+            features: ["Recommended by WP", "Free SSL", "1-Click Install"],
+            color: "from-blue-400/20 to-cyan-400/20",
+            badge: "Best for WordPress",
+            affiliateLink: "#"
+        }
+    ];
+
+    const displayProviders = providers || defaultProviders;
     return (
         <section className="container mx-auto px-4 md:px-6 relative z-20 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
@@ -124,6 +187,37 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
                                     </li>
                                 ))}
                             </ul>
+
+                            {provider.promoCode && (
+                                <div className="w-full mb-4">
+                                    <div className="text-center mb-1.5 flex items-center justify-center gap-2">
+                                        <div className="h-px bg-white/10 flex-1"></div>
+                                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                                            {provider.promoDiscount 
+                                                ? (lang === "es" ? `Obtén ${provider.promoDiscount}% OFF con:` : `Get ${provider.promoDiscount}% OFF with:`)
+                                                : (lang === "es" ? "Con este código:" : "With this code:")}
+                                        </span>
+                                        <div className="h-px bg-white/10 flex-1"></div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleCopy(provider.promoCode!)}
+                                        className="w-full relative overflow-hidden flex items-center justify-center p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-yellow-500/15 to-amber-500/10 border border-yellow-500/30 hover:border-yellow-400/50 hover:bg-yellow-500/20 active:bg-yellow-500/30 transition-all cursor-pointer group shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+                                        title={lang === "es" ? "Haz clic para copiar" : "Click to copy promo code"}
+                                    >
+                                        <div className="flex flex-row items-center justify-center w-full relative z-10 gap-3">
+                                            <span className="text-yellow-600 dark:text-yellow-300 text-sm md:text-base font-black tracking-wider flex items-center gap-2 drop-shadow-md">
+                                                {provider.promoCode}
+                                                {copiedCode === provider.promoCode ? (
+                                                    <Check className="w-5 h-5 text-green-500 drop-shadow-md" />
+                                                ) : (
+                                                    <Copy className="w-4 h-4 text-yellow-600/70 dark:text-yellow-400/70 group-hover:text-yellow-500 dark:group-hover:text-yellow-300 transition-colors" />
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+                                    </button>
+                                </div>
+                            )}
 
                             {/* CTAs */}
                             <div className="space-y-3 mt-auto">

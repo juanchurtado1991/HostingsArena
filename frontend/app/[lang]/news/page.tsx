@@ -45,6 +45,7 @@ async function getPublishedPosts(query?: string, category?: string) {
     }
 
     const { data, error } = await rpc
+        .order('views_count', { ascending: false, nullsFirst: false })
         .order('published_at', { ascending: false })
         .limit(30);
 

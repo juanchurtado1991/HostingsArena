@@ -9,6 +9,7 @@ export * from "./PublishSummaryModal";
 export * from "./RemindersManager";
 export * from "./ProviderManager";
 export * from "./VideoStudio";
+export * from './Top3Manager';
 export * from "./TaskCard";
 export * from "./ProviderEditorModal";
 export * from "./SEOManager";

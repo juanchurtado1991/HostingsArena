@@ -128,7 +128,9 @@ export async function POST(request: NextRequest) {
             minimum_payout_amount,
             minimum_payout_currency,
             reminder_at,
-            reminder_note
+            reminder_note,
+            promo_code,
+            promo_discount
         } = body;
 
         if (!provider_name || !affiliate_link) {
@@ -175,6 +177,8 @@ export async function POST(request: NextRequest) {
                 minimum_payout_currency: minimum_payout_currency || 'USD',
                 reminder_at: reminder_at || null,
                 reminder_note: reminder_note || null,
+                promo_code: promo_code || null,
+                promo_discount: promo_discount || null,
                 last_verified_at: new Date().toISOString(),
             }, { onConflict: 'provider_name' })
             .select()
@@ -280,7 +284,7 @@ export async function PATCH(request: NextRequest) {
         const fieldsToNullify = [
             'network', 'account_email', 'account_password',
             'dashboard_url', 'account_phone', 'payment_method', 'reminder_at',
-            'reminder_note', 'minimum_payout_currency'
+            'reminder_note', 'minimum_payout_currency', 'promo_code', 'promo_discount'
         ];
 
         fieldsToNullify.forEach(field => {
