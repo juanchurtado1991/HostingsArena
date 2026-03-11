@@ -176,9 +176,9 @@ export async function POST(request: NextRequest) {
                 minimum_payout_amount: (minimum_payout_amount !== undefined && minimum_payout_amount !== "") ? parseFloat(minimum_payout_amount) : null,
                 minimum_payout_currency: minimum_payout_currency || 'USD',
                 reminder_at: reminder_at || null,
-                reminder_note: reminder_note || null,
-                promo_code: promo_code || null,
-                promo_discount: promo_discount || null,
+                reminder_note: reminder_note?.trim() || null,
+                promo_code: promo_code?.trim() || null,
+                promo_discount: promo_discount?.trim() || null,
                 last_verified_at: new Date().toISOString(),
             }, { onConflict: 'provider_name' })
             .select()
@@ -288,8 +288,10 @@ export async function PATCH(request: NextRequest) {
         ];
 
         fieldsToNullify.forEach(field => {
-            if (updates[field] === "") {
+            if (updates[field] === "" || (typeof updates[field] === 'string' && updates[field].trim() === "")) {
                 updates[field] = null;
+            } else if (typeof updates[field] === 'string') {
+                updates[field] = updates[field].trim();
             }
         });
 

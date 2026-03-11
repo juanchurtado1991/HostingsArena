@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { execSync } from 'child_process';
+import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
 const escapeXml = (unsafe: string) => {
     return unsafe.replace(/[<>&"']/g, (c) => {
@@ -128,7 +130,7 @@ export async function POST(request: Request) {
     let tempBase = "";
 
     try {
-        const voicesDir = path.join(process.cwd(), "public", "temp");
+        const voicesDir = path.join(os.tmpdir(), "ha_voices_temp");
         if (!fs.existsSync(voicesDir)) {
             fs.mkdirSync(voicesDir, { recursive: true });
         }
@@ -233,7 +235,31 @@ export async function POST(request: Request) {
             throw new Error(`Generated audio file is too small (${stats.size} bytes). API blocked.`);
         }
 
-        const url = `/temp/${finalFileName}`;
+        // Upload to Supabase Storage
+        const supabase = createAdminClient();
+        const buffer = fs.readFileSync(finalFilePath);
+        const storagePath = `temp_audio/${finalFileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+            .from("images")
+            .upload(storagePath, buffer, {
+                contentType: "audio/webm",
+                upsert: true,
+            });
+            
+        if (uploadError) {
+            throw new Error(`Supabase upload failed: ${uploadError.message}`);
+        }
+
+        const { data: urlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(storagePath);
+
+        const url = urlData.publicUrl;
+        
+        // Cleanup the final file from /tmp now that it's in Supabase
+        if (fs.existsSync(finalFilePath)) fs.unlinkSync(finalFilePath);
+
         return NextResponse.json({ 
             url, 
             duration: finalDuration,

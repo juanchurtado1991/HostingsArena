@@ -3,6 +3,8 @@ import { bundle } from "@remotion/bundler";
 import { getCompositions, renderMedia } from "@remotion/renderer";
 import path from "path";
 import fs from "fs";
+import os from "os";
+import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
@@ -24,14 +26,7 @@ export async function POST(request: Request) {
         const entryPoint = path.join(process.cwd(), "components/video/entry.ts");
         const timestamp = Date.now();
         const outputFilename = `news-${timestamp}.mp4`;
-        const outputLocation = path.join(process.cwd(), "public", "temp", outputFilename);
-        const publicUrl = `/temp/${outputFilename}`;
-
-        // Ensure directory exists
-        const tempDir = path.join(process.cwd(), "public", "temp");
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir, { recursive: true });
-        }
+        const outputLocation = path.join(os.tmpdir(), outputFilename);
 
         // Helper to resolve local paths - REVERTED to relative paths for Chromium security
         const resolveRelativePath = (url?: string) => {
@@ -157,13 +152,38 @@ export async function POST(request: Request) {
                     },
                 });
 
-                console.log(`[VideoRender] Render complete: ${outputLocation}`);
+                console.log(`[VideoRender] Render complete: ${outputLocation}. Uploading to Supabase...`);
+                await sendEvent({ status: "rendering", rawProgress: 1, steps: ["Uploading Final Video to Cloud Storage"] });
+
+                const supabase = createAdminClient();
+                const buffer = fs.readFileSync(outputLocation);
+                const storagePath = `renders/${outputFilename}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from("images")
+                    .upload(storagePath, buffer, {
+                        contentType: "video/mp4",
+                        upsert: true,
+                    });
+
+                if (uploadError) {
+                    throw new Error(`Upload failed: ${uploadError.message}`);
+                }
+
+                const { data: urlData } = supabase.storage
+                    .from("images")
+                    .getPublicUrl(storagePath);
+
+                const cloudUrl = urlData.publicUrl;
+                
+                // Cleanup temp file
+                if (fs.existsSync(outputLocation)) fs.unlinkSync(outputLocation);
                 
                 await sendEvent({ 
                     status: "complete", 
-                    videoUrl: publicUrl,
+                    videoUrl: cloudUrl,
                     jobId: `vid_${Math.random().toString(36).substring(7)}`,
-                    steps: ["Finished: Final MP4 Encoding"] 
+                    steps: ["Finished: Ready to share!"] 
                 });
                 
                 await writer.close();
