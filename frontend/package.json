@@ -17,7 +17,6 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@remotion/bundler": "^4.0.427",
-    "@remotion/compositor-darwin-arm64": "^4.0.427",
     "@remotion/google-fonts": "^4.0.427",
     "@remotion/lottie": "^4.0.427",
     "@remotion/player": "^4.0.427",
