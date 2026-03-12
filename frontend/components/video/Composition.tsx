@@ -280,6 +280,13 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                 transform: `translateX(${exitWhipX}px)`,
                 filter: exitBlur > 0 ? `blur(${exitBlur}px)` : 'none'
             }}>
+                <NewsTitleCard 
+                    headline={clip.title || ""} 
+                    subHeadline={clip.subtitle || ""}
+                    format={format}
+                    frame={frame}
+                    fps={fps}
+                    duration={clip.durationInFrames}
                 />
                 {sfxElement}
             </AbsoluteFill>
