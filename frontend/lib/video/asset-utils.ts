@@ -42,7 +42,10 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
                 finalUrl = url.replace(/hd_1920_1080/gi, 'sd_640_360')
                               .replace(/hd_1280_720/gi, 'sd_640_360');
             } else if (url.includes('supabase.co')) {
-                finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
+                const isImage = /\.(jpg|jpeg|png|webp|avif)/i.test(url);
+                if (isImage) {
+                    finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
+                }
             }
         }
 
