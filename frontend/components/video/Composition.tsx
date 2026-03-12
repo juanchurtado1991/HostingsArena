@@ -147,7 +147,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
 
     // Transition SFX — plays at the END of the clip (whip-pan transition sound)
     const transitionSfxElement = showTransitionSfx && resolvedTransitionSfx ? (
-        <Audio src={resolvedTransitionSfx.startsWith('/') ? staticFile(resolvedTransitionSfx.slice(1)) : resolveAsset(resolvedTransitionSfx, baseUrl)!} volume={0.6} />
+        <Audio src={resolveAsset(resolvedTransitionSfx, baseUrl) || ""} volume={0.6} />
     ) : null;
 
     if (clip.type === 'video') {
@@ -290,7 +290,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     duration={clip.durationInFrames}
                 />
                 {sfxElement}
-                {showTransitionSfx && <Audio src={transitionSfxUrl!.startsWith('/') ? staticFile(transitionSfxUrl!.slice(1)) : resolveAsset(transitionSfxUrl, baseUrl)!} volume={0.6} />}
+                {showTransitionSfx && transitionSfxUrl && <Audio src={resolveAsset(transitionSfxUrl, baseUrl) || ""} volume={0.6} />}
             </AbsoluteFill>
         );
     }
