@@ -763,7 +763,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
     voiceSpeed = 1,
     baseUrl = '',
 }) => {
-    const { fps } = useVideoConfig();
+    const { fps, durationInFrames } = useVideoConfig();
 
     // PREFETCH TRANSITION SFX for stability in production
     useEffect(() => {
