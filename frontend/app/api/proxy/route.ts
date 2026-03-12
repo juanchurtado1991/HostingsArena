@@ -14,16 +14,7 @@ export async function GET(request: NextRequest) {
         
         // Comprehensive anti-bot impersonation for Cloudflare/Pexels
         fetchHeaders.set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36');
-        fetchHeaders.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7');
-        fetchHeaders.set('Accept-Language', 'en-US,en;q=0.9,es;q=0.8');
-        fetchHeaders.set('Sec-Ch-Ua', '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"');
-        fetchHeaders.set('Sec-Ch-Ua-Mobile', '?0');
-        fetchHeaders.set('Sec-Ch-Ua-Platform', '"macOS"');
-        fetchHeaders.set('Sec-Fetch-Dest', 'document');
-        fetchHeaders.set('Sec-Fetch-Mode', 'navigate');
-        fetchHeaders.set('Sec-Fetch-Site', 'none');
-        fetchHeaders.set('Sec-Fetch-User', '?1');
-        fetchHeaders.set('Upgrade-Insecure-Requests', '1');
+        fetchHeaders.set('Accept', '*/*');
 
         const range = request.headers.get('range');
         if (range) {

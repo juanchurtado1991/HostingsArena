@@ -822,9 +822,27 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 playbackRate={1}
                                                 pauseWhenBuffering={!isPreview} 
                                                 acceptableTimeShiftInSeconds={0.5}
-                                                useWebAudioApi={true} // Force Web Audio API for proxy compatibility
+                                                useWebAudioApi={true} 
                                                 crossOrigin="anonymous"
-                                                volume={finalVolume}
+                                                onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}
+                                                volume={(f) => {
+                                                    let vol = (clip.volume ?? 1);
+                                                    if (clip.type === 'audio') {
+                                                        vol *= 1.5; 
+                                                    } else if (clip.type === 'music') {
+                                                        // Accurate frame-by-frame ducking
+                                                        const frameInComposition = clip.startFrame + f;
+                                                        const voicePlaying = layers.some(l => 
+                                                            l.clips.some(c => 
+                                                                c.type === 'audio' && 
+                                                                frameInComposition >= c.startFrame && 
+                                                                frameInComposition < c.startFrame + c.durationInFrames
+                                                            )
+                                                        );
+                                                        vol *= voicePlaying ? 0.35 : 1.0;
+                                                    }
+                                                    return vol;
+                                                }}
                                                 loop={clip.type === 'music'}
                                                 endAt={clip.type === 'audio' ? clip.durationInFrames : undefined}
                                             />
@@ -917,10 +935,11 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                         {outroSfxUrl && (
                             <Audio 
                                 src={resolveAsset(outroSfxUrl, baseUrl) || outroSfxUrl} 
-                                volume={0.8} 
+                                volume={() => 0.8}
                                 pauseWhenBuffering={!isPreview}
                                 useWebAudioApi={true}
                                 crossOrigin="anonymous"
+                                onError={(e) => console.error(`[AudioError] Failed to load Outro SFX: ${outroSfxUrl}`, e)}
                             />
                         )}
                     </AbsoluteFill>
