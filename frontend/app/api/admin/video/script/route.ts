@@ -183,7 +183,7 @@ export async function POST(request: Request) {
             ${newsDigest}
             ${userFocus}
             FORMAT: ${isShort ? 'Vertical SHORT (9:16) for TikTok/Shorts/Reels' : 'Landscape FULL VIDEO (16:9) for YouTube'}
-            LANGUAGE: ${lang === 'es' ? 'Spanish (Latin American, professional, high-energy, "Analista Tech" tone)' : 'English (American, energetic, authoritative)'}
+            LANGUAGE: ${lang === 'es' ? 'Spanish (Standard/Universal, correct formal orthography, professional, high-energy, "Analista Tech" tone)' : 'English (American, energetic, authoritative)'}
             
             
             === VIDEO REQUIREMENTS ===
@@ -209,13 +209,13 @@ export async function POST(request: Request) {
             - Each [Visual:] tag must describe a concrete, high-end cinematic shot in English.
             - Each [PexelsQuery:] tag must contain 2-4 words optimized as a search query for Pexels stock media (e.g., "server room blue lights", "smartphone close up hand"). This is used to find the perfect image/video for the scene.
             - [Transition:] options: crossfade (default), zoom (intense), none (cut).
-            ${lang === 'es' ? `` : ''}
+            ${lang === 'es' ? `- ORTOGRAFÍA: Usa ortografía perfectamente correcta en español. NO uses "hacks" fonéticos. Escribe "Google", no "Gúgol". Escribe "Hardware", no "járduer".` : ''}
             
             MANDATORY OUTPUT FORMAT:
             [Headline: 3-5 word high-impact headline] [Subheadline: 5-10 word supporting data] [DisplayHeadline: correctly spelled headline for display (only if different from Headline)] [Visual: cinematic shot description] [PexelsQuery: 2-4 word stock media search query] [Transition: crossfade|zoom|none] Spoken content.
             
             EXAMPLE (Spanish):
-            [Headline: RUPTURA CUÁNTICA DE GÚGOL] [Subheadline: Gúgol confirma que el cifrado de 30 años ha sido vulnerado] [DisplayHeadline: RUPTURA CUÁNTICA DE GOOGLE] [Visual: Aerial view of Silicon Valley at golden hour with data streams] [PexelsQuery: silicon valley aerial technology] [Transition: crossfade] Gúgol acaba de confirmarlo. La computación cuántica rompió oficialmente un estándar de cifrado de 30 años. Mientras el mundo cripto entra en pánico, el járduer necesario para esto ya está aquí.
+            [Headline: RUPTURA CUÁNTICA DE GOOGLE] [Subheadline: Google confirma que el cifrado de 30 años ha sido vulnerado] [DisplayHeadline: RUPTURA CUÁNTICA DE GOOGLE] [Visual: Aerial view of Silicon Valley at golden hour with data streams] [PexelsQuery: silicon valley aerial technology] [Transition: crossfade] Google acaba de confirmarlo. La computación cuántica rompió oficialmente un estándar de cifrado de 30 años. Mientras el mundo cripto entra en pánico, el hardware necesario para esto ya está aquí.
 
         `;
 

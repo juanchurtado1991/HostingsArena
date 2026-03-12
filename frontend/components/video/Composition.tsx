@@ -754,6 +754,24 @@ export const HostingComposition: React.FC<CompositionProps> = ({
         }
     }, [transitionSfxUrl, baseUrl]);
 
+    // [OPTIMIZATION] Bulk prefetch ALL Narrations and Music to handle slow connections
+    useEffect(() => {
+        const audioUrls = new Set<string>();
+        layers.forEach(layer => {
+            layer.clips.forEach(clip => {
+                if (clip.type === 'audio' || clip.type === 'music') {
+                    const resolved = resolveAsset(clip.src, baseUrl);
+                    if (resolved) audioUrls.add(resolved);
+                }
+            });
+        });
+
+        if (audioUrls.size > 0) {
+            console.log(`[AudioPrefetch] Proactively prefetching ${audioUrls.size} audio assets...`);
+            audioUrls.forEach(url => prefetch(url));
+        }
+    }, [layers, baseUrl]);
+
     // Calculate dynamic scene timings memoized using SyncEngine
     const sceneTimings = useMemo(() => {
         const introFrames = SyncEngine.getIntroFrames();
@@ -800,51 +818,58 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                         return (
                             <React.Fragment key={layer.id}>
                                 {layer.clips.map((clip) => {
-                                    let finalVolume = (clip.volume ?? 1);
-                                    
-                                    if (clip.type === 'audio') {
-                                        finalVolume *= 1.5; 
-                                    } else if (clip.type === 'music') {
-                                        finalVolume *= duckingMultiplier;
-                                    }
-
                                     const assetUrl = resolveAsset(clip.src, baseUrl)!;
+                                    const isVoice = clip.type === 'audio';
+                                    
+                                    // Diagnostic logs for debugging silent narrations
+                                    if (isVoice) {
+                                        console.log(`[AudioLoader] Preparing voice clip: ${clip.id}`, {
+                                            src: assetUrl,
+                                            start: clip.startFrame,
+                                            duration: clip.durationInFrames,
+                                            volume: (clip.volume ?? 1) * 1.5,
+                                            buffering: '10s (300 frames)'
+                                        });
+                                    }
 
                                     return (
                                         <Sequence 
                                             key={clip.id} 
                                             from={clip.startFrame} 
                                             durationInFrames={clip.durationInFrames}
-                                            premountFor={60}
+                                            // [PERF OPTIMIZATION] Reduced premount buffer to 3s (90 frames)
+                                            // to avoid browser throttling from too many concurrent decodes.
+                                            premountFor={90} 
                                         >
                                             <Audio 
                                                 src={assetUrl}
+                                                // Optional format hint to help browser engines
+                                                {...(assetUrl.includes('.webm') ? { type: 'audio/webm' } : {})}
+                                                {...(assetUrl.includes('.mp3') ? { type: 'audio/mpeg' } : {})}
                                                 playbackRate={1}
-                                                pauseWhenBuffering={!isPreview} 
-                                                acceptableTimeShiftInSeconds={0.5}
+                                                pauseWhenBuffering={true} // FORCE Sync stability
+                                                acceptableTimeShiftInSeconds={0.15}
+                                                // Web Audio API is now strictly used for all audio to ensure
+                                                // resource isolation and frame-accurate playback.
                                                 useWebAudioApi={true} 
                                                 crossOrigin="anonymous"
                                                 onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}
-                                                volume={(f) => {
-                                                    let vol = (clip.volume ?? 1);
-                                                    if (clip.type === 'audio') {
-                                                        vol *= 1.5; 
-                                                    } else if (clip.type === 'music') {
-                                                        // Accurate frame-by-frame ducking
-                                                        const frameInComposition = clip.startFrame + f;
-                                                        const voicePlaying = layers.some(l => 
+                                                volume={isVoice 
+                                                    ? (clip.volume ?? 1) * 1.5  // Static volume boost for Narrations
+                                                    : (f: number) => {          // Dynamic Ducking for Music
+                                                        const vol = (clip.volume ?? 1);
+                                                        const frameInComp = clip.startFrame + f;
+                                                        const voiceActive = layers.some(l => 
                                                             l.clips.some(c => 
-                                                                c.type === 'audio' && 
-                                                                frameInComposition >= c.startFrame && 
-                                                                frameInComposition < c.startFrame + c.durationInFrames
+                                                                 c.type === 'audio' && 
+                                                                frameInComp >= c.startFrame && 
+                                                                frameInComp < c.startFrame + c.durationInFrames
                                                             )
                                                         );
-                                                        vol *= voicePlaying ? 0.35 : 1.0;
+                                                        return vol * (voiceActive ? 0.35 : 1.0);
                                                     }
-                                                    return vol;
-                                                }}
+                                                }
                                                 loop={clip.type === 'music'}
-                                                endAt={clip.type === 'audio' ? clip.durationInFrames : undefined}
                                             />
                                         </Sequence>
                                     );

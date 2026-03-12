@@ -3,6 +3,7 @@
 import { Player, PlayerRef } from "@remotion/player";
 import { prefetch } from "remotion";
 import { useEffect, useRef, useMemo, useState, useCallback, memo, forwardRef, useImperativeHandle } from "react";
+import { Clock, Sparkles, Film, Mic, Music } from "lucide-react";
 import { HostingComposition } from "./Composition";
 import { Scene, Layer } from "../../types/studio";
 import { SyncEngine } from "../../lib/video-sync/SyncEngine";
@@ -156,6 +157,14 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
             const BATCH_SIZE = 3;
             let completed = 0;
 
+            // Safety timeout: 30 seconds
+            const timeout = setTimeout(() => {
+                if (!cancelled) {
+                    console.warn('[Prefetch] Safety timeout reached. Forcing unlock.');
+                    setIsPrefetching(false);
+                }
+            }, 30000);
+
             for (let i = 0; i < allMediaUrls.length; i += BATCH_SIZE) {
                 if (cancelled) break;
                 const batch = allMediaUrls.slice(i, i + BATCH_SIZE);
@@ -169,7 +178,7 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
                         await prewarmCache(proxyUrl);
                         
                         // 2. Remotion in-memory prefetch (instant thanks to Cache API hit)
-                        const { free, waitUntilDone } = prefetch(url, {
+                        const { free, waitUntilDone } = prefetch(proxyUrl, {
                             method: 'blob-url',
                         });
                         freeCallbacks.push(free);
@@ -183,6 +192,8 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
                     }
                 }));
             }
+
+            clearTimeout(timeout);
 
             if (!cancelled) {
                 prefetchFreeRefs.current = freeCallbacks;
@@ -266,7 +277,8 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
             if (e.code === 'Space') {
                 e.preventDefault();
                 const player = playerRef.current;
-                if (player) {
+                // Block spacebar if loading
+                if (player && !isPrefetching) {
                     if (player.isPlaying()) player.pause();
                     else player.play();
                 }
@@ -275,7 +287,7 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [isPrefetching]);
 
     const inputProps = useMemo(() => ({
         title: title || "Tech News Summary",
@@ -287,6 +299,24 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         transitionSfxUrl: sanitize(transitionSfxUrl),
         voiceSpeed,
     }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, voiceSpeed]);
+
+    // UI Sync Feedback
+    const [isSyncing, setIsSyncing] = useState(false);
+    useEffect(() => {
+        // Only show "Syncing" if we are not already showing the full splash
+        if (!isPrefetching) {
+            setIsSyncing(true);
+            const timer = setTimeout(() => setIsSyncing(false), 1200);
+            return () => clearTimeout(timer);
+        }
+    }, [inputProps, durationInFrames, isPrefetching]);
+
+    // Pause player if prefetching starts
+    useEffect(() => {
+        if (isPrefetching) {
+            playerRef.current?.pause();
+        }
+    }, [isPrefetching]);
 
     return (
         <div className="w-full h-full rounded-none overflow-hidden shadow-2xl relative bg-black">
@@ -303,13 +333,112 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
                 controls={false}
                 clickToPlay={false}
                 loop={false}
-                numberOfSharedAudioTags={20}
+                numberOfSharedAudioTags={30}
                 renderLoading={() => (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
                         <div className="w-10 h-10 border-4 border-studio-accent border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 )}
             />
+
+            {/* Premium Full-Screen Loading Overlay (Splash Screen) */}
+            {isPrefetching && (
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-2xl animate-in fade-in duration-700">
+                    <div className="relative w-80 h-80 flex items-center justify-center">
+                        {/* Outer rotating ring with multiple layers */}
+                        <div className="absolute inset-0 border border-studio-accent/10 rounded-full" />
+                        <div className="absolute inset-4 border border-studio-accent/5 rounded-full" />
+                        
+                        <div 
+                            className="absolute inset-0 border-t-2 border-studio-accent rounded-full animate-spin shadow-[0_0_20px_rgba(0,122,255,0.2)]" 
+                            style={{ animationDuration: '4s' }}
+                        />
+                        <div 
+                            className="absolute inset-4 border-b-2 border-studio-accent/40 rounded-full animate-spin-slow" 
+                            style={{ animationDuration: '8s', animationDirection: 'reverse' }}
+                        />
+                        
+                        {/* Inner status circle */}
+                        <div className="flex flex-col items-center justify-center text-center p-8 z-10">
+                             <div className="relative mb-6">
+                                <div className="w-20 h-20 bg-studio-accent/10 rounded-[2.5rem] flex items-center justify-center border border-studio-accent/20 shadow-2xl">
+                                    <Clock className="w-10 h-10 text-studio-accent animate-pulse" />
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-6 h-6 bg-studio-accent rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg animate-bounce">
+                                    <Sparkles className="w-3 h-3 text-white" />
+                                </div>
+                             </div>
+                             <span className="text-[11px] font-black uppercase tracking-[0.4em] text-studio-accent mb-2">
+                                Synchronization
+                             </span>
+                             <div className="flex items-baseline gap-1">
+                                <span className="text-5xl font-mono font-black text-white tabular-nums tracking-tighter">
+                                    {prefetchProgress}
+                                </span>
+                                <span className="text-lg font-mono font-bold text-studio-accent/60">%</span>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-16 w-96 space-y-5 animate-in slide-in-from-bottom-4 duration-1000">
+                        <div className="flex justify-between items-end px-1">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest mb-1">
+                                    Asset Pipeline
+                                </span>
+                                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest animate-pulse">
+                                    Optimizing Buffers...
+                                </span>
+                            </div>
+                            <span className="text-[10px] font-mono font-black text-studio-accent bg-studio-accent/10 px-3 py-1 rounded-full border border-studio-accent/20">
+                                {prefetchDone} / {prefetchTotal}
+                            </span>
+                        </div>
+                        
+                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                            <div 
+                                className="h-full bg-gradient-to-r from-studio-accent via-indigo-500 to-studio-accent rounded-full transition-all duration-700 ease-out shadow-[0_0_20px_rgba(0,122,255,0.5)]"
+                                style={{ width: `${Math.max(2, prefetchProgress)}%` }}
+                            />
+                        </div>
+                        
+                        <div className="flex items-center justify-center gap-6 pt-4 opacity-40">
+                             <Film className="w-4 h-4 text-white" />
+                             <div className="w-1 h-1 rounded-full bg-white/20" />
+                             <Mic className="w-4 h-4 text-white" />
+                             <div className="w-1 h-1 rounded-full bg-white/20" />
+                             <Music className="w-4 h-4 text-white" />
+                        </div>
+                    </div>
+                    
+                    {/* Subtle Brand Footer */}
+                    <div className="absolute bottom-16 flex items-center gap-4 opacity-20 hover:opacity-40 transition-opacity">
+                        <Sparkles className="w-5 h-5 text-studio-accent" />
+                        <span className="text-[11px] font-black uppercase tracking-[0.5em] text-white">HostingArena Video Engine</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Sync Status Toast (Mini) */}
+            {(isSyncing && !isPrefetching) && (
+                <div className="absolute top-8 left-8 z-[110] animate-in fade-in slide-in-from-top-6 duration-700">
+                    <div className="flex items-center gap-4 px-6 py-3.5 bg-zinc-950/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] group">
+                        <div className="relative">
+                            <div className="w-2.5 h-2.5 rounded-full bg-studio-accent shadow-[0_0_10px_rgba(0,122,255,0.8)]" />
+                            <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-studio-accent animate-ping" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[11px] font-black text-white uppercase tracking-[0.2em]">
+                                Engine Sync
+                            </span>
+                            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+                                Refreshing timeline state
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* Guides Layer */}
             {showSafeAreas && (
@@ -319,23 +448,6 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
                     {format === '9:16' && (
                         <div className="absolute inset-x-0 bottom-[15%] h-[15%] border-t border-dashed border-red-500/20 bg-red-500/5" />
                     )}
-                </div>
-            )}
-
-            {/* Non-Blocking Prefetch Progress Bar */}
-            {isPrefetching && (
-                <div className="absolute bottom-0 left-0 right-0 z-[95] pointer-events-none">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-black/70 backdrop-blur-md">
-                        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                            <div 
-                                className="h-full bg-gradient-to-r from-studio-accent to-blue-400 rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(0,122,255,0.4)]"
-                                style={{ width: `${prefetchProgress}%` }}
-                            />
-                        </div>
-                        <span className="text-[9px] font-bold text-white/50 tabular-nums whitespace-nowrap">
-                            {prefetchDone}/{prefetchTotal}
-                        </span>
-                    </div>
                 </div>
             )}
         </div>

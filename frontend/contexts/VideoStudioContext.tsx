@@ -304,21 +304,16 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 const data = JSON.parse(savedState);
                 if (data.scenes) setScenes(data.scenes);
                 if (data.layers) {
-                    const cleanLayers = data.layers.map((l: any, i: number) => ({
-                        ...l,
-                        name: i === 0 ? "Imagen / Video" : i === 1 ? "Narración" : "Música"
-                    }));
-                    setLayers(cleanLayers);
+                    setLayers(data.layers);
                 }
                 // Fallback for legacy tracks migration
                 else if (data.videoTrack) {
                     const legacyLayers = [
                         { id: 'l1', name: 'Imagen / Video', clips: data.videoTrack || [] },
-                        { id: 'l2', name: 'Narración', clips: data.overlayTrack || [] },
-                        { id: 'l3', name: 'Música', clips: data.audioTrack || [] },
-                        { id: 'l4', name: 'Música 2', clips: data.musicTrack || [] }
+                        { id: 'l2', name: 'Cintillo / Overlay', clips: data.overlayTrack || [] },
+                        { id: 'l3', name: 'Voz / Narración', clips: data.audioTrack || [] },
+                        { id: 'l4', name: 'Música', clips: data.musicTrack || [] }
                     ].filter(l => l.clips.length > 0);
-                    // No need to override names again here
                     setLayers(legacyLayers);
                 }
                 if (data.format) setFormat(data.format);
@@ -343,6 +338,33 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         }
         setIsLoaded(true);
     }, []);
+
+    // [REPAIR EFFECT] Ensure layers have correct names and IDs even if saved in corrupted state
+    useEffect(() => {
+        if (!isLoaded || layers.length === 0) return;
+        
+        const layerMap: Record<string, string> = {
+            'l1': 'Imagen / Video',
+            'l2': 'Cintillo / Overlay',
+            'l3': 'Voz / Narración',
+            'l4': 'Música'
+        };
+
+        let hasChange = false;
+        const repairedLayers = layers.map(l => {
+            const standardName = layerMap[l.id];
+            if (standardName && l.name !== standardName) {
+                hasChange = true;
+                return { ...l, name: standardName };
+            }
+            return l;
+        });
+
+        if (hasChange) {
+            console.log("[StudioContext] Automatically repaired corrupted layer names");
+            setLayers(repairedLayers);
+        }
+    }, [isLoaded, layers]);
 
     useEffect(() => {
         if (!isLoaded) return;
@@ -414,20 +436,19 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         });
 
                         const initialLayers: Layer[] = [
-                            { id: 'l1', name: 'Capa 1', clips: newVideoTrack },
+                            { id: 'l1', name: 'Imagen / Video', clips: newVideoTrack },
                             {
                                 id: 'l2',
-                                name: 'Capa 2',
+                                name: 'Narración',
                                 clips: [{
                                     id: 'a-custom',
                                     type: 'audio' as 'audio',
                                     src: customVoiceUrl,
-                                    startFrame: introFrames,
+                                    startFrame: SyncEngine.getIntroFrames(),
                                     durationInFrames: audioFrames
                                 }]
                             }
-                        ].filter(l => l.clips.length > 0);
-                        initialLayers.forEach((l, i) => l.name = `Capa ${i + 1}`);
+                        ];
 
                         setLayers(initialLayers);
                         setDurationInFrames(totalFrames);
@@ -715,8 +736,8 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
 
             const finalLayers: Layer[] = [
                 { id: 'l1', name: 'Imagen / Video', clips: newVideoTrack },
-                { id: 'l2', name: 'Cintillo',       clips: newLowerThirdClips },
-                { id: 'l3', name: 'Voz / SFX',      clips: newAudioClips },
+                { id: 'l2', name: 'Cintillo / Overlay', clips: newLowerThirdClips },
+                { id: 'l3', name: 'Voz / Narración',      clips: newAudioClips },
                 { id: 'l4', name: 'Música',         clips: newMusicTrack },
             ];
 

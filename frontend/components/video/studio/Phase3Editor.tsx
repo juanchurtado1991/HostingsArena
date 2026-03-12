@@ -132,6 +132,18 @@ export function Phase3Editor() {
         }
     }, [scenes, setCtxScenes]);
 
+    // 2d. Auto-expand duration if clips exceed current limit
+    useEffect(() => {
+        if (layers.length === 0) return;
+        
+        const contentDuration = SyncEngine.getClipsDurationInFrames(layers);
+        // Only expand or adjust if significantly different or content exceeds current
+        if (contentDuration > durationInFrames) {
+            console.log(`[TimelineSync] Expanding duration to match content: ${contentDuration} frames`);
+            setDurationInFramesStore(contentDuration);
+        }
+    }, [layers, durationInFrames, setDurationInFramesStore]);
+
     // 3. Auto-Save Effect (Debounced + beforeunload support)
     useEffect(() => {
         if (layers.length === 0) return;

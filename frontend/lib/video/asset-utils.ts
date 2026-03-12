@@ -41,17 +41,20 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
                 // Pexels videos: swap HD for SD
                 finalUrl = url.replace(/hd_1920_1080/gi, 'sd_640_360')
                               .replace(/hd_1280_720/gi, 'sd_640_360');
-            } else if (url.includes('supabase.co')) {
-                const isImage = /\.(jpg|jpeg|png|webp|avif)/i.test(url);
-                if (isImage) {
-                    finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
-                }
             }
         }
 
+        if (url.includes('supabase.co')) {
+            const isImage = /\.(jpg|jpeg|png|webp|avif)/i.test(url);
+            if (isImage) {
+                finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
+            }
+            // RETURN DIRECTLY - Supabase is CORS-friendly and preferred for native playback
+            return finalUrl;
+        }
+
         if (baseUrl) {
-            // For production render, we MUST use absolute URLs because the headless browser
-            // might not have a domain context for relative paths.
+            // For production render, we MUST use absolute URLs
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
             return `${cleanBaseUrl}/api/proxy?url=${encodeURIComponent(finalUrl)}`;
         }
