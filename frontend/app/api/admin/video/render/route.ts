@@ -7,6 +7,11 @@ import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
+    // Crucial for Vercel: Redirect Remotion's browser cache to /tmp
+    // as node_modules is read-only.
+    const browserCachePath = path.join(os.tmpdir(), ".remotion");
+    process.env.REMOTION_BROWSER_CACHE = browserCachePath;
+    
     const body = await request.json();
     const { 
         title, script, scenes, layers, format,
@@ -65,19 +70,29 @@ export async function POST(request: Request) {
         const host = request.headers.get("host") || "localhost:3000";
         const baseUrl = `${protocol}://${host}`;
 
-        const comps = await getCompositions(bundleLocation, {
-            inputProps: {
-                title: title || "Tech News Summary",
-                scenes: sanitizedScenes,
-                layers,
-                format: format || "9:16",
-                bgMusicUrl: relBgMusicUrl,
-                bgMusicVolume,
-                transitionSfxUrl: relTransitionSfxUrl,
-                outroSfxUrl: relOutroSfxUrl,
-                baseUrl,
-            },
-        });
+        let comps;
+        try {
+            console.log("[VideoRender] Getting compositions from bundle...");
+            comps = await getCompositions(bundleLocation, {
+                inputProps: {
+                    title: title || "Tech News Summary",
+                    scenes: sanitizedScenes,
+                    layers,
+                    format: format || "9:16",
+                    bgMusicUrl: relBgMusicUrl,
+                    bgMusicVolume,
+                    transitionSfxUrl: relTransitionSfxUrl,
+                    outroSfxUrl: relOutroSfxUrl,
+                    baseUrl,
+                },
+                chromiumOptions: {
+                    gl: "angle",
+                }
+            });
+        } catch (err: any) {
+            console.error("[VideoRender] getCompositions failed:", err);
+            throw new Error(`Failed to extract compositions: ${err.message}`);
+        }
 
         const composition = comps.find((c) => c.id === compositionId);
         if (!composition) {
