@@ -768,6 +768,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
     baseUrl = '',
 }) => {
     const { fps, durationInFrames } = useVideoConfig();
+    const isPreview = !baseUrl;
 
     // PREFETCH TRANSITION SFX for stability in production
     useEffect(() => {
@@ -814,7 +815,6 @@ export const HostingComposition: React.FC<CompositionProps> = ({
     const duckingMultiplier = isVoiceActive ? 0.35 : 1.0;
 
     const renderLayers = (activeLayers: Layer[]) => {
-        const isPreview = !baseUrl;
         return (
             <>
                 {activeLayers.map((layer, lIdx) => {
