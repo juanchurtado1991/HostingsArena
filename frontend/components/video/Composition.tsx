@@ -146,19 +146,6 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
         </Sequence>
     ) : null;
 
-    // Transition SFX — plays at the END of the clip (whip-pan transition sound)
-    // CRITICAL: Only play if it's a whip-pan (isWhipManual) or specified news type to avoid phantom clicks
-    const transitionSfxElement = (resolvedTransitionSfx && isWhipManual) ? (
-        <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset} premountFor={60}>
-            <Audio 
-                src={resolveAsset(resolvedTransitionSfx, baseUrl) || ""} 
-                volume={0.6} 
-                pauseWhenBuffering={!isPreview}
-                useWebAudioApi={true}
-                crossOrigin="anonymous"
-            />
-        </Sequence>
-    ) : null;
 
     if (clip.type === 'video') {
         return (
@@ -175,7 +162,6 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                     />
                 )}
                 {sfxElement}
-                {transitionSfxElement}
             </AbsoluteFill>
         );
     }
@@ -187,7 +173,6 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                 onError={handleAssetError}
             />
             {sfxElement}
-            {transitionSfxElement}
         </AbsoluteFill>
     );
 };
@@ -303,18 +288,6 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     fps={fps}
                     duration={clip.durationInFrames}
                 />
-                {sfxElement}
-                {(transitionSfxUrl && isWhipManual) && (
-                    <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset} premountFor={60}>
-                        <Audio 
-                            src={resolveAsset(transitionSfxUrl, baseUrl) || ""} 
-                            volume={0.6} 
-                            pauseWhenBuffering={!isPreview}
-                            useWebAudioApi={true}
-                            crossOrigin="anonymous"
-                        />
-                    </Sequence>
-                )}
             </AbsoluteFill>
         );
     }
