@@ -47,3 +47,10 @@ public/renders/*.mp4
 public/temp/
 public/uploads/
 public/voices/*.webm
+
+# Video Studio Build Artifacts
+public/video-bundle/
+
+# Test scripts
+test_*.js
+test_output.txt

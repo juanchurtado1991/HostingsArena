@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { bundle } from "@remotion/bundler";
 import { getCompositions, renderMedia } from "@remotion/renderer";
 import path from "path";
 import fs from "fs";
@@ -47,14 +46,15 @@ export async function POST(request: Request) {
             voiceUrl: resolveRelativePath(scene.voiceUrl)
         }));
 
-        console.log("[VideoRender] Bundling composition with publicDir...");
-        const bundleLocation = await bundle({
-            entryPoint,
-            publicDir: path.join(process.cwd(), "public") // Crucial for staticFile resolution
-        });
-
         const compositionId = format === "9:16" ? "HostingShort" : "HostingLandscape";
         
+        console.log(`[VideoRender] Using pre-built bundle from public/video-bundle/bundle.js`);
+        const bundleLocation = path.join(process.cwd(), "public", "video-bundle", "bundle.js");
+        
+        if (!fs.existsSync(bundleLocation)) {
+            throw new Error("Video bundle not found. Ensure 'npm run build' or 'node scripts/bundle-video.js' has been run.");
+        }
+
         console.log(`[VideoRender] Using relative assets for secure browser rendering: 
           Music: ${relBgMusicUrl}
           SFX: ${relTransitionSfxUrl}
