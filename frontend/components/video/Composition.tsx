@@ -130,7 +130,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     const sfxFadeOut = clip.sfxFadeOutFrames ?? 8;
     
     const sfxElement = resolvedSfxSrc ? (
-        <Sequence from={0} durationInFrames={sfxDur}>
+        <Sequence from={0} durationInFrames={sfxDur} premountFor={60}>
             <Audio 
                 src={resolvedSfxSrc} 
                 volume={(f: number) => {
@@ -147,8 +147,9 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     ) : null;
 
     // Transition SFX — plays at the END of the clip (whip-pan transition sound)
-    const transitionSfxElement = resolvedTransitionSfx ? (
-        <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset}>
+    // CRITICAL: Only play if it's a whip-pan (isWhipManual) or specified news type to avoid phantom clicks
+    const transitionSfxElement = (resolvedTransitionSfx && isWhipManual) ? (
+        <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset} premountFor={60}>
             <Audio 
                 src={resolveAsset(resolvedTransitionSfx, baseUrl) || ""} 
                 volume={0.6} 
@@ -255,7 +256,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
     const sfxFadeOut = clip.sfxFadeOutFrames ?? 8;
     
     const sfxElement = resolvedSfxSrc ? (
-        <Sequence from={0} durationInFrames={sfxDur}>
+        <Sequence from={0} durationInFrames={sfxDur} premountFor={60}>
             <Audio 
                 src={resolvedSfxSrc} 
                 volume={(f: number) => {
@@ -265,6 +266,8 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                 }}
                 pauseWhenBuffering={true}
                 acceptableTimeShiftInSeconds={0.5}
+                useWebAudioApi={true}
+                crossOrigin="anonymous"
             />
         </Sequence>
     ) : null;
@@ -300,8 +303,8 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     duration={clip.durationInFrames}
                 />
                 {sfxElement}
-                {transitionSfxUrl && (
-                    <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset}>
+                {(transitionSfxUrl && isWhipManual) && (
+                    <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset} premountFor={60}>
                         <Audio 
                             src={resolveAsset(transitionSfxUrl, baseUrl) || ""} 
                             volume={0.6} 
@@ -837,6 +840,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                             key={clip.id} 
                                             from={clip.startFrame} 
                                             durationInFrames={clip.durationInFrames}
+                                            premountFor={60}
                                         >
                                             <Audio 
                                                 src={assetUrl}
@@ -930,7 +934,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                 <Sequence 
                     from={durationInFrames - outroFrames} 
                     durationInFrames={outroFrames} 
-                    premountFor={30} 
+                    premountFor={60} 
                     style={{ zIndex: 9999 }} // Force top layer
                 >
                     <AbsoluteFill>
@@ -939,6 +943,9 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                             <Audio 
                                 src={outroSfxUrl.startsWith('/') ? `${baseUrl}${outroSfxUrl}` : outroSfxUrl} 
                                 volume={0.8} 
+                                pauseWhenBuffering={true}
+                                useWebAudioApi={true}
+                                crossOrigin="anonymous"
                             />
                         )}
                     </AbsoluteFill>
