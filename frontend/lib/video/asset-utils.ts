@@ -47,7 +47,9 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
         }
 
         if (baseUrl) {
-            return finalUrl;
+            // For production render, we still need the proxy if it's an external domain
+            // to bypass CORS in the headless browser.
+            return `/api/proxy?url=${encodeURIComponent(finalUrl)}`;
         }
         
         return `/api/proxy?url=${encodeURIComponent(finalUrl)}`;
