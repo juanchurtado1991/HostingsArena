@@ -27,7 +27,8 @@ export interface CompositionProps {
 
 const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: string, baseUrl?: string, transitionSfxUrl?: string }> = ({ clip, format, title, baseUrl, transitionSfxUrl }) => {
     const frame = useCurrentFrame();
-    const { fps, durationInFrames } = useVideoConfig(); // Use actual clip duration
+    const { fps } = useVideoConfig(); // Use actual clip duration
+    const clipDuration = clip.durationInFrames;
     const isPreview = !baseUrl;
     const [hasError, setHasError] = useState(false);
     const [fallbackSrc, setFallbackSrc] = useState<string | null>(null);
@@ -53,15 +54,15 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     const entryScale = interpolate(frame, [0, transFrames], [0.8, 1], { extrapolateRight: 'clamp' });
     
     // Exit Whip
-    const exitWhipX = interpolate(frame, [durationInFrames - transFrames, durationInFrames], [0, format === '9:16' ? 600 : 1000], { extrapolateLeft: 'clamp' });
-    const exitBlur = interpolate(frame, [durationInFrames - transFrames, durationInFrames], [0, 25], { extrapolateLeft: 'clamp' });
-    const exitScale = interpolate(frame, [durationInFrames - transFrames, durationInFrames], [1, 1.4], { extrapolateLeft: 'clamp' });
+    const exitWhipX = isWhipManual ? interpolate(frame, [clipDuration - transFrames, clipDuration], [0, format === '9:16' ? 600 : 1000], { extrapolateLeft: 'clamp' }) : 0;
+    const exitBlur = isWhipManual ? interpolate(frame, [clipDuration - transFrames, clipDuration], [0, 25], { extrapolateLeft: 'clamp' }) : 0;
+    const exitScale = isWhipManual ? interpolate(frame, [clipDuration - transFrames, clipDuration], [1, 1.4], { extrapolateLeft: 'clamp' }) : 1;
     
     const totalWhipX = isWhipManual ? (entryWhipX + exitWhipX) : 0;
     const totalBlur = isWhipManual ? (entryBlur + exitBlur) : 0;
 
     // v6 SFX Timing
-    const sfxOffset = durationInFrames - Math.floor(transFrames / 2);
+    const sfxOffset = clipDuration - Math.floor(transFrames / 2);
     const resolvedTransitionSfx = transitionSfxUrl;
     const showTransitionSfx = frame >= sfxOffset && frame < sfxOffset + 5 && resolvedTransitionSfx;
 
@@ -225,16 +226,17 @@ const BackgroundParticles: React.FC<{ frame: number, count?: number, color?: str
 // TextRenderer component for professional overlays
 const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: string, baseUrl?: string, transitionSfxUrl?: string }> = ({ clip, format, title, baseUrl, transitionSfxUrl }) => { 
     const frame = useCurrentFrame(); 
-    const { fps, durationInFrames } = useVideoConfig(); 
+    const { fps } = useVideoConfig(); 
+    const clipDuration = clip.durationInFrames;
 
     // Port v6 Whip Transition to Text
     const transFrames = 12;
     const isWhipManual = clip.motionEffect === 'whip-pan' || clip.src === 'news-card';
-    const exitWhipX = isWhipManual ? interpolate(frame, [durationInFrames - transFrames, durationInFrames], [0, format === '9:16' ? 600 : 1000], { extrapolateLeft: 'clamp' }) : 0;
-    const exitBlur = isWhipManual ? interpolate(frame, [durationInFrames - transFrames, durationInFrames], [0, 20], { extrapolateLeft: 'clamp' }) : 0;
+    const exitWhipX = isWhipManual ? interpolate(frame, [clipDuration - transFrames, clipDuration], [0, format === '9:16' ? 600 : 1000], { extrapolateLeft: 'clamp' }) : 0;
+    const exitBlur = isWhipManual ? interpolate(frame, [clipDuration - transFrames, clipDuration], [0, 20], { extrapolateLeft: 'clamp' }) : 0;
 
     // SFX Timing
-    const sfxOffset = durationInFrames - Math.floor(transFrames / 2);
+    const sfxOffset = clipDuration - Math.floor(transFrames / 2);
     const showTransitionSfx = frame >= sfxOffset && frame < sfxOffset + 5 && transitionSfxUrl;
 
     // Linked SFX — plays at the START of the clip with fade
