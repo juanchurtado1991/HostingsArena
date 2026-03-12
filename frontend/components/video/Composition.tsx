@@ -147,8 +147,16 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     ) : null;
 
     // Transition SFX — plays at the END of the clip (whip-pan transition sound)
-    const transitionSfxElement = showTransitionSfx && resolvedTransitionSfx ? (
-        <Audio src={resolveAsset(resolvedTransitionSfx, baseUrl) || ""} volume={0.6} />
+    const transitionSfxElement = resolvedTransitionSfx ? (
+        <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset}>
+            <Audio 
+                src={resolveAsset(resolvedTransitionSfx, baseUrl) || ""} 
+                volume={0.6} 
+                pauseWhenBuffering={true}
+                useWebAudioApi={true}
+                crossOrigin="anonymous"
+            />
+        </Sequence>
     ) : null;
 
     if (clip.type === 'video') {
@@ -237,7 +245,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
 
     // SFX Timing
     const sfxOffset = clipDuration - Math.floor(transFrames / 2);
-    const showTransitionSfx = frame >= sfxOffset && frame < sfxOffset + 5 && transitionSfxUrl;
+    // Removed showTransitionSfx conditional render in favor of Sequence below
 
     // Linked SFX — plays at the START of the clip with fade
     const resolvedSfxSrc = clip.sfxUrl ? (resolveAsset(clip.sfxUrl, baseUrl) || clip.sfxUrl) : null;
@@ -292,7 +300,17 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     duration={clip.durationInFrames}
                 />
                 {sfxElement}
-                {showTransitionSfx && transitionSfxUrl && <Audio src={resolveAsset(transitionSfxUrl, baseUrl) || ""} volume={0.6} />}
+                {transitionSfxUrl && (
+                    <Sequence from={sfxOffset} durationInFrames={clipDuration - sfxOffset}>
+                        <Audio 
+                            src={resolveAsset(transitionSfxUrl, baseUrl) || ""} 
+                            volume={0.6} 
+                            pauseWhenBuffering={true}
+                            useWebAudioApi={true}
+                            crossOrigin="anonymous"
+                        />
+                    </Sequence>
+                )}
             </AbsoluteFill>
         );
     }
@@ -745,7 +763,17 @@ export const HostingComposition: React.FC<CompositionProps> = ({
     voiceSpeed = 1,
     baseUrl = '',
 }) => {
-    const { fps, durationInFrames } = useVideoConfig();
+    const { fps } = useVideoConfig();
+
+    // PREFETCH TRANSITION SFX for stability in production
+    useEffect(() => {
+        if (transitionSfxUrl) {
+            const resolved = resolveAsset(transitionSfxUrl, baseUrl);
+            if (resolved && resolved !== 'intro' && resolved !== 'outro') {
+                prefetch(resolved);
+            }
+        }
+    }, [transitionSfxUrl, baseUrl]);
 
     // Calculate dynamic scene timings memoized using SyncEngine
     const sceneTimings = useMemo(() => {
