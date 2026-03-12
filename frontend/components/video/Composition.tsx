@@ -848,7 +848,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 playbackRate={1}
                                                 pauseWhenBuffering={!isPreview} 
                                                 acceptableTimeShiftInSeconds={0.5}
-                                                useWebAudioApi={!isPreview} // Use native HTML5 audio for long music files in preview for better performance
+                                                useWebAudioApi={true} // Force Web Audio API for proxy compatibility
                                                 crossOrigin="anonymous"
                                                 volume={finalVolume}
                                                 loop={clip.type === 'music'}
@@ -942,7 +942,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                         <OutroSequence format={format} fps={fps} />
                         {outroSfxUrl && (
                             <Audio 
-                                src={outroSfxUrl.startsWith('/') ? `${baseUrl}${outroSfxUrl}` : outroSfxUrl} 
+                                src={resolveAsset(outroSfxUrl, baseUrl) || outroSfxUrl} 
                                 volume={0.8} 
                                 pauseWhenBuffering={!isPreview}
                                 useWebAudioApi={true}
