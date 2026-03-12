@@ -138,7 +138,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                     const fadeOutVol = sfxFadeOut > 0 ? interpolate(f, [sfxDur - sfxFadeOut, sfxDur], [sfxBaseVol, 0], { extrapolateLeft: 'clamp' }) : sfxBaseVol;
                     return Math.min(fadeInVol, fadeOutVol);
                 }}
-                pauseWhenBuffering={true}
+                pauseWhenBuffering={!isPreview}
                 acceptableTimeShiftInSeconds={0.5}
                 useWebAudioApi={true}
                 crossOrigin="anonymous"
@@ -153,7 +153,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
             <Audio 
                 src={resolveAsset(resolvedTransitionSfx, baseUrl) || ""} 
                 volume={0.6} 
-                pauseWhenBuffering={true}
+                pauseWhenBuffering={!isPreview}
                 useWebAudioApi={true}
                 crossOrigin="anonymous"
             />
@@ -234,6 +234,7 @@ const BackgroundParticles: React.FC<{ frame: number, count?: number, color?: str
 
 // TextRenderer component for professional overlays
 const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: string, baseUrl?: string, transitionSfxUrl?: string }> = ({ clip, format, title, baseUrl, transitionSfxUrl }) => { 
+    const isPreview = !baseUrl;
     const frame = useCurrentFrame(); 
     const { fps } = useVideoConfig(); 
     const clipDuration = clip.durationInFrames;
@@ -264,7 +265,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     const fadeOutVol = sfxFadeOut > 0 ? interpolate(f, [sfxDur - sfxFadeOut, sfxDur], [sfxBaseVol, 0], { extrapolateLeft: 'clamp' }) : sfxBaseVol;
                     return Math.min(fadeInVol, fadeOutVol);
                 }}
-                pauseWhenBuffering={true}
+                pauseWhenBuffering={!isPreview}
                 acceptableTimeShiftInSeconds={0.5}
                 useWebAudioApi={true}
                 crossOrigin="anonymous"
@@ -308,7 +309,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                         <Audio 
                             src={resolveAsset(transitionSfxUrl, baseUrl) || ""} 
                             volume={0.6} 
-                            pauseWhenBuffering={true}
+                            pauseWhenBuffering={!isPreview}
                             useWebAudioApi={true}
                             crossOrigin="anonymous"
                         />
@@ -845,9 +846,9 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                             <Audio 
                                                 src={assetUrl}
                                                 playbackRate={1}
-                                                pauseWhenBuffering={true} 
+                                                pauseWhenBuffering={!isPreview} 
                                                 acceptableTimeShiftInSeconds={0.5}
-                                                useWebAudioApi={true}
+                                                useWebAudioApi={!isPreview} // Use native HTML5 audio for long music files in preview for better performance
                                                 crossOrigin="anonymous"
                                                 volume={finalVolume}
                                                 loop={clip.type === 'music'}
@@ -943,7 +944,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                             <Audio 
                                 src={outroSfxUrl.startsWith('/') ? `${baseUrl}${outroSfxUrl}` : outroSfxUrl} 
                                 volume={0.8} 
-                                pauseWhenBuffering={true}
+                                pauseWhenBuffering={!isPreview}
                                 useWebAudioApi={true}
                                 crossOrigin="anonymous"
                             />
