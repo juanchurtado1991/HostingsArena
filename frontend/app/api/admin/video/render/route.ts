@@ -32,6 +32,62 @@ export async function POST(request: Request) {
         durationInFrames = 1800
     } = body;
 
+    // --- HOME LAB RENDERING PROXY ---
+    // If HOME_LAB_RENDER_URL is configured, we offload the render to our home lab.
+    // This bypasses Vercel/Local serverless limits and uses dedicated hardware.
+    if (process.env.HOME_LAB_RENDER_URL) {
+        console.log(`[VideoRender] PROXYING to remote renderer: ${process.env.HOME_LAB_RENDER_URL}`);
+        
+        // Determine bundle URL (needs to be public)
+        const protocol = request.headers.get("x-forwarded-proto") || "http";
+        const host = request.headers.get("host") || "localhost:3000";
+        const bundleUrl = `${protocol}://${host}/video-bundle/bundle.js`;
+
+        try {
+            const remoteResponse = await fetch(`${process.env.HOME_LAB_RENDER_URL}/render`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bundleUrl,
+                    compositionId: format === "9:16" ? "HostingShort" : "HostingLandscape",
+                    inputProps: {
+                        title, scenes, layers, format,
+                        bgMusicUrl, bgMusicVolume, 
+                        transitionSfxUrl, outroSfxUrl,
+                        baseUrl: `${protocol}://${host}`
+                    },
+                    durationInFrames,
+                    width: format === "9:16" ? 1080 : 1920,
+                    height: format === "9:16" ? 1920 : 1080,
+                    crf: exportSettings?.quality === 'max' ? 18 : (exportSettings?.quality === 'draft' ? 28 : 23)
+                })
+            });
+
+            if (!remoteResponse.ok) {
+                const errorText = await remoteResponse.text();
+                throw new Error(`Remote renderer failed: ${errorText}`);
+            }
+
+            // Pipe the SSE response back to our client
+            return new Response(remoteResponse.body, {
+                headers: {
+                    'Content-Type': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                },
+            });
+        } catch (remoteError: any) {
+            console.error("[VideoRender] Remote Proxy Error:", remoteError);
+            // Fallback to local render only if we really want to, 
+            // but usually a proxy failure means configuration issues.
+            // For now, return error to avoid unexpected Vercel bills.
+            return NextResponse.json({ 
+                error: "Remote render proxy failed", 
+                details: remoteError.message 
+            }, { status: 502 });
+        }
+    }
+
     if (!title || !script) {
         return NextResponse.json({ error: "Title and script are required" }, { status: 400 });
     }

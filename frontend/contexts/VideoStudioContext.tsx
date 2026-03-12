@@ -819,66 +819,75 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 throw new Error(errorDetails);
             }
 
-            // SSE Consumption
+            // SSE Consumption - Robust buffer handling
             const reader = renderResponse.body.getReader();
             const decoder = new TextDecoder();
             let finalVideoUrl = null;
+            let buffer = '';
 
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                
+                // Keep the last partial line in the buffer
+                buffer = lines.pop() || '';
 
                 for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.substring(6));
-                            
-                            if (data.error) {
-                                throw new Error(data.details || "Streaming render failed");
-                            }
-
-                            if (data.status === "initializing") {
-                                setRenderStep(data.steps[0] || "Initializing Video News Engine...");
-                                setRenderProgress(5);
-                            }
-
-                            if (data.status === "rendering") {
-                                const raw = parseFloat(data.rawProgress);
-                                if (!isNaN(raw)) {
-                                    console.log(`[SSE Client] ${new Date().toISOString()} - Received progress: ${raw}`);
-                                    const realPct = 5 + (raw * 90); // scale 0-1 to 5-95%
-                                    setRenderProgress(Math.round(realPct));
-                                    setRenderStep("Compositing News Scenes...");
-
-                                    // Calculate real ETA based on elapsed time vs progress
-                                    const elapsedSec = (Date.now() - renderStartTime) / 1000;
-                                    if (raw > 0.05) { // Only calc after 5% to avoid initial spikes
-                                        const totalEstimatedSec = elapsedSec / raw;
-                                        const remainingSec = totalEstimatedSec - elapsedSec;
-                                        setRenderEta(Math.ceil(remainingSec));
-                                    } else {
-                                        // Fallback to static guess early on
-                                        setRenderEta(Math.ceil(estimatedSeconds - elapsedSec));
-                                    }
-                                }
-                            }
-
-                            if (data.status === "complete") {
-                                finalVideoUrl = data.videoUrl;
-                                setVideoUrl(data.videoUrl); // Set immediately
-                                setRenderStep("Finalizing MP4 container...");
-                            }
-
-                        } catch (e) {
-                            console.warn("Failed to parse SSE chunk", line, e);
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+                    
+                    try {
+                        const data = JSON.parse(trimmedLine.substring(6));
+                        
+                        if (data.error) {
+                            throw new Error(data.details || "Streaming render failed");
                         }
+
+                        if (data.status === "initializing") {
+                            setRenderStep(data.steps?.[0] || "Initializing Video News Engine...");
+                            setRenderProgress(5);
+                        }
+
+                        if (data.status === "rendering" || data.status === "uploading") {
+                            const raw = parseFloat(data.rawProgress);
+                            if (!isNaN(raw)) {
+                                console.log(`[SSE Client] ${new Date().toISOString()} - Received progress: ${raw}`);
+                                const realPct = 5 + (raw * 90); // scale 0-1 to 5-95%
+                                setRenderProgress(Math.round(realPct));
+                                setRenderStep(data.message || (data.status === "uploading" ? "Uploading to Cloud..." : "Compositing News Scenes..."));
+
+                                // Calculate real ETA based on elapsed time vs progress
+                                const elapsedSec = (Date.now() - renderStartTime) / 1000;
+                                if (raw > 0.05) { 
+                                    const totalEstimatedSec = elapsedSec / raw;
+                                    const remainingSec = totalEstimatedSec - elapsedSec;
+                                    setRenderEta(Math.ceil(remainingSec));
+                                } else {
+                                    setRenderEta(Math.ceil(estimatedSeconds - elapsedSec));
+                                }
+                            } else if (data.status === "uploading") {
+                                setRenderStep("Uploading to secure storage...");
+                                setRenderProgress(95);
+                            }
+                        }
+
+                        if (data.status === "complete") {
+                            console.log("[SSE Client] Render Complete Event Received!", data.videoUrl);
+                            finalVideoUrl = data.videoUrl;
+                            setVideoUrl(data.videoUrl); // Set immediately
+                            setRenderStep("Finalizing MP4 container...");
+                        }
+
+                    } catch (e) {
+                        console.warn("Failed to parse SSE chunk", trimmedLine, e);
                     }
                 }
             }
 
+            // Sync final URL
             if (finalVideoUrl) setVideoUrl(finalVideoUrl);
 
             setRenderStep("Finalizing master output...");
@@ -1070,13 +1079,15 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
 
     const handleDownload = useCallback(() => {
         if (!videoUrl) return;
+        const filename = `${title.replace(/\s/g, '_') || 'video'}.mp4`;
+        const proxyUrl = `/api/admin/video/download?url=${encodeURIComponent(videoUrl)}&filename=${encodeURIComponent(filename)}`;
+        
         const link = document.createElement('a');
-        link.href = videoUrl;
-        link.download = `${title.replace(/\s/g, '_') || 'video'}.mp4`;
+        link.href = proxyUrl;
+        link.download = filename; // Still helpful for some browsers
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        setRenderFinished(false);
     }, [videoUrl, title]);
 
     const value: VideoStudioContextValue = useMemo(() => ({
