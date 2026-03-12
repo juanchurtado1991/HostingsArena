@@ -209,15 +209,7 @@ export async function POST(request: Request) {
             - Each [Visual:] tag must describe a concrete, high-end cinematic shot in English.
             - Each [PexelsQuery:] tag must contain 2-4 words optimized as a search query for Pexels stock media (e.g., "server room blue lights", "smartphone close up hand"). This is used to find the perfect image/video for the scene.
             - [Transition:] options: crossfade (default), zoom (intense), none (cut).
-            ${lang === 'es' ? `
-            REGLAS FONÉTICAS OBLIGATORIAS (SOLO PARA ESPAÑOL):
-            - Escribe las marcas y términos técnicos en inglés de forma fonética en español para facilitar la pronunciación del TTS.
-            - Ejemplos: "OpenAI" → "Ópen Ái", "NVIDIA" → "Envidia", "Microsoft" → "Máicrosoft", "Google" → "Gúgol", "Apple" → "Ápol", "iPhone" → "Áifon", "Cloud" → "Cláud", "Streaming" → "Estríming", "Hardware" → "Járduer", "Software" → "Sófuer", "Data Center" → "Déita Sénter", "Machine Learning" → "Mashín Lérning", "Blockchain" → "Blókchein", "Startup" → "Estártap"
-            - EXCEPCIÓN: "HostingArena" se mantiene igual (es nuestra marca).
-            - Aplica esto a TODAS las palabras en inglés que aparezcan en el script.
-            - IMPORTANTE: Los tags [Headline:] y [Subheadline:] PUEDEN contener fonética para TTS.
-              Agrega SIEMPRE un tag [DisplayHeadline:] con el headline ESCRITO CORRECTAMENTE (ej: "Apple" no "Ápol", "NVIDIA" no "Envidia"). Este tag se usa SOLO para texto en pantalla.
-            ` : ''}
+            ${lang === 'es' ? `` : ''}
             
             MANDATORY OUTPUT FORMAT:
             [Headline: 3-5 word high-impact headline] [Subheadline: 5-10 word supporting data] [DisplayHeadline: correctly spelled headline for display (only if different from Headline)] [Visual: cinematic shot description] [PexelsQuery: 2-4 word stock media search query] [Transition: crossfade|zoom|none] Spoken content.

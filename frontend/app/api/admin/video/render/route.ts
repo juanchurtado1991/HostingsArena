@@ -1,16 +1,28 @@
 import { NextResponse } from "next/server";
-import { getCompositions, renderMedia } from "@remotion/renderer";
+import { getCompositions, renderMedia, ensureBrowser } from "@remotion/renderer";
 import path from "path";
 import fs from "fs";
 import os from "os";
 import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
+// --- VERCEL FILESYSTEM OVERRIDES ---
+// These must be set at the top level so they take effect before Remotion initializes.
+if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    const tmpDir = os.tmpdir();
+    process.env.REMOTION_BROWSER_CACHE = path.join(tmpDir, ".remotion");
+    process.env.REMOTION_LOCAL_DIR = path.join(tmpDir, ".remotion_local");
+    console.log(`[VideoRender] Redirecting Remotion cache to: ${process.env.REMOTION_BROWSER_CACHE}`);
+}
+
 export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
-    // Crucial for Vercel: Redirect Remotion's browser cache to /tmp
-    // as node_modules is read-only.
-    const browserCachePath = path.join(os.tmpdir(), ".remotion");
-    process.env.REMOTION_BROWSER_CACHE = browserCachePath;
+    // Explicitly ensure browser is ready in the writable /tmp path
+    try {
+        console.log("[VideoRender] Ensuring Chromium browser is available...");
+        await ensureBrowser();
+    } catch (browserErr: any) {
+        console.warn("[VideoRender] ensureBrowser warning (may already be downloading):", browserErr.message);
+    }
     
     const body = await request.json();
     const { 
