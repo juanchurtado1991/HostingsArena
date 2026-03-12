@@ -75,18 +75,18 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     const vY = clip.y ?? 50;
     
     // Default Animation (Ken Burns)
-    const kenFrames = durationInFrames;
+    const kenFrames = clipDuration;
     const kbScale = interpolate(frame, [0, kenFrames], [1.1, 1.25]);
-    const finalScale = (!clip.motionEffect || clip.motionEffect === 'ken-burns') ? (kbScale * (isWhipManual ? (frame < transFrames ? entryScale : 1) * (frame > durationInFrames - transFrames ? exitScale : 1) : 1)) : (isWhipManual ? (frame < transFrames ? entryScale : 1) * (frame > durationInFrames - transFrames ? exitScale : 1) : 1);
+    const finalScale = (!clip.motionEffect || clip.motionEffect === 'ken-burns') ? (kbScale * (isWhipManual ? (frame < transFrames ? entryScale : 1) * (frame > clipDuration - transFrames ? exitScale : 1) : 1)) : (isWhipManual ? (frame < transFrames ? entryScale : 1) * (frame > clipDuration - transFrames ? exitScale : 1) : 1);
     const finalTx = totalWhipX;
     
     // Manual Motion Effects
     let manualTransform = '';
     if (clip.motionEffect === 'zoom-in') {
-        const zScale = interpolate(frame, [0, durationInFrames], [1, 1.3]);
+        const zScale = interpolate(frame, [0, clipDuration], [1, 1.3]);
         manualTransform = `scale(${zScale})`;
     } else if (clip.motionEffect === 'zoom-out') {
-        const zScale = interpolate(frame, [0, durationInFrames], [1.3, 1]);
+        const zScale = interpolate(frame, [0, clipDuration], [1.3, 1]);
         manualTransform = `scale(${zScale})`;
     } else if (clip.motionEffect === 'slide-up') {
         const ty = interpolate(frame, [0, 20], [50, 0], { extrapolateRight: 'clamp' });
