@@ -305,6 +305,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     frame={frame}
                     fps={fps}
                     duration={clip.durationInFrames}
+                    baseUrl={baseUrl}
                 />
             </AbsoluteFill>
         );
@@ -573,6 +574,13 @@ const NewsLowerThirdOverlay: React.FC<{
     const pulseCycle = frame % 90;
     const continuousPulse = interpolate(pulseCycle, [0, 10, 20, 90], [1, 0.85, 1, 1], { extrapolateRight: 'clamp' });
     
+    const logoSrc = (baseUrl ? resolveAsset("/ha-logo.png", baseUrl) : staticFile("/ha-logo.png")) as string;
+    
+    // Diagnostic for Phase 4 404 tracking
+    if (frame === 10) {
+        console.log(`[NewsOverlay] Logo Source: ${logoSrc}`, { baseUrl, frame });
+    }
+
     return (
         <AbsoluteFill style={{
             justifyContent: 'flex-end',
@@ -712,7 +720,7 @@ const NewsLowerThirdOverlay: React.FC<{
                         transform: `scale(${logoPop * continuousPulse})` // Incorporates periodic shrinking
                     }}>
                         <Img 
-                            src={(baseUrl ? resolveAsset("/ha-logo.png", baseUrl) : staticFile("/ha-logo.png")) as string} 
+                            src={logoSrc} 
                             style={{
                                 width: '85%', // Increased significantly from 65% to fill space
                                 height: '85%',
