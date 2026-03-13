@@ -42,6 +42,21 @@ async function run() {
     
     copyDir(result, bundleDest);
     console.log("✅ Video bundle directory created at:", bundleDest);
+
+    // --- Post-processing index.html ---
+    const indexPath = path.join(bundleDest, "index.html");
+    if (fs.existsSync(indexPath)) {
+      console.log("🛠 Post-processing index.html to use relative paths...");
+      let html = fs.readFileSync(indexPath, "utf8");
+      
+      // Replace src="/bundle.js" with src="./bundle.js"
+      // Replace href="/bundle.css" with href="./bundle.css"
+      // Also handles double quotes and potential other assets starting with /
+      html = html.replace(/(src|href)="\/([^"]+)"/g, '$1="./$2"');
+      
+      fs.writeFileSync(indexPath, html);
+      console.log("✨ Successfully patched index.html for subdirectory support.");
+    }
   } catch (error) {
     console.error("❌ Failed to bundle video:", error);
     process.exit(1);
