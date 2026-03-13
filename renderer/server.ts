@@ -75,6 +75,11 @@ app.post('/render', async (req, res) => {
             outputLocation,
             codec: 'h264',
             crf,
+            inputProps,
+            chromiumOptions: {
+                disableWebSecurity: true,
+                gl: 'angle',
+            },
             onProgress: ({ progress }) => {
                 sendEvent({ status: 'rendering', rawProgress: progress, message: 'Rendering frames...' });
             },

@@ -847,8 +847,8 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 {...(assetUrl.includes('.webm') ? { type: 'audio/webm' } : {})}
                                                 {...(assetUrl.includes('.mp3') ? { type: 'audio/mpeg' } : {})}
                                                 playbackRate={1}
-                                                pauseWhenBuffering={true} // FORCE Sync stability
-                                                acceptableTimeShiftInSeconds={0.15}
+                                                pauseWhenBuffering={!isPreview} // Only pause in headless render, not preview
+                                                acceptableTimeShiftInSeconds={0.5} // SKILL.md Gotcha #3: low values cause aggressive stutter loops
                                                 // Web Audio API is now strictly used for all audio to ensure
                                                 // resource isolation and frame-accurate playback.
                                                 useWebAudioApi={true} 
