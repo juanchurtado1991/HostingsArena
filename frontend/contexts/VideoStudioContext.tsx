@@ -887,8 +887,10 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 }
             }
 
-            // Sync final URL
-            if (finalVideoUrl) setVideoUrl(finalVideoUrl);
+            // Final verification before marking as finished
+            if (!finalVideoUrl) {
+                throw new Error("Render stream ended without receiving a completion event or video URL.");
+            }
 
             setRenderStep("Finalizing master output...");
             for (let p = Math.round(renderProgress); p <= 100; p += 2) {

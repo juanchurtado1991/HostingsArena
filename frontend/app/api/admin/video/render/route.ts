@@ -52,7 +52,8 @@ export async function POST(request: Request) {
         // because the Home Lab cannot reach http://localhost:3000
         else if (host.includes("localhost")) {
             const publicHost = process.env.NEXT_PUBLIC_SITE_URL || "https://hostingsarena.com";
-            bundleUrl = `${publicHost}/video-bundle/`;
+            // Ensure publicHost doesn't have a trailing slash, then add /video-bundle/
+            bundleUrl = `${publicHost.replace(/\/$/, '')}/video-bundle/`;
             console.log(`[VideoRender] Localhost detected. Forcing public bundle URL: ${bundleUrl}`);
         }
         // 3. Otherwise, use the current host (assuming it's public like Vercel)
@@ -71,7 +72,9 @@ export async function POST(request: Request) {
                         title, scenes, layers, format,
                         bgMusicUrl, bgMusicVolume, 
                         transitionSfxUrl, outroSfxUrl,
-                        baseUrl: bundleUrl.split('/video-bundle')[0] // Use the bundle's origin as base
+                        baseUrl: bundleUrl.includes('/video-bundle') 
+                            ? bundleUrl.split('/video-bundle')[0] 
+                            : bundleUrl.replace(/\/$/, '')
                     },
                     durationInFrames,
                     width: format === "9:16" ? 1080 : 1920,
