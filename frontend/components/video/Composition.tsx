@@ -158,7 +158,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                         style={styles}
                         muted={true}
                         volume={0}
-                        onCanPlay={() => console.log(`[VideoLoader] Video Ready: ${resolvedSrc}`)}
+                        onCanPlay={() => console.log(`[VideoLoader] Video Ready: ${resolvedSrc}`, { from: clip.startFrame, dur: clip.durationInFrames })}
                         onError={handleAssetError}
                     />
                 )}

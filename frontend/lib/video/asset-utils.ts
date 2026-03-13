@@ -54,9 +54,18 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
             // For audio/video from Supabase, fall through to proxy bypass CORS for useWebAudioApi
         }
 
+        // 2. Production absolute URLs
         if (baseUrl && baseUrl.length > 0) {
-            // For production render, we MUST use absolute URLs
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+            
+            // BYPASS PROXY for known CORS-friendly CDNs in production renderer
+            // This avoids Vercel proxy bottlenecks and timeouts for large video files.
+            // We can do this safely because the renderer has disableWebSecurity: true.
+            const isCdn = url.includes('pexels.com') || url.includes('jamendo.com') || url.includes('pixabay.com');
+            if (isCdn) {
+                return finalUrl;
+            }
+
             return `${cleanBaseUrl}/api/proxy?url=${encodeURIComponent(finalUrl)}`;
         }
         
