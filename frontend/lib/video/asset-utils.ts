@@ -48,9 +48,10 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
             const isImage = /\.(jpg|jpeg|png|webp|avif)/i.test(url);
             if (isImage) {
                 finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
+                // RETURN DIRECTLY - Supabase is CORS-friendly for images
+                return finalUrl;
             }
-            // RETURN DIRECTLY - Supabase is CORS-friendly and preferred for native playback
-            return finalUrl;
+            // For audio/video from Supabase, fall through to proxy bypass CORS for useWebAudioApi
         }
 
         if (baseUrl) {

@@ -18,6 +18,7 @@ if (process.env.VERCEL || process.env.NODE_ENV === "production") {
 }
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 300; // 5 minutes to prevent stream cutoffs on Vercel
 export async function POST(request: Request) {
     // Explicitly ensure browser is ready in the writable /tmp path
     try {
