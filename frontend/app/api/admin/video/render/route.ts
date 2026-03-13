@@ -52,12 +52,12 @@ export async function POST(request: Request) {
         // because the Home Lab cannot reach http://localhost:3000
         else if (host.includes("localhost")) {
             const publicHost = process.env.NEXT_PUBLIC_SITE_URL || "https://hostingsarena.com";
-            bundleUrl = `${publicHost}/video-bundle/bundle.js`;
+            bundleUrl = `${publicHost}/video-bundle/`;
             console.log(`[VideoRender] Localhost detected. Forcing public bundle URL: ${bundleUrl}`);
         }
         // 3. Otherwise, use the current host (assuming it's public like Vercel)
         else {
-            bundleUrl = `${protocol}://${host}/video-bundle/bundle.js`;
+            bundleUrl = `${protocol}://${host}/video-bundle/`;
         }
 
         try {
