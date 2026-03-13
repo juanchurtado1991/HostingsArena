@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { AbsoluteFill, useVideoConfig, useCurrentFrame, interpolate, spring, Audio, Img, OffthreadVideo, Sequence, staticFile, prefetch } from 'remotion';
+import { AbsoluteFill, useVideoConfig, useCurrentFrame, interpolate, spring, Audio, Img, Video, Sequence, staticFile, prefetch } from 'remotion';
 import { ShieldCheck, Zap, Globe, Star, Server, Shield, Cpu } from 'lucide-react';
 import { findBestMedia, getImageUrl, getFallbackUrl, getRandomMedia } from './mediaLibrary';
 
@@ -153,11 +153,12 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                 {fallbackSrc ? (
                     <Img src={fallbackSrc} style={styles} />
                 ) : (
-                    <OffthreadVideo 
+                    <Video 
                         src={resolvedSrc || ""} 
                         style={styles}
                         muted={true}
                         volume={0}
+                        onCanPlay={() => console.log(`[VideoLoader] Video Ready: ${resolvedSrc}`)}
                         onError={handleAssetError}
                     />
                 )}
