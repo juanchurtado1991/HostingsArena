@@ -6,12 +6,15 @@ import os from "os";
 import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
 // --- VERCEL FILESYSTEM OVERRIDES ---
-// These must be set at the top level so they take effect before Remotion initializes.
+// Move these to the absolute top to ensure Remotion picks them up during initialization if local render is triggered.
 if (process.env.VERCEL || process.env.NODE_ENV === "production") {
     const tmpDir = os.tmpdir();
     process.env.REMOTION_BROWSER_CACHE = path.join(tmpDir, ".remotion");
     process.env.REMOTION_LOCAL_DIR = path.join(tmpDir, ".remotion_local");
-    console.log(`[VideoRender] Redirecting Remotion cache to: ${process.env.REMOTION_BROWSER_CACHE}`);
+    // Ensure the directory exists
+    if (!fs.existsSync(process.env.REMOTION_BROWSER_CACHE)) {
+        fs.mkdirSync(process.env.REMOTION_BROWSER_CACHE, { recursive: true });
+    }
 }
 
 export const dynamic = "force-dynamic";
@@ -32,16 +35,30 @@ export async function POST(request: Request) {
         durationInFrames = 1800
     } = body;
 
-    // --- HOME LAB RENDERING PROXY ---
-    // If HOME_LAB_RENDER_URL is configured, we offload the render to our home lab.
-    // This bypasses Vercel/Local serverless limits and uses dedicated hardware.
     if (process.env.HOME_LAB_RENDER_URL) {
         console.log(`[VideoRender] PROXYING to remote renderer: ${process.env.HOME_LAB_RENDER_URL}`);
         
-        // Determine bundle URL (needs to be public)
-        const protocol = request.headers.get("x-forwarded-proto") || "http";
+        // Determine bundle URL (needs to be public and reachable by the home lab)
+        const protocol = request.headers.get("x-forwarded-proto") || "https";
         const host = request.headers.get("host") || "localhost:3000";
-        const bundleUrl = `${protocol}://${host}/video-bundle/bundle.js`;
+        
+        let bundleUrl = "";
+        
+        // 1. If we have a specific override, use it
+        if (process.env.VIDEO_BUNDLE_URL_OVERRIDE) {
+            bundleUrl = process.env.VIDEO_BUNDLE_URL_OVERRIDE;
+        } 
+        // 2. If we are on localhost, we MUST use a public URL (e.g. from NEXT_PUBLIC_SITE_URL or the Vercel deploy)
+        // because the Home Lab cannot reach http://localhost:3000
+        else if (host.includes("localhost")) {
+            const publicHost = process.env.NEXT_PUBLIC_SITE_URL || "https://hostingsarena.com";
+            bundleUrl = `${publicHost}/video-bundle/bundle.js`;
+            console.log(`[VideoRender] Localhost detected. Forcing public bundle URL: ${bundleUrl}`);
+        }
+        // 3. Otherwise, use the current host (assuming it's public like Vercel)
+        else {
+            bundleUrl = `${protocol}://${host}/video-bundle/bundle.js`;
+        }
 
         try {
             const remoteResponse = await fetch(`${process.env.HOME_LAB_RENDER_URL}/render`, {
@@ -54,7 +71,7 @@ export async function POST(request: Request) {
                         title, scenes, layers, format,
                         bgMusicUrl, bgMusicVolume, 
                         transitionSfxUrl, outroSfxUrl,
-                        baseUrl: `${protocol}://${host}`
+                        baseUrl: bundleUrl.split('/video-bundle')[0] // Use the bundle's origin as base
                     },
                     durationInFrames,
                     width: format === "9:16" ? 1080 : 1920,

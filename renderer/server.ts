@@ -38,28 +38,20 @@ app.post('/render', async (req, res) => {
         res.write(`data: ${JSON.stringify(data)}\n\n`);
     };
 
-    const tempBundlePath = path.join(os.tmpdir(), `bundle-${Date.now()}.js`);
     const outputLocation = path.join(os.tmpdir(), outputFilename);
 
     try {
-        sendEvent({ status: 'initializing', message: 'Downloading video bundle...' });
-        
-        // 1. Download the bundle
-        const response = await fetch(bundleUrl);
-        if (!response.ok) throw new Error(`Failed to download bundle from ${bundleUrl}`);
-        const bundleContent = await response.text();
-        fs.writeFileSync(tempBundlePath, bundleContent);
-
-        // 2. Extract compositions
-        sendEvent({ status: 'initializing', message: 'Extracting compositions...' });
-        const comps = await getCompositions(tempBundlePath, { inputProps });
+        // 1. Extract compositions - Use bundleUrl DIRECTLY as serveUrl
+        // Remotion handles remote URLs perfectly, avoiding filesystem issues on the host.
+        sendEvent({ status: 'initializing', message: 'Extracting compositions from remote bundle...' });
+        const comps = await getCompositions(bundleUrl, { inputProps });
         const composition = comps.find(c => c.id === compositionId);
         
         if (!composition) {
             throw new Error(`Composition ${compositionId} not found in bundle`);
         }
 
-        // 3. Render
+        // 2. Render
         sendEvent({ status: 'rendering', rawProgress: 0, message: 'Starting render...' });
         
         await renderMedia({
@@ -69,7 +61,7 @@ app.post('/render', async (req, res) => {
                 width: width || composition.width,
                 height: height || composition.height,
             },
-            serveUrl: tempBundlePath,
+            serveUrl: bundleUrl,
             outputLocation,
             codec: 'h264',
             crf,
@@ -114,10 +106,6 @@ app.post('/render', async (req, res) => {
     } finally {
         // [CLEANUP] Remove temporary files to prevent disk filling
         try {
-            if (fs.existsSync(tempBundlePath)) {
-                fs.unlinkSync(tempBundlePath);
-                console.log(`[Cleanup] Deleted temporary bundle: ${tempBundlePath}`);
-            }
             if (fs.existsSync(outputLocation)) {
                 fs.unlinkSync(outputLocation);
                 console.log(`[Cleanup] Deleted temporary output: ${outputLocation}`);
