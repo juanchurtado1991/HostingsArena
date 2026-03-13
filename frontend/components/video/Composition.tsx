@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { AbsoluteFill, useVideoConfig, useCurrentFrame, interpolate, spring, Audio, Img, OffthreadVideo, Sequence, staticFile, prefetch } from 'remotion';
+import { AbsoluteFill, useVideoConfig, useCurrentFrame, interpolate, spring, Audio, Img, Video, OffthreadVideo, Sequence, staticFile, prefetch } from 'remotion';
 import { ShieldCheck, Zap, Globe, Star, Server, Shield, Cpu } from 'lucide-react';
 import { findBestMedia, getImageUrl, getFallbackUrl, getRandomMedia } from './mediaLibrary';
 
@@ -152,7 +152,18 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
             <AbsoluteFill>
                 {fallbackSrc ? (
                     <Img src={fallbackSrc} style={styles} />
+                ) : isPreview ? (
+                    // [PERF] Standard Video is much faster for browser preview
+                    <Video 
+                        src={resolvedSrc || ""} 
+                        style={styles}
+                        muted={true}
+                        volume={0}
+                        onCanPlay={() => console.log(`[VideoLoader] Preview Video Ready: ${resolvedSrc}`)}
+                        onError={handleAssetError}
+                    />
                 ) : (
+                    // [STABILITY] OffthreadVideo ensures frame-accurate rendering in headless
                     <OffthreadVideo 
                         src={resolvedSrc || ""} 
                         style={styles}
@@ -160,7 +171,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                         volume={0}
                         // @ts-ignore - Required to disable recursive proxying in headless.
                         proxyUrl={null}
-                        onCanPlay={() => console.log(`[VideoLoader] Video Ready: ${resolvedSrc}`, { from: clip.startFrame, dur: clip.durationInFrames })}
+                        onCanPlay={() => console.log(`[VideoLoader] Render Video Ready: ${resolvedSrc}`, { from: clip.startFrame, dur: clip.durationInFrames })}
                         onError={handleAssetError}
                     />
                 )}

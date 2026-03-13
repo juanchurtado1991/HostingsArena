@@ -44,28 +44,20 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
             }
         }
 
-        if (url.includes('supabase.co')) {
-            const isImage = /\.(jpg|jpeg|png|webp|avif)/i.test(url);
-            if (isImage) {
-                finalUrl += (url.includes('?') ? '&' : '?') + 'width=640&quality=60';
-                // RETURN DIRECTLY - Supabase is CORS-friendly for images
-                return finalUrl;
+        // [STABILITY] BYPASS PROXY for known CORS-friendly CDNs (Preview & Production)
+        // This avoids Vercel proxy bottlenecks and local dev server hangs.
+        const isCdn = url.includes('pexels.com') || url.includes('jamendo.com') || url.includes('pixabay.com') || url.includes('supabase.co');
+        if (isCdn) {
+            // Apply low-res optimization for Supabase images if applicable
+            if (url.includes('supabase.co') && /\.(jpg|jpeg|png|webp|avif)/i.test(url)) {
+                return finalUrl + (finalUrl.includes('?') ? '&' : '?') + 'width=640&quality=60';
             }
-            // For audio/video from Supabase, fall through to proxy bypass CORS for useWebAudioApi
+            return finalUrl;
         }
 
-        // 2. Production absolute URLs
+        // 2. Production absolute URLs for remaining unknown assets
         if (baseUrl && baseUrl.length > 0) {
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-            
-            // BYPASS PROXY for known CORS-friendly CDNs in production renderer
-            // This avoids Vercel proxy bottlenecks and timeouts for large video files.
-            // We can do this safely because the renderer has disableWebSecurity: true.
-            const isCdn = url.includes('pexels.com') || url.includes('jamendo.com') || url.includes('pixabay.com');
-            if (isCdn) {
-                return finalUrl;
-            }
-
             return `${cleanBaseUrl}/api/proxy?url=${encodeURIComponent(finalUrl)}`;
         }
         
