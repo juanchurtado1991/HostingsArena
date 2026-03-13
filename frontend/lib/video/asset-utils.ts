@@ -54,7 +54,7 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
             // For audio/video from Supabase, fall through to proxy bypass CORS for useWebAudioApi
         }
 
-        if (baseUrl) {
+        if (baseUrl && baseUrl.length > 0) {
             // For production render, we MUST use absolute URLs
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
             return `${cleanBaseUrl}/api/proxy?url=${encodeURIComponent(finalUrl)}`;
@@ -65,7 +65,7 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
 
     // 3. Local assets
     const cleanPath = url.startsWith('/') ? url : `/${url}`;
-    if (baseUrl) {
+    if (baseUrl && baseUrl.length > 0) {
         return `${baseUrl}${cleanPath}`;
     }
 

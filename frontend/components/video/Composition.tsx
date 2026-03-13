@@ -574,7 +574,8 @@ const NewsLowerThirdOverlay: React.FC<{
     const pulseCycle = frame % 90;
     const continuousPulse = interpolate(pulseCycle, [0, 10, 20, 90], [1, 0.85, 1, 1], { extrapolateRight: 'clamp' });
     
-    const logoSrc = (baseUrl ? resolveAsset("/ha-logo.png", baseUrl) : staticFile("/ha-logo.png")) as string;
+    const isProduction = typeof baseUrl === 'string' && baseUrl.length > 0;
+    const logoSrc = (isProduction ? resolveAsset("/ha-logo.png", baseUrl) : staticFile("/ha-logo.png")) as string;
     
     // Diagnostic for Phase 4 404 tracking
     if (frame === 10) {
@@ -860,6 +861,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 // resource isolation and frame-accurate playback.
                                                 useWebAudioApi={true} 
                                                 crossOrigin="anonymous"
+                                                onCanPlay={() => isVoice && console.log(`[AudioLoader] Audio Ready: ${clip.id}`)}
                                                 onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}
                                                 volume={isVoice 
                                                     ? (clip.volume ?? 1) * 1.5  // Static volume boost for Narrations
