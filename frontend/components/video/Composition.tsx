@@ -852,21 +852,20 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                         >
                                             <Audio 
                                                 src={assetUrl}
-                                                // Optional format hint to help browser engines
                                                 {...(assetUrl.includes('.webm') ? { type: 'audio/webm' } : {})}
                                                 {...(assetUrl.includes('.mp3') ? { type: 'audio/mpeg' } : {})}
                                                 playbackRate={1}
-                                                pauseWhenBuffering={true} // FORCE Sync stability
-                                                acceptableTimeShiftInSeconds={0.5} // SKILL.md Gotcha #3: low values cause aggressive stutter loops
-                                                // Web Audio API is now strictly used for all audio to ensure
-                                                // resource isolation and frame-accurate playback.
-                                                useWebAudioApi={true} 
+                                                pauseWhenBuffering={true} 
+                                                acceptableTimeShiftInSeconds={0.5} 
+                                                // [STABILITY] Disable WebAudio for Narrations to prevent stuttering/silence.
+                                                // Keep it ONLY for music to allow frame-accurate ducking.
+                                                useWebAudioApi={!isVoice} 
                                                 crossOrigin="anonymous"
                                                 onCanPlay={() => console.log(`[AudioLoader] Audio Ready (${clip.type}): ${clip.id}`)}
                                                 onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}
                                                 volume={isVoice 
-                                                    ? (clip.volume ?? 1) * 1.5  // Static volume boost for Narrations
-                                                    : (f: number) => {          // Dynamic Ducking for Music
+                                                    ? (clip.volume ?? 1) * 1.5  
+                                                    : (f: number) => {          
                                                         const vol = (clip.volume ?? 1);
                                                         const frameInComp = clip.startFrame + f;
                                                         const voiceActive = layers.some(l => 
