@@ -712,7 +712,7 @@ const NewsLowerThirdOverlay: React.FC<{
                         transform: `scale(${logoPop * continuousPulse})` // Incorporates periodic shrinking
                     }}>
                         <Img 
-                            src={resolveAsset("/ha-logo.png", baseUrl) || staticFile("/ha-logo.png")} 
+                            src={(baseUrl ? resolveAsset("/ha-logo.png", baseUrl) : staticFile("/ha-logo.png")) as string} 
                             style={{
                                 width: '85%', // Increased significantly from 65% to fill space
                                 height: '85%',
