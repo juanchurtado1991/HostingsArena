@@ -80,6 +80,7 @@ app.post('/render', async (req, res) => {
                 disableWebSecurity: true,
                 gl: 'angle',
             },
+            concurrency: 1,
             onProgress: ({ progress }) => {
                 sendEvent({ status: 'rendering', rawProgress: progress, message: 'Rendering frames...' });
             },
