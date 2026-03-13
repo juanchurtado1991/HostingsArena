@@ -104,10 +104,10 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
     const top = `${vY}%`;
 
     if (clip.src === 'intro') {
-        return <IntroSequence title={clip.title || title || "HostingArena"} format={format} fps={fps} />;
+        return <IntroSequence title={clip.title || title || "HostingArena"} format={format} fps={fps} baseUrl={baseUrl} />;
     }
     if (clip.src === 'outro') {
-        return <OutroSequence format={format} fps={fps} />;
+        return <OutroSequence format={format} fps={fps} baseUrl={baseUrl} />;
     }
 
     const styles: React.CSSProperties = {
@@ -261,7 +261,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
     if (clip.src === 'intro') {
         return (
             <AbsoluteFill>
-                <IntroSequence title={clip.title || title || "HostingArena"} format={format} fps={fps} />
+                <IntroSequence title={clip.title || title || "HostingArena"} format={format} fps={fps} baseUrl={baseUrl} />
                 {sfxElement}
             </AbsoluteFill>
         );
@@ -269,7 +269,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
     if (clip.src === 'outro') {
         return (
             <AbsoluteFill>
-                <OutroSequence format={format} fps={fps} />
+                <OutroSequence format={format} fps={fps} baseUrl={baseUrl} />
                 {sfxElement}
             </AbsoluteFill>
         );
@@ -861,7 +861,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 // resource isolation and frame-accurate playback.
                                                 useWebAudioApi={true} 
                                                 crossOrigin="anonymous"
-                                                onCanPlay={() => isVoice && console.log(`[AudioLoader] Audio Ready: ${clip.id}`)}
+                                                onCanPlay={() => console.log(`[AudioLoader] Audio Ready (${clip.type}): ${clip.id}`)}
                                                 onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}
                                                 volume={isVoice 
                                                     ? (clip.volume ?? 1) * 1.5  // Static volume boost for Narrations
@@ -984,7 +984,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
 };
 
 // ====== INTRO SEQUENCE COMPONENT ======
-const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: number }> = ({ title, format, fps }) => {
+const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: number; baseUrl?: string }> = ({ title, format, fps, baseUrl }) => {
     const frame = useCurrentFrame();
 
     const logoScale = spring({ frame, fps, config: { damping: 14, stiffness: 150, mass: 0.7 } });
@@ -1137,7 +1137,7 @@ const IntroSequence: React.FC<{ title: string; format: '9:16' | '16:9'; fps: num
 };
 
 // ====== OUTRO SEQUENCE COMPONENT ======
-const OutroSequence: React.FC<{ format: '9:16' | '16:9'; fps: number }> = ({ format, fps }) => {
+const OutroSequence: React.FC<{ format: '9:16' | '16:9'; fps: number; baseUrl?: string }> = ({ format, fps, baseUrl }) => {
     const frame = useCurrentFrame();
 
     const fadeIn = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });

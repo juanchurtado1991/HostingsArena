@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
         const responseHeaders = new Headers({
             'Access-Control-Allow-Origin': '*',
             'Cache-Control': 'public, max-age=3600',
+            'X-Accel-Buffering': 'no',
+            'Content-Encoding': 'none',
         });
 
         const contentType = response.headers.get('Content-Type');
