@@ -93,8 +93,10 @@ export async function POST(request: Request) {
             return new Response(remoteResponse.body, {
                 headers: {
                     'Content-Type': 'text/event-stream',
-                    'Cache-Control': 'no-cache',
+                    'Cache-Control': 'no-cache, no-transform',
                     'Connection': 'keep-alive',
+                    'Content-Encoding': 'none',
+                    'X-Accel-Buffering': 'no',
                 },
             });
         } catch (remoteError: any) {

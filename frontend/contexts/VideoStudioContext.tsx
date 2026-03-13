@@ -830,60 +830,67 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 if (done) break;
 
                 buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
                 
-                // Keep the last partial line in the buffer
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+                // SSE events are separated by double newlines
+                let boundary = buffer.indexOf('\n\n');
+                while (boundary !== -1) {
+                    const chunk = buffer.slice(0, boundary);
+                    buffer = buffer.slice(boundary + 2); // advance past the \n\n
                     
-                    try {
-                        const data = JSON.parse(trimmedLine.substring(6));
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        const trimmedLine = line.trim();
+                        if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
                         
-                        if (data.error) {
-                            throw new Error(data.details || "Streaming render failed");
-                        }
-
-                        if (data.status === "initializing") {
-                            setRenderStep(data.steps?.[0] || "Initializing Video News Engine...");
-                            setRenderProgress(5);
-                        }
-
-                        if (data.status === "rendering" || data.status === "uploading") {
-                            const raw = parseFloat(data.rawProgress);
-                            if (!isNaN(raw)) {
-                                console.log(`[SSE Client] ${new Date().toISOString()} - Received progress: ${raw}`);
-                                const realPct = 5 + (raw * 90); // scale 0-1 to 5-95%
-                                setRenderProgress(Math.round(realPct));
-                                setRenderStep(data.message || (data.status === "uploading" ? "Uploading to Cloud..." : "Compositing News Scenes..."));
-
-                                // Calculate real ETA based on elapsed time vs progress
-                                const elapsedSec = (Date.now() - renderStartTime) / 1000;
-                                if (raw > 0.05) { 
-                                    const totalEstimatedSec = elapsedSec / raw;
-                                    const remainingSec = totalEstimatedSec - elapsedSec;
-                                    setRenderEta(Math.ceil(remainingSec));
-                                } else {
-                                    setRenderEta(Math.ceil(estimatedSeconds - elapsedSec));
-                                }
-                            } else if (data.status === "uploading") {
-                                setRenderStep("Uploading to secure storage...");
-                                setRenderProgress(95);
+                        try {
+                            const data = JSON.parse(trimmedLine.substring(6));
+                            
+                            if (data.error) {
+                                throw new Error(data.details || "Streaming render failed");
                             }
-                        }
 
-                        if (data.status === "complete") {
-                            console.log("[SSE Client] Render Complete Event Received!", data.videoUrl);
-                            finalVideoUrl = data.videoUrl;
-                            setVideoUrl(data.videoUrl); // Set immediately
-                            setRenderStep("Finalizing MP4 container...");
-                        }
+                            if (data.status === "initializing") {
+                                setRenderStep(data.steps?.[0] || "Initializing Video News Engine...");
+                                setRenderProgress(5);
+                            }
 
-                    } catch (e) {
-                        console.warn("Failed to parse SSE chunk", trimmedLine, e);
+                            if (data.status === "rendering" || data.status === "uploading") {
+                                const raw = parseFloat(data.rawProgress);
+                                if (!isNaN(raw)) {
+                                    console.log(`[SSE Client] ${new Date().toISOString()} - Received progress: ${raw}`);
+                                    const realPct = 5 + (raw * 90); // scale 0-1 to 5-95%
+                                    setRenderProgress(Math.round(realPct));
+                                    setRenderStep(data.message || (data.status === "uploading" ? "Uploading to Cloud..." : "Compositing News Scenes..."));
+
+                                    // Calculate real ETA based on elapsed time vs progress
+                                    const elapsedSec = (Date.now() - renderStartTime) / 1000;
+                                    if (raw > 0.05) { 
+                                        const totalEstimatedSec = elapsedSec / raw;
+                                        const remainingSec = totalEstimatedSec - elapsedSec;
+                                        setRenderEta(Math.ceil(remainingSec));
+                                    } else {
+                                        setRenderEta(Math.ceil(estimatedSeconds - elapsedSec));
+                                    }
+                                } else if (data.status === "uploading") {
+                                    setRenderStep("Uploading to secure storage...");
+                                    setRenderProgress(95);
+                                }
+                            }
+
+                            // Keep looking for complete even if progress goes to 1
+                            if (data.status === "complete") {
+                                console.log("[SSE Client] Render Complete Event Received!", data.videoUrl);
+                                finalVideoUrl = data.videoUrl;
+                                setVideoUrl(data.videoUrl); // Set immediately
+                                setRenderStep("Finalizing MP4 container...");
+                            }
+
+                        } catch (e: any) {
+                            if (e.message.includes("Streaming render failed")) throw e; // Bubble up explicit server errors
+                            console.warn("[SSE Client] Failed to parse SSE line", trimmedLine, e);
+                        }
                     }
+                    boundary = buffer.indexOf('\n\n');
                 }
             }
 

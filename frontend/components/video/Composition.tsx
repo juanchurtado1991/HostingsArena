@@ -526,8 +526,9 @@ const NewsLowerThirdOverlay: React.FC<{
     format: '9:16' | '16:9', 
     frame: number, 
     fps: number,
-    duration: number
-}> = ({ headline, speech, format, frame, fps, duration }) => {
+    duration: number,
+    baseUrl?: string
+}> = ({ headline, speech, format, frame, fps, duration, baseUrl }) => {
     const isVertical = format === '9:16';
     
     // Entrance Animation (Slide up from bottom)
@@ -711,7 +712,7 @@ const NewsLowerThirdOverlay: React.FC<{
                         transform: `scale(${logoPop * continuousPulse})` // Incorporates periodic shrinking
                     }}>
                         <Img 
-                            src={staticFile("/ha-logo.png")} 
+                            src={resolveAsset("/ha-logo.png", baseUrl) || staticFile("/ha-logo.png")} 
                             style={{
                                 width: '85%', // Increased significantly from 65% to fill space
                                 height: '85%',
@@ -825,8 +826,6 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                     if (isVoice) {
                                         console.log(`[AudioLoader] Preparing voice clip: ${clip.id}`, {
                                             src: assetUrl,
-                                            start: clip.startFrame,
-                                            duration: clip.durationInFrames,
                                             volume: (clip.volume ?? 1) * 1.5,
                                             buffering: '10s (300 frames)'
                                         });
