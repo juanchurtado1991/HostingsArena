@@ -138,7 +138,7 @@ const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title?: stri
                     const fadeOutVol = sfxFadeOut > 0 ? interpolate(f, [sfxDur - sfxFadeOut, sfxDur], [sfxBaseVol, 0], { extrapolateLeft: 'clamp' }) : sfxBaseVol;
                     return Math.min(fadeInVol, fadeOutVol);
                 }}
-                pauseWhenBuffering={!isPreview}
+                pauseWhenBuffering={true}
                 acceptableTimeShiftInSeconds={0.5}
                 useWebAudioApi={true}
                 crossOrigin="anonymous"
@@ -250,7 +250,7 @@ const TextRenderer: React.FC<{ clip: Clip, format: "9:16" | "16:9", title?: stri
                     const fadeOutVol = sfxFadeOut > 0 ? interpolate(f, [sfxDur - sfxFadeOut, sfxDur], [sfxBaseVol, 0], { extrapolateLeft: 'clamp' }) : sfxBaseVol;
                     return Math.min(fadeInVol, fadeOutVol);
                 }}
-                pauseWhenBuffering={!isPreview}
+                pauseWhenBuffering={true}
                 acceptableTimeShiftInSeconds={0.5}
                 useWebAudioApi={true}
                 crossOrigin="anonymous"
@@ -847,7 +847,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 {...(assetUrl.includes('.webm') ? { type: 'audio/webm' } : {})}
                                                 {...(assetUrl.includes('.mp3') ? { type: 'audio/mpeg' } : {})}
                                                 playbackRate={1}
-                                                pauseWhenBuffering={!isPreview} // Only pause in headless render, not preview
+                                                pauseWhenBuffering={true} // FORCE Sync stability
                                                 acceptableTimeShiftInSeconds={0.5} // SKILL.md Gotcha #3: low values cause aggressive stutter loops
                                                 // Web Audio API is now strictly used for all audio to ensure
                                                 // resource isolation and frame-accurate playback.
@@ -961,7 +961,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                             <Audio 
                                 src={resolveAsset(outroSfxUrl, baseUrl) || outroSfxUrl} 
                                 volume={() => 0.8}
-                                pauseWhenBuffering={!isPreview}
+                                pauseWhenBuffering={true}
                                 useWebAudioApi={true}
                                 crossOrigin="anonymous"
                                 onError={(e) => console.error(`[AudioError] Failed to load Outro SFX: ${outroSfxUrl}`, e)}
