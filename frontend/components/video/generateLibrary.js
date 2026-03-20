@@ -1,47 +1,31 @@
 const fs = require('fs');
 
-// ==========================================
-// 1. CONFIGURATION & API KEYS
-// ==========================================
 const PEXELS_API_KEY = 'Oyl8PMfo0oQTpLZAy7flg36uWtcDIbgYo36cIbZCDI7fBrXKVkPp4Zye';
 
-// 4000 for maximum variety in the media library
 const TARGET_COUNT = 4000; 
 
-// 45+ search queries across tech categories for maximum variety
 const SEARCH_QUERIES = [
-    // Core Tech
     'server room', 'data center', 'programming code', 'software development',
     'artificial intelligence', 'machine learning', 'neural network',
-    // Hardware & Devices
     'computer hardware', 'motherboard closeup', 'GPU graphics card', 'smartphone technology',
     'laptop workspace', 'microchip processor', 'circuit board',
-    // Cybersecurity & Network
     'cybersecurity', 'hacker dark room', 'network infrastructure', 'firewall security',
     'encryption digital', 'VPN connection',
-    // Cloud & Infrastructure
     'cloud computing', 'fiber optic cable', 'satellite communication', 'antenna tower',
-    // Business & Innovation
     'tech startup office', 'business meeting technology', 'stock market digital',
     'silicon valley', 'innovation laboratory',
-    // Abstract & Cinematic
     'digital abstract particles', 'neon lights city', 'futuristic interface',
     'hologram technology', 'matrix code rain', 'blue technology background',
     'abstract data visualization', 'dark tech background',
-    // Specific Companies & Products
     'google office', 'apple store', 'microsoft office building', 'nvidia graphics',
     'tesla electric car', 'amazon warehouse', 'meta virtual reality',
     'spacex rocket launch', 'openai artificial intelligence', 'robotics factory',
     'drone aerial technology', 'virtual reality headset', '3d printing',
-    'autonomous driving car', 'quantum computer',
+    'autonomous driving car', 'quantum computer', 'car', 'plane', 'nature', 'city'
 ];
 
-// Rate limit helper
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ==========================================
-// 2. FETCH IMAGES FROM PEXELS
-// ==========================================
 async function fetchImages() {
     console.log(`Fetching ${TARGET_COUNT} images from Pexels...`);
     let imagesMap = new Map();
@@ -78,7 +62,6 @@ async function fetchImages() {
             const desc = photo.alt || query;
             const keywords = desc.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(' ').filter(w => w.length > 3).slice(0, 5);
             
-            // Clean URL: remove query params for permanent links
             const baseUrl = photo.src.original.split('?')[0];
 
             if (!imagesMap.has(baseUrl)) {
@@ -93,7 +76,6 @@ async function fetchImages() {
         console.log(`✅ Images loaded: ${imagesMap.size}/${TARGET_COUNT} (Query: ${query}, Page: ${page})`);
         page++;
         
-        // Move to next query after exhausting pages (Pexels caps at ~15 pages/query)
         if (page > 15) {
             queryIndex++;
             page = 1;
@@ -105,9 +87,6 @@ async function fetchImages() {
     return Array.from(imagesMap.values());
 }
 
-// ==========================================
-// 3. FETCH VIDEOS FROM PEXELS
-// ==========================================
 async function fetchVideos() {
     console.log(`\nFetching ${TARGET_COUNT} videos from Pexels...`);
     let videosMap = new Map();
@@ -173,9 +152,6 @@ async function fetchVideos() {
     return Array.from(videosMap.values());
 }
 
-// ==========================================
-// 4. ASSEMBLE & WRITE TYPESCRIPT FILE
-// ==========================================
 async function main() {
     try {
         const images = await fetchImages();

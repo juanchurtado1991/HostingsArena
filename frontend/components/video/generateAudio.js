@@ -1,33 +1,23 @@
 const fs = require('fs');
 
-// ==========================================
-// 1. CONFIGURATION
-// ==========================================
 const JAMENDO_CLIENT_ID = '1e0313af'; 
 
 const MUSIC_TARGET = 2000;
 const SFX_TARGET = 2000;
 
-// 25+ music queries for maximum variety across moods and genres
 const MUSIC_QUERIES = [
-    // News & Broadcast
     'news broadcast', 'breaking news', 'news theme', 'news report',
     'tv news', 'broadcast intro',
-    // Tech & Electronic
     'technology electronic', 'tech background', 'digital ambient',
     'synthwave', 'retrowave', 'electronic beat',
-    // Corporate & Professional
     'corporate upbeat', 'business presentation', 'corporate motivational',
     'inspiring corporate',
-    // Cinematic & Dramatic
     'cinematic tension', 'epic trailer', 'dramatic orchestral',
     'suspense thriller', 'action cinematic',
-    // Ambient & Minimal
     'cyberpunk ambient', 'minimalist tech', 'dark ambient',
     'lo-fi background', 'chill electronic',
 ];
 
-// 15+ SFX queries for transition sounds, UI effects, and tech sounds
 const SFX_QUERIES = [
     'interface click', 'ui notification', 'whoosh transition',
     'digital glitch', 'alert beep', 'sci-fi sound',
@@ -40,7 +30,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchMusic() {
     console.log(`🎵 Fetching ${MUSIC_TARGET} music tracks...`);
-    let musicMap = new Map(); // keyed by track.id for dedup
+    let musicMap = new Map(); 
     let page = 1;
 
     for (const query of MUSIC_QUERIES) {
@@ -74,7 +64,6 @@ async function fetchMusic() {
                     if (musicMap.size >= MUSIC_TARGET) return;
                     
                     if (!musicMap.has(track.id)) {
-                        // Extract better keywords from the track's tags and name
                         const trackTags = [];
                         if (track.musicinfo && track.musicinfo.tags && track.musicinfo.tags.genres) {
                             trackTags.push(...track.musicinfo.tags.genres);
@@ -109,12 +98,9 @@ async function fetchMusic() {
     return Array.from(musicMap.values());
 }
 
-// ==========================================
-// 3. FETCH SFX FROM JAMENDO
-// ==========================================
 async function fetchSFX() {
     console.log(`\n🔊 Fetching ${SFX_TARGET} SFX tracks...`);
-    let sfxMap = new Map(); // keyed by track.id for dedup
+    let sfxMap = new Map(); 
 
     for (const query of SFX_QUERIES) {
         if (sfxMap.size >= SFX_TARGET) break;
@@ -173,9 +159,6 @@ async function fetchSFX() {
     return Array.from(sfxMap.values());
 }
 
-// ==========================================
-// 4. ASSEMBLE & WRITE
-// ==========================================
 async function main() {
     try {
         const music = await fetchMusic();
