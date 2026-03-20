@@ -98,13 +98,14 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                             premountFor={90} 
                                         >
                                             <Audio 
+                                                key={`audio-${clip.id}`}
                                                 src={assetUrl}
                                                 {...(assetUrl.includes('.webm') ? { type: 'audio/webm' } : {})}
                                                 {...(assetUrl.includes('.mp3') ? { type: 'audio/mpeg' } : {})}
                                                 playbackRate={1}
                                                 pauseWhenBuffering={true} 
                                                 acceptableTimeShiftInSeconds={0.5} 
-                                                useWebAudioApi={!isVoice} 
+                                                useWebAudioApi={true} 
                                                 crossOrigin="anonymous"
                                                 onCanPlay={() => console.log(`[AudioLoader] Audio Ready (${clip.type}): ${clip.id}`)}
                                                 onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}

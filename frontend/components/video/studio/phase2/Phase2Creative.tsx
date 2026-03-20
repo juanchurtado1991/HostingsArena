@@ -5,7 +5,7 @@ import { VoicePicker } from '@/components/video/VoicePicker';
 import { AudioPicker } from '@/components/video/AudioPicker';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import { PlusCircle, Music, Mic, Play, Pause, Languages, Settings2, CheckCircle, Sparkles, Volume2, Trash } from 'lucide-react';
+import { Music, Mic, Play, Pause, Languages, Settings2, CheckCircle, Sparkles, Volume2, Trash } from 'lucide-react';
 import { ALL_AUDIO } from '@/components/video/audioLibrary';
 import { findBestMixedMediaBatch, type MediaItem } from '@/components/video/mediaLibrary';
 import { SceneScriptEditor } from './SceneScriptEditor';
