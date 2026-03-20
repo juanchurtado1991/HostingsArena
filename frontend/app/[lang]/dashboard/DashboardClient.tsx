@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { TaskCard, AffiliateResolveModal, AffiliateManager, PostEditor, AffiliateLinkTester, RemindersManager, ProviderManager, VideoStudio } from "@/components/dashboard";
 import { HelpCenter } from "@/components/dashboard/HelpCenter";
-import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
+import { AnalyticsCard } from "@/components/dashboard/analytics/AnalyticsCard";
 import { Top3Manager } from "@/components/dashboard/Top3Manager";
 import { SEOManager } from "@/components/dashboard/SEOManager";
 import type { AdminTask, TaskType, TaskPriority, ScraperStatus } from "@/lib/tasks/types";

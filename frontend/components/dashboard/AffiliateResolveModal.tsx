@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminTask } from "@/lib/tasks/types";
-import { AffiliateFormModal, EMPTY_AFFILIATE_FORM } from "./AffiliateFormModal";
+import { AffiliateFormModal } from "./affiliate-modal/AffiliateFormModal";
+import { EMPTY_AFFILIATE_FORM, type AffiliateFormData } from "./affiliate-modal/types";
 
 interface AffiliateResolveModalProps {
     task: AdminTask;

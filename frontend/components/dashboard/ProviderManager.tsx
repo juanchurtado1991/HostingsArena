@@ -8,7 +8,7 @@ import {
     Search, Plus, Edit3, Loader2, Globe, 
     ShieldCheck, Server, Database, Zap
 } from "lucide-react";
-import { ProviderEditorModal } from "./ProviderEditorModal";
+import { ProviderEditorModal } from "./provider-modal/ProviderEditorModal";
 import type { HostingProvider, VPNProvider } from "@/types";
 
 export function ProviderManager() {

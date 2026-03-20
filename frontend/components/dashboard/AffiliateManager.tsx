@@ -10,8 +10,8 @@ import {
     TrendingUp, Clock, BarChart3, Copy, Check, BookOpen, ChevronDown,
     ShieldCheck, Filter, AlertTriangle
 } from "lucide-react";
-import { AffiliateFormModal, EMPTY_AFFILIATE_FORM } from "./AffiliateFormModal";
-import type { AffiliateFormData, ProviderOption } from "./AffiliateFormModal";
+import { AffiliateFormModal } from "./affiliate-modal/AffiliateFormModal";
+import { EMPTY_AFFILIATE_FORM, type AffiliateFormData, type ProviderOption } from "./affiliate-modal/types";
 
 interface AffiliatePartner {
     id: string;
