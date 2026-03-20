@@ -82,7 +82,7 @@ export function WorkflowNavigation() {
 
 
     return (
-        <div className="w-full sticky top-0 z-[100] px-8 py-2 flex justify-center">
+        <div className="w-full sticky top-0 z-[100] px-8 pt-4 pb-2 flex justify-center">
             <div className="flex items-center justify-between bg-studio-surface/80 backdrop-blur-[32px] rounded-full border border-studio-border px-6 h-12 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-black/5 w-full max-w-5xl">
                 
                 <div className="flex items-center gap-10">
