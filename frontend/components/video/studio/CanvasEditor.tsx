@@ -42,7 +42,6 @@ export function CanvasEditor() {
     }, []);
 
     const activeClips = useMemo(() => {
-        // Find visible clips for the current frame across all layers
         const clips: Clip[] = [];
         layers.forEach(layer => {
             if (layer.isVisible === false) return;
@@ -60,11 +59,9 @@ export function CanvasEditor() {
         const y = clip.y ?? 50;
         const scale = clip.scale ?? 1;
         
-        // Base size is the container size
         const wpx = bounds.width * scale;
         const hpx = bounds.height * scale;
         
-        // (x, y) is the CENTER point in % of container
         const leftPx = (x / 100) * bounds.width - (wpx / 2);
         const topPx = (y / 100) * bounds.height - (hpx / 2);
 
@@ -105,7 +102,6 @@ export function CanvasEditor() {
             const deltaX = e.clientX - dragState.initialX;
             const deltaY = e.clientY - dragState.initialY;
             
-            // Percentage of container dimensions
             const deltaXPct = (deltaX / bounds.width) * 100;
             const deltaYPct = (deltaY / bounds.height) * 100;
 
@@ -115,11 +111,9 @@ export function CanvasEditor() {
                     y: dragState.initialClipY + deltaYPct
                 });
             } else {
-                // Resize logic - using X delta as the dominant factor for uniform scale
                 let multiplier = 1;
                 if (dragState.mode === 'resize-tl' || dragState.mode === 'resize-bl') multiplier = -1;
                 
-                // Scale is factor of original size. 1 unit = 2% change approx
                 const scaleDelta = (deltaX / (bounds.width / 2)) * multiplier;
                 const newScale = Math.max(0.05, Math.min(10, dragState.initialClipScale + scaleDelta));
                 
@@ -161,21 +155,17 @@ export function CanvasEditor() {
                         style={style}
                         onPointerDown={(e) => handlePointerDown(e, clip, 'move')}
                     >
-                        {/* Interactive UI overlays only when selected */}
                         {selected && (
                             <>
-                                {/* Corner Resizers - Apple System Style */}
                                 <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-nwse-resize shadow-lg z-10 border border-studio-border hover:scale-125 transition-transform" onPointerDown={(e) => handlePointerDown(e, clip, 'resize-tl')} />
                                 <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-nesw-resize shadow-lg z-10 border border-studio-border hover:scale-125 transition-transform" onPointerDown={(e) => handlePointerDown(e, clip, 'resize-tr')} />
                                 <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-nesw-resize shadow-lg z-10 border border-studio-border hover:scale-125 transition-transform" onPointerDown={(e) => handlePointerDown(e, clip, 'resize-bl')} />
                                 <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-nwse-resize shadow-lg z-10 border border-studio-border hover:scale-125 transition-transform" onPointerDown={(e) => handlePointerDown(e, clip, 'resize-br')} />
                                 
-                                {/* Center Anchor Indicator */}
                                 <div className="w-5 h-5 rounded-full border border-studio-accent/30 flex items-center justify-center bg-studio-bg/60 backdrop-blur-sm pointer-events-none">
                                     <Target className="w-3 h-3 text-studio-accent" />
                                 </div>
 
-                                {/* Property Badge - High Lux Glass */}
                                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full px-5 py-2.5 flex items-center gap-4 shadow-2xl pointer-events-none ring-1 ring-white/5">
                                     <div className="flex items-center gap-2">
                                         <Scaling className="w-3.5 h-3.5 text-studio-accent" />
@@ -188,14 +178,12 @@ export function CanvasEditor() {
                                     </div>
                                 </div>
                                 
-                                {/* Visual Drag Handle */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
                                     <Move className="w-6 h-6 text-white drop-shadow-lg" />
                                 </div>
                             </>
                         )}
                         
-                        {/* Non-selected hover feedback */}
                         {!selected && (
                             <div className="absolute inset-0 bg-studio-accent/5 border border-white/10 rounded-none opacity-0 group-hover:opacity-100 transition-opacity" />
                         )}

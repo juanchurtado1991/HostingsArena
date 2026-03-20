@@ -1,5 +1,5 @@
 import { Composition } from 'remotion';
-import { HostingComposition } from './Composition';
+import { HostingComposition } from './composition/HostingComposition';
 
 export const RemotionVideo: React.FC = () => {
     return (

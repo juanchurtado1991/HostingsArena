@@ -4,7 +4,7 @@ import { Player, PlayerRef } from "@remotion/player";
 import { prefetch } from "remotion";
 import { useEffect, useRef, useMemo, useState, useCallback, memo, forwardRef, useImperativeHandle } from "react";
 import { Clock, Sparkles, Film, Mic, Music } from "lucide-react";
-import { HostingComposition } from "./Composition";
+import { HostingComposition } from "./composition/HostingComposition";
 import { Scene, Layer } from "../../types/studio";
 import { SyncEngine } from "../../lib/video-sync/SyncEngine";
 import { useStudioStore } from "../../store/useStudioStore";
