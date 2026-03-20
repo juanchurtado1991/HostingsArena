@@ -20,16 +20,17 @@ import { Button } from "@/components/ui/button";
 import { PublishSummaryModal } from "./PublishSummaryModal";
 import {
     Search, Plus, Loader2, Edit3, Trash2,
-    Bold, Italic, Underline as UnderlineIcon, Strikethrough,
-    AlignLeft, AlignCenter, AlignRight,
-    Heading1, Heading2, Heading3, List, ListOrdered, Quote,
-    Link as LinkIcon, Palette, Highlighter, Sparkles, Upload,
+    Sparkles,
     FileText, CheckCircle, Clock, Tag, X,
     ChevronDown, ExternalLink, ImageIcon, Type, Undo2, Redo2, AlertTriangle, Share2,
-    Save,
-    Send,
     Globe
 } from "lucide-react";
+import { PostEditorSEO } from "./post-editor/PostEditorSEO";
+import { PostEditorSocial } from "./post-editor/PostEditorSocial";
+import { PostEditorMedia } from "./post-editor/PostEditorMedia";
+import { PostEditorHeader } from "./post-editor/PostEditorHeader";
+import { PostEditorContent } from "./post-editor/PostEditorContent";
+import { GenerationConfigModal } from "./post-editor/GenerationConfigModal";
 
 
 export interface Post {
@@ -72,40 +73,6 @@ interface AffiliateLink {
     provider_name: string;
     affiliate_link: string;
     status: string;
-}
-
-
-function ToolbarBtn({
-    onClick, active, title, children, className = ""
-}: {
-    onClick: () => void; active?: boolean; title: string;
-    children: React.ReactNode; className?: string;
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            title={title}
-            className={`p-2 rounded-xl transition-all duration-200 ${active
-                ? "bg-primary/15 text-primary shadow-sm shadow-primary/10 ring-1 ring-primary/20"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground hover:scale-105"
-                } ${className}`}
-        >
-            {children}
-        </button>
-    );
-}
-
-function ToolbarGroup({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-    return (
-        <div className={`flex items-center gap-0.5 ${className}`}>
-            {children}
-        </div>
-    );
-}
-
-function ToolbarDivider() {
-    return <div className="w-px h-6 bg-border/40 mx-1" />;
 }
 
 const ResizableImage = (props: any) => {
@@ -211,462 +178,6 @@ const FontSize = Extension.create({
         }
     },
 })
-
-const normalizeUrl = (url: string) => {
-    if (!url) return "";
-    if (url.startsWith('/') || /^[a-z]+:\/\//i.test(url)) {
-        return url;
-    }
-    return `https://${url}`;
-};
-
-function EditorToolbar({
-    editor,
-    affiliateLinks,
-    onInsertAffiliate,
-    onInsertImage,
-}: {
-    editor: any;
-    affiliateLinks: AffiliateLink[];
-    onInsertAffiliate: (link: AffiliateLink) => void;
-    onInsertImage: (file: File) => Promise<void>;
-}) {
-    const [showColorPicker, setShowColorPicker] = useState(false);
-    const [showAffiliateMenu, setShowAffiliateMenu] = useState(false);
-    const [showVsMenu, setShowVsMenu] = useState(false);
-    const [showLinkMenu, setShowLinkMenu] = useState(false);
-    const [linkUrl, setLinkUrl] = useState("");
-    const [vsCategory, setVsCategory] = useState<"hosting" | "vpn">("hosting");
-    const [vsProviders, setVsProviders] = useState<any[]>([]);
-    const [vsLoading, setVsLoading] = useState(false);
-    const [vsA, setVsA] = useState("");
-    const [vsB, setVsB] = useState("");
-    const [affSearch, setAffSearch] = useState("");
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        if (showVsMenu) {
-            const fetchVsProviders = async () => {
-                setVsLoading(true);
-                try {
-                    const res = await fetch(`/api/providers?type=${vsCategory}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setVsProviders(data || []);
-                    }
-                } catch (e) {
-                    console.error("Error fetching vs providers:", e);
-                } finally {
-                    setVsLoading(false);
-                }
-            };
-            fetchVsProviders();
-        }
-    }, [showVsMenu, vsCategory]);
-
-    if (!editor) return null;
-
-    const colors = [
-        "#ffffff", "#000000", "#ef4444", "#f97316", "#eab308", "#22c55e",
-        "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#6b7280", "#1e293b",
-    ];
-
-    const filteredLinks = affiliateLinks.filter(a =>
-        a.provider_name.toLowerCase().includes(affSearch.toLowerCase())
-    );
-
-    return (
-        <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border/50 bg-muted/20 overflow-x-auto no-scrollbar">
-            <ToolbarGroup>
-                <ToolbarBtn onClick={() => editor.chain().focus().undo().run()} title="Undo (⌘Z)">
-                    <Undo2 className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().redo().run()} title="Redo (⌘⇧Z)">
-                    <Redo2 className="w-4 h-4" />
-                </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            <ToolbarGroup>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold (⌘B)">
-                    <Bold className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic (⌘I)">
-                    <Italic className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline (⌘U)">
-                    <UnderlineIcon className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-                    <Strikethrough className="w-4 h-4" />
-                </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-            <ToolbarGroup>
-                <div className="flex items-center gap-1 bg-background/50 rounded-xl px-2 h-9 ring-1 ring-border/50">
-                    <Type className="w-3.5 h-3.5 text-muted-foreground" />
-                    <select
-                        className="bg-transparent text-[11px] font-bold border-none focus:ring-0 cursor-pointer min-w-[50px] outline-none"
-                        onChange={(e) => {
-                            if (e.target.value === "auto") {
-                                editor.chain().focus().unsetFontSize().run();
-                            } else {
-                                editor.chain().focus().setFontSize(`${e.target.value}px`).run();
-                            }
-                        }}
-                        value={editor.getAttributes('textStyle').fontSize?.replace('px', '') || "auto"}
-                    >
-                        <option value="auto">Auto</option>
-                        {[10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 32, 48].map(size => (
-                            <option key={size} value={size}>{size}px</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="relative">
-                    <ToolbarBtn onClick={() => setShowColorPicker(true)} title="Text Color" active={showColorPicker}>
-                        <Palette className="w-4 h-4" />
-                    </ToolbarBtn>
-                    {showColorPicker && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowColorPicker(false)} />
-                            <div className="w-full max-w-[240px] p-5 bg-background border border-border rounded-3xl shadow-2xl z-50 animate-in zoom-in-95 duration-200 relative">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                                        <Palette className="w-3.5 h-3.5" />
-                                        Text Colors
-                                    </h4>
-                                    <button onClick={() => setShowColorPicker(false)} className="text-muted-foreground hover:text-foreground">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    {colors.map(c => (
-                                        <button
-                                            key={c}
-                                            type="button"
-                                            onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(false); }}
-                                            className="w-8 h-8 rounded-full border border-border hover:scale-125 transition-all duration-200 shadow-sm ring-offset-2 hover:ring-2 hover:ring-primary/20"
-                                            style={{ backgroundColor: c }}
-                                            title={c}
-                                        />
-                                    ))}
-                                </div>
-
-                                <div className="space-y-3 pt-3 border-t border-border/50">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Custom Color</label>
-                                        <input
-                                            type="color"
-                                            className="w-8 h-8 p-0 border-0 rounded-full cursor-pointer bg-transparent"
-                                            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
-                                            title="Pick Custom Color"
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false); }}
-                                        className="w-full text-[10px] font-bold text-muted-foreground hover:text-foreground py-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Undo2 className="w-3 h-3" />
-                                        RESET COLOR
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHighlight({ color: "#fbbf24" }).run()} active={editor.isActive("highlight")} title="Highlight">
-                    <Highlighter className="w-4 h-4" />
-                </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            <ToolbarGroup>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} title="Heading 1">
-                    <Heading1 className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} title="Heading 2">
-                    <Heading2 className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })} title="Heading 3">
-                    <Heading3 className="w-4 h-4" />
-                </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            <ToolbarGroup>
-                <ToolbarBtn onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} title="Align Left">
-                    <AlignLeft className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().setTextAlign("center").run()} active={editor.isActive({ textAlign: "center" })} title="Center">
-                    <AlignCenter className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().setTextAlign("right").run()} active={editor.isActive({ textAlign: "right" })} title="Align Right">
-                    <AlignRight className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
-                    <List className="w-4 h-4" />
-                </ToolbarBtn>
-                <ToolbarBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
-                    <ListOrdered className="w-4 h-4" />
-                </ToolbarBtn>
-            </ToolbarGroup>
-
-            <ToolbarDivider />
-
-            <ToolbarGroup>
-                <ToolbarBtn onClick={() => fileInputRef.current?.click()} title="Insert Image">
-                    <ImageIcon className="w-4 h-4" />
-                </ToolbarBtn>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                            onInsertImage(file);
-                            e.target.value = ""; // Reset
-                        }
-                    }}
-                />
-
-                <ToolbarBtn
-                    onClick={() => {
-                        const previousUrl = editor.getAttributes('link').href || "";
-                        setLinkUrl(previousUrl);
-                        setShowLinkMenu(true);
-                    }}
-                    active={editor.isActive('link')}
-                    title="Insert/Edit Link"
-                >
-                    <LinkIcon className="w-4 h-4" />
-                </ToolbarBtn>
-
-                <ToolbarBtn onClick={() => setShowVsMenu(true)} active={showVsMenu} title="Insert Versus Comparison">
-                    <div className="flex items-center gap-0.5">
-                        <span className="text-[10px] font-black">VS</span>
-                    </div>
-                </ToolbarBtn>
-
-                <button
-                    type="button"
-                    onClick={() => setShowAffiliateMenu(true)}
-                    title="Insert Affiliate Link"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20"
-                >
-                    <span className="hidden sm:inline">AFFILIATE</span>
-                    <ChevronDown className="w-3 h-3" />
-                </button>
-            </ToolbarGroup>
-
-            {showLinkMenu && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLinkMenu(false)} />
-                    <GlassCard className="w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-bold flex items-center gap-2">
-                                <LinkIcon className="w-4 h-4 text-primary" />
-                                Edit Link
-                            </h4>
-                            <button onClick={() => setShowLinkMenu(false)} className="text-muted-foreground hover:text-foreground">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <div className="space-y-4">
-                            <input
-                                type="url"
-                                value={linkUrl}
-                                onChange={(e) => setLinkUrl(e.target.value)}
-                                placeholder="https://example.com"
-                                className="w-full px-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        if (linkUrl === '') {
-                                            editor.chain().focus().extendMarkRange('link').unsetLink().run();
-                                        } else {
-                                            const normalized = normalizeUrl(linkUrl);
-                                            editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
-                                        }
-                                        setShowLinkMenu(false);
-                                    }
-                                }}
-                            />
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="ghost"
-                                    className="flex-1 rounded-xl"
-                                    onClick={() => {
-                                        editor.chain().focus().extendMarkRange('link').unsetLink().run();
-                                        setShowLinkMenu(false);
-                                    }}
-                                >
-                                    Remove
-                                </Button>
-                                <Button
-                                    className="flex-1 rounded-xl font-bold"
-                                    onClick={() => {
-                                        if (linkUrl === '') {
-                                            editor.chain().focus().extendMarkRange('link').unsetLink().run();
-                                        } else {
-                                            const normalized = normalizeUrl(linkUrl);
-                                            editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
-                                        }
-                                        setShowLinkMenu(false);
-                                    }}
-                                >
-                                    Apply
-                                </Button>
-                            </div>
-                        </div>
-                    </GlassCard>
-                </div>
-            )}
-
-            {showVsMenu && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVsMenu(false)} />
-                    <div className="w-full max-w-[320px] p-5 bg-background border border-border rounded-3xl shadow-2xl z-50 animate-in zoom-in-95 duration-200 relative">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <h4 className="text-sm font-black uppercase tracking-wider text-primary flex items-center gap-2">
-                                    <span className="p-1 px-1.5 bg-primary text-white rounded text-[10px]">VS</span>
-                                    Comparison
-                                </h4>
-                                <button onClick={() => setShowVsMenu(false)} className="text-muted-foreground hover:text-foreground hover:rotate-90 transition-transform" type="button">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="flex p-1 bg-muted/50 rounded-xl mb-4 ring-1 ring-border/50">
-                                <button
-                                    type="button"
-                                    onClick={() => setVsCategory("hosting")}
-                                    className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "hosting" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                                >
-                                    HOSTING
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setVsCategory("vpn")}
-                                    className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${vsCategory === "vpn" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                                >
-                                    VPN
-                                </button>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">Provider A</label>
-                                    <select
-                                        value={vsA}
-                                        onChange={(e) => setVsA(e.target.value)}
-                                        className="w-full bg-muted/50 rounded-2xl px-4 py-2.5 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none font-medium"
-                                        disabled={vsLoading}
-                                    >
-                                        <option value="">{vsLoading ? 'Loading...' : 'Select...'}</option>
-                                        {vsProviders.map(a => (
-                                            <option key={a.id} value={a.id}>{a.provider_name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">Provider B</label>
-                                    <select
-                                        value={vsB}
-                                        onChange={(e) => setVsB(e.target.value)}
-                                        className="w-full bg-muted/50 rounded-2xl px-4 py-2.5 text-sm border-none ring-1 ring-border/50 focus:ring-primary/50 outline-none font-medium"
-                                        disabled={vsLoading}
-                                    >
-                                        <option value="">{vsLoading ? 'Loading...' : 'Select...'}</option>
-                                        {vsProviders.map(a => (
-                                            <option key={a.id} value={a.id}>{a.provider_name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <Button
-                                className="w-full rounded-2xl py-6 font-bold shadow-xl shadow-primary/20 mt-2"
-                                disabled={!vsA || !vsB || vsA === vsB || vsLoading}
-                                type="button"
-                                onClick={() => {
-                                    const lang = window.location.pathname.split('/')[1] || 'en';
-                                    const finalLang = ['en', 'es'].includes(lang) ? lang : 'en';
-                                    const url = `/${finalLang}/compare?a=${vsA}&b=${vsB}&cat=${vsCategory}`;
-
-                                    const providerA = vsProviders.find(p => p.id === vsA);
-                                    const providerB = vsProviders.find(p => p.id === vsB);
-                                    const label = `${providerA?.provider_name || 'Provider A'} vs ${providerB?.provider_name || 'Provider B'}`;
-
-                                    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).insertContent(label).run();
-                                    setShowVsMenu(false);
-                                    setVsA("");
-                                    setVsB("");
-                                }}
-                            >
-                                Insert Comparison
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showAffiliateMenu && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAffiliateMenu(false)} />
-                    <div className="w-full max-w-[320px] rounded-3xl bg-background border border-border shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 duration-200 relative">
-                        <div className="p-4 border-b border-border/50 bg-primary/5 flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Active Partners</span>
-                            <button onClick={() => setShowAffiliateMenu(false)} className="text-muted-foreground hover:text-foreground">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <div className="p-4">
-                            <input
-                                type="text"
-                                value={affSearch}
-                                onChange={(e) => setAffSearch(e.target.value)}
-                                placeholder="Search partners..."
-                                className="w-full px-4 py-2.5 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                autoFocus
-                            />
-                        </div>
-                        <div className="max-h-60 overflow-y-auto pb-4 px-2">
-                            {filteredLinks.length === 0 ? (
-                                <div className="py-8 text-xs text-muted-foreground text-center">
-                                    No active affiliates found
-                                </div>
-                            ) : filteredLinks.map(link => (
-                                <button
-                                    key={link.id}
-                                    type="button"
-                                    onClick={() => {
-                                        onInsertAffiliate(link);
-                                        setShowAffiliateMenu(false);
-                                        setAffSearch("");
-                                    }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-primary/5 rounded-2xl transition-all flex items-center justify-between group"
-                                >
-                                    <span className="font-semibold group-hover:text-primary">{link.provider_name}</span>
-                                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 
 function PostEditorModal({
@@ -1385,96 +896,24 @@ function PostEditorModal({
                 className="absolute inset-3 md:inset-6 rounded-3xl border border-[color:var(--glass-border)] bg-card shadow-2xl shadow-black/20 dark:shadow-black/50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex flex-col border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
-                    <div className="flex items-center justify-between px-4 md:px-6 pt-3 pb-2 md:pt-4 md:pb-3">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/15 shadow-lg shadow-primary/10 shrink-0">
-                                <Edit3 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                                <h2 className="text-base md:text-xl font-bold tracking-tight">{post ? "Edit Post" : "New Post"}</h2>
-                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                    {post?.is_ai_generated && (
-                                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/15">🤖 AI</span>
-                                    )}
-                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                                        {wordCount}w
-                                        {(lastSavedAt || isAutoSaving) && (
-                                            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                                        )}
-                                        {isAutoSaving ? (
-                                            <span className="flex items-center gap-1 text-[10px] font-bold text-primary animate-pulse">
-                                                <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                                                Saving...
-                                            </span>
-                                        ) : lastSavedAt ? (
-                                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500/80">
-                                                <CheckCircle className="w-2.5 h-2.5" />
-                                                Saved {lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        ) : null}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted/50 transition-all duration-200 group shrink-0">
-                            <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2 px-4 md:px-6 pb-3 overflow-x-auto scrollbar-hide">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border shrink-0">
-                            <select
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value)}
-                                className="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer"
-                            >
-                                <option value="draft">📝 Draft</option>
-                                <option value="published">✅ Published</option>
-                            </select>
-                        </div>
-
-                        {status === 'published' && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border shrink-0" title="Publish Date (El Salvador Time UTC-6)">
-                                <input
-                                    type="datetime-local"
-                                    value={scheduledDate}
-                                    onChange={(e) => setScheduledDate(e.target.value)}
-                                    className="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer outline-none [color-scheme:dark] dark:[color-scheme:dark] light:[color-scheme:light]"
-                                />
-                            </div>
-                        )}
-
-                        <div
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border cursor-pointer hover:bg-muted/80 transition-colors shrink-0"
-                            onClick={() => setShouldIndexGoogle(!shouldIndexGoogle)}
-                            title="Toggle Google Indexing on Publish"
-                        >
-                            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${shouldIndexGoogle ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500/50'}`} />
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-bold">G-Index</span>
-                        </div>
-
-                        <div className="flex-1" />
-
-                        <div className="flex gap-1.5 shrink-0">
-                            <Button
-                                onClick={() => handleSave()}
-                                className="rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border shadow-sm text-xs font-semibold px-3 h-8 transition-all duration-200"
-                                disabled={saving || (!title.trim() && editLang === 'en') || (!titleEs.trim() && editLang === 'es')}
-                            >
-                                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Save className="w-3.5 h-3.5" /><span className="hidden sm:inline ml-1.5">Save Draft</span></>}
-                            </Button>
-
-                            <Button
-                                onClick={() => handleSave(true)}
-                                className="rounded-xl bg-gradient-to-r from-primary to-sky-600 hover:from-blue-500 hover:to-sky-500 shadow-lg shadow-primary/25 text-xs font-semibold px-3 h-8 transition-all duration-200"
-                                disabled={saving || (!title.trim() && editLang === 'en') || (!titleEs.trim() && editLang === 'es')}
-                            >
-                                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3.5 h-3.5" /><span className="ml-1.5">Publish</span></>}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <PostEditorHeader 
+                    post={post}
+                    status={status}
+                    setStatus={setStatus}
+                    scheduledDate={scheduledDate}
+                    setScheduledDate={setScheduledDate}
+                    shouldIndexGoogle={shouldIndexGoogle}
+                    setShouldIndexGoogle={setShouldIndexGoogle}
+                    saving={saving}
+                    handleSave={handleSave}
+                    onClose={onClose}
+                    wordCount={wordCount}
+                    lastSavedAt={lastSavedAt}
+                    isAutoSaving={isAutoSaving}
+                    editLang={editLang}
+                    title={title}
+                    titleEs={titleEs}
+                />
 
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_360px] overflow-hidden">
                     <div className="flex flex-col overflow-hidden border-r border-border/50">
@@ -1515,418 +954,86 @@ function PostEditorModal({
                         </div>
 
                         {activeSection === "content" && (
-                            <div className="flex flex-col flex-1 overflow-hidden">
-                                <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border/50 bg-muted/20 overflow-x-auto no-scrollbar justify-between">
-                                    <div className="flex flex-wrap items-center gap-1">
-                                        <div className="flex items-center gap-1 p-1 bg-background/50 border border-border rounded-xl mr-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleLangSwitch('en')}
-                                                className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${editLang === 'en' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-                                            >
-                                                EN
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleLangSwitch('es')}
-                                                className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${editLang === 'es' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-                                            >
-                                                ES
-                                            </button>
-                                        </div>
-
-                                        <ToolbarGroup>
-                                            <ToolbarBtn onClick={() => editor?.chain().focus().undo().run()} title="Undo (⌘Z)">
-                                                <Undo2 className="w-4 h-4" />
-                                            </ToolbarBtn>
-                                            <ToolbarBtn onClick={() => editor?.chain().focus().redo().run()} title="Redo (⌘⇧Z)">
-                                                <Redo2 className="w-4 h-4" />
-                                            </ToolbarBtn>
-                                        </ToolbarGroup>
-
-                                        <ToolbarDivider />
-
-                                        {editLang === 'en' && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleTranslate()}
-                                                disabled={isTranslating}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:scale-105 transition-all disabled:opacity-50 disabled:grayscale"
-                                            >
-                                                {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                                                MAGIC TRANSLATE TO ES
-                                            </button>
-                                        )}
-                                        {editLang === 'es' && (
-                                            <div className="px-3 py-1.5 rounded-xl text-[10px] font-bold border border-primary/20 text-primary bg-primary/5 flex items-center gap-2">
-                                                <CheckCircle className="w-3 h-3" />
-                                                EDITING SPANISH VERSION
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <EditorToolbar
-                                    editor={editor}
-                                    affiliateLinks={affiliateLinks}
-                                    onInsertAffiliate={handleInsertAffiliate}
-                                    onInsertImage={handleEditorImageUpload}
-                                />
-                                <div className="flex-1 overflow-y-auto">
-                                    {editor && (
-                                        <BubbleMenu editor={editor} shouldShow={({ editor }: { editor: any }) => editor.isActive('image')}>
-                                            <div className="flex items-center gap-1 p-1 bg-background/80 backdrop-blur-md border border-border rounded-lg shadow-xl">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0 text-xs"
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '25%', style: 'width: 25%; height: auto;' }).run()}
-                                                >
-                                                    25%
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0 text-xs"
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '50%', style: 'width: 50%; height: auto;' }).run()}
-                                                >
-                                                    50%
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0 text-xs"
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '75%', style: 'width: 75%; height: auto;' }).run()}
-                                                >
-                                                    75%
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0 text-xs"
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%', align: 'center' }).run()}
-                                                >
-                                                    100%
-                                                </Button>
-
-                                                <div className="w-px h-4 bg-border mx-1" />
-
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`h-8 w-8 p-0 ${editor.isActive('image', { align: 'left' }) ? 'bg-primary/20 text-primary' : ''}`}
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { align: 'left', width: editor.getAttributes('image').width === '100%' ? '40%' : editor.getAttributes('image').width }).run()}
-                                                    title="Align Left (Text Wrap)"
-                                                >
-                                                    <AlignLeft className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`h-8 w-8 p-0 ${editor.isActive('image', { align: 'center' }) ? 'bg-primary/20 text-primary' : ''}`}
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center' }).run()}
-                                                    title="Align Center"
-                                                >
-                                                    <AlignCenter className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`h-8 w-8 p-0 ${editor.isActive('image', { align: 'right' }) ? 'bg-primary/20 text-primary' : ''}`}
-                                                    onClick={() => editor.chain().focus().updateAttributes('image', { align: 'right', width: editor.getAttributes('image').width === '100%' ? '40%' : editor.getAttributes('image').width }).run()}
-                                                    title="Align Right (Text Wrap)"
-                                                >
-                                                    <AlignRight className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </div>
-                                        </BubbleMenu>
-                                    )}
-                                    <EditorContent editor={editor} />
-                                </div>
-                            </div>
+                            <PostEditorContent 
+                                editor={editor}
+                                editLang={editLang}
+                                handleLangSwitch={handleLangSwitch}
+                                handleTranslate={handleTranslate}
+                                isTranslating={isTranslating}
+                                affiliateLinks={affiliateLinks}
+                                handleInsertAffiliate={handleInsertAffiliate}
+                                handleEditorImageUpload={handleEditorImageUpload}
+                            />
                         )}
 
                         {activeSection === "seo" && (
-                            <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                                <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-500/5 to-cyan-500/5 border border-blue-500/10">
-                                    <p className="text-xs font-bold text-blue-400 mb-1 flex items-center gap-1.5">
-                                        <Search className="w-3.5 h-3.5" /> SEO Preview
-                                    </p>
-                                    <p className="text-sm font-semibold text-blue-300 mt-2 line-clamp-1">{editLang === 'es' ? seoTitleEs || titleEs : seoTitle || title || "Page Title"}</p>
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{editLang === 'es' ? seoDescEs || excerptEs : seoDesc || excerpt || "Meta description will appear here..."}</p>
-                                    <p className="text-[10px] text-emerald-400 mt-1 font-mono">hostingsarena.com/news/{slug || "slug"}</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">SEO Title {editLang === 'es' ? '(ES)' : '(EN)'}</label>
-                                    <input
-                                        type="text"
-                                        value={editLang === 'es' ? seoTitleEs : seoTitle}
-                                        onChange={(e) => editLang === 'es' ? setSeoTitleEs(e.target.value) : setSeoTitle(e.target.value)}
-                                        placeholder="SEO-optimized title"
-                                        className={INPUT_CLASS}
-                                        maxLength={60}
-                                    />
-                                    <div className="flex justify-between mt-1.5">
-                                        <p className="text-[10px] text-muted-foreground">Recommended: 50-60 characters</p>
-                                        <p className={`text-[10px] font-mono ${(editLang === 'es' ? seoTitleEs : seoTitle).length > 60 ? "text-red-400" : (editLang === 'es' ? seoTitleEs : seoTitle).length > 50 ? "text-emerald-400" : "text-muted-foreground"}`}>
-                                            {(editLang === 'es' ? seoTitleEs : seoTitle).length}/60
-                                        </p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Meta Description {editLang === 'es' ? '(ES)' : '(EN)'}</label>
-                                    <textarea
-                                        value={editLang === 'es' ? seoDescEs : seoDesc}
-                                        onChange={(e) => editLang === 'es' ? setSeoDescEs(e.target.value) : setSeoDesc(e.target.value)}
-                                        placeholder="Compelling description for search results"
-                                        className={`${INPUT_CLASS} h-24 resize-none`}
-                                        maxLength={155}
-                                    />
-                                    <div className="flex justify-between mt-1.5">
-                                        <p className="text-[10px] text-muted-foreground">Recommended: 120-155 characters</p>
-                                        <p className={`text-[10px] font-mono ${(editLang === 'es' ? seoDescEs : seoDesc).length > 155 ? "text-red-400" : (editLang === 'es' ? seoDescEs : seoDesc).length > 120 ? "text-emerald-400" : "text-muted-foreground"}`}>
-                                            {(editLang === 'es' ? seoDescEs : seoDesc).length}/155
-                                        </p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Target Keywords {editLang === 'es' ? '(ES)' : '(EN)'}</label>
-                                    <input
-                                        type="text"
-                                        value={editLang === 'es' ? keywordsEs : keywords}
-                                        onChange={(e) => editLang === 'es' ? setKeywordsEs(e.target.value) : setKeywords(e.target.value)}
-                                        placeholder="keyword1, keyword2, keyword3"
-                                        className={INPUT_CLASS}
-                                    />
-                                    {(editLang === 'es' ? keywordsEs : keywords) && (
-                                        <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                            {(editLang === 'es' ? keywordsEs : keywords).split(",").map((k, i) => k.trim() && (
-                                                <span key={i} className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-medium border border-primary/15">
-                                                    {k.trim()}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <PostEditorSEO 
+                                editLang={editLang}
+                                seoTitle={seoTitle}
+                                setSeoTitle={setSeoTitle}
+                                seoTitleEs={seoTitleEs}
+                                setSeoTitleEs={setSeoTitleEs}
+                                seoDesc={seoDesc}
+                                setSeoDesc={setSeoDesc}
+                                seoDescEs={seoDescEs}
+                                setSeoDescEs={setSeoDescEs}
+                                keywords={keywords}
+                                setKeywords={setKeywords}
+                                keywordsEs={keywordsEs}
+                                setKeywordsEs={setKeywordsEs}
+                                title={title}
+                                titleEs={titleEs}
+                                excerpt={excerpt}
+                                excerptEs={excerptEs}
+                                slug={slug}
+                            />
                         )}
 
                         {activeSection === "social" && (
-                            <div className="flex-1 overflow-y-auto p-8 space-y-8">
-                                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl border border-blue-500/10 mb-6">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-foreground">Social Media Content ({editLang.toUpperCase()})</h3>
-                                        <p className="text-xs text-muted-foreground mt-1">Customize your social posts for {editLang === 'en' ? 'English' : 'Spanish'} audiences.</p>
-                                    </div>
-                                    <button
-                                        onClick={handleGenerateSocial}
-                                        disabled={isTranslating}
-                                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-bold bg-white dark:bg-zinc-800 border border-border/50 shadow-sm hover:scale-105 transition-all disabled:opacity-50"
-                                    >
-                                        {isTranslating ? <Loader2 className="w-3 h-3 animate-spin text-primary" /> : <Sparkles className="w-3 h-3 text-primary" />}
-                                        REGENERATE SOCIAL (AI)
-                                    </button>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                                            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-foreground" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-                                            Twitter Post ({editLang.toUpperCase()})
-                                        </label>
-                                        <span className={`text-[10px] font-mono ${(editLang === 'es' ? socialTwEs : socialTw).length > 280 ? "text-red-400" : "text-muted-foreground"}`}>{(editLang === 'es' ? socialTwEs : socialTw).length}/280</span>
-                                    </div>
-
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
-                                        <div className="flex gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0" />
-                                            <div className="flex-1 space-y-1">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-sm font-bold">HostingArena</span>
-                                                    <span className="text-xs text-muted-foreground">@hostingarena · 1m</span>
-                                                </div>
-                                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{(editLang === 'es' ? (socialTwEs || socialTw) : socialTw) || "Write something amazing..."} {editLang === 'es' ? socialTagsEs : socialTags}</p>
-                                                {coverImageUrl && (
-                                                    <div className="mt-2 rounded-xl overflow-hidden border border-border/50">
-                                                        <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <textarea
-                                        value={editLang === 'es' ? socialTwEs : socialTw}
-                                        onChange={(e) => editLang === 'es' ? setSocialTwEs(e.target.value) : setSocialTw(e.target.value)}
-                                        placeholder="What's happening?"
-                                        className={`${INPUT_CLASS} h-24 resize-none font-medium`}
-                                    />
-                                </div>
-
-                                <div className="h-px bg-border/50" />
-
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-foreground" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"></path></svg>
-                                        Facebook Post ({editLang.toUpperCase()})
-                                    </label>
-
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
-                                        <div className="flex gap-2 mb-3">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-sm font-semibold text-blue-600">HostingsArena</p>
-                                                <p className="text-xs text-muted-foreground">Just now · 🌍</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialFbEs || socialFb || "What's on your mind?" : socialFb || "What's on your mind?"}</p>
-                                        {coverImageUrl && (
-                                            <div className="rounded-lg overflow-hidden border border-border/50 bg-muted/20">
-                                                <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
-                                                <div className="p-3 bg-muted/30 border-t border-border/50">
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">HOSTINGSARENA.COM</p>
-                                                    <p className="text-sm font-bold text-foreground mt-1">{editLang === 'es' ? titleEs || "Article Title" : title || "Article Title"}</p>
-                                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{editLang === 'es' ? seoDescEs || excerptEs : seoDesc || excerpt || "Read the full article..."}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mt-3">{editLang === 'es' ? socialTagsEs : socialTags}</p>
-                                    </div>
-
-                                    <textarea
-                                        value={editLang === 'es' ? socialFbEs : socialFb}
-                                        onChange={(e) => editLang === 'es' ? setSocialFbEs(e.target.value) : setSocialFb(e.target.value)}
-                                        placeholder="Share on Facebook..."
-                                        className={`${INPUT_CLASS} h-24 resize-none font-medium`}
-                                    />
-                                </div>
-
-                                <div className="h-px bg-border/50" />
-
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
-                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#0077b5]" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
-                                        LinkedIn Post ({editLang.toUpperCase()})
-                                    </label>
-
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
-                                        <div className="flex gap-2 mb-3">
-                                            <div className="w-10 h-10 rounded-sm bg-primary/10 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-sm font-semibold">HostingsArena</p>
-                                                <p className="text-xs text-muted-foreground">redefining verified benchmarks.</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-3">{editLang === 'es' ? socialLiEs || socialLi || "Share your professional insights..." : socialLi || "Share your professional insights..."}</p>
-                                        <p className="text-sm text-blue-500 font-medium whitespace-pre-wrap mb-3">{editLang === 'es' ? socialTagsEs : socialTags}</p>
-                                        {coverImageUrl && (
-                                            <div className="rounded-sm overflow-hidden border border-border/50 bg-muted/20">
-                                                <img src={coverImageUrl} alt="Preview" className="w-full aspect-video object-cover" />
-                                                <div className="p-2 bg-muted/30">
-                                                    <p className="text-xs font-semibold">{editLang === 'es' ? seoTitleEs || titleEs || "Article Title" : seoTitle || title || "Article Title"}</p>
-                                                    <p className="text-[10px] text-muted-foreground">hostingarena.com</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <textarea
-                                        value={editLang === 'es' ? socialLiEs : socialLi}
-                                        onChange={(e) => editLang === 'es' ? setSocialLiEs(e.target.value) : setSocialLi(e.target.value)}
-                                        placeholder="Share on LinkedIn..."
-                                        className={`${INPUT_CLASS} h-32 resize-none`}
-                                    />
-                                </div>
-
-                                <div className="h-px bg-border/50" />
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Hashtags {editLang === 'es' ? '(ES)' : '(EN)'}</label>
-                                    <input
-                                        type="text"
-                                        value={editLang === 'es' ? socialTagsEs : socialTags}
-                                        onChange={(e) => editLang === 'es' ? setSocialTagsEs(e.target.value) : setSocialTags(e.target.value)}
-                                        placeholder="#webhosting #tech #review"
-                                        className={INPUT_CLASS}
-                                    />
-                                    {(editLang === 'es' ? socialTagsEs : socialTags) && (
-                                        <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                            {(editLang === 'es' ? socialTagsEs : socialTags).split(" ").map((t, i) => t.trim() && (
-                                                <span key={i} className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-medium border border-blue-500/15">
-                                                    {t.startsWith("#") ? t : `#${t}`}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <PostEditorSocial 
+                                editLang={editLang}
+                                socialTw={socialTw}
+                                setSocialTw={setSocialTw}
+                                socialTwEs={socialTwEs}
+                                setSocialTwEs={setSocialTwEs}
+                                socialFb={socialFb}
+                                setSocialFb={setSocialFb}
+                                socialFbEs={socialFbEs}
+                                setSocialFbEs={setSocialFbEs}
+                                socialLi={socialLi}
+                                setSocialLi={setSocialLi}
+                                socialLiEs={socialLiEs}
+                                setSocialLiEs={setSocialLiEs}
+                                socialTags={socialTags}
+                                setSocialTags={setSocialTags}
+                                socialTagsEs={socialTagsEs}
+                                setSocialTagsEs={setSocialTagsEs}
+                                handleGenerateSocial={handleGenerateSocial}
+                                isTranslating={isTranslating}
+                                coverImageUrl={coverImageUrl}
+                                title={title}
+                                titleEs={titleEs}
+                                seoTitle={seoTitle}
+                                seoTitleEs={seoTitleEs}
+                                seoDesc={seoDesc}
+                                seoDescEs={seoDescEs}
+                                excerpt={excerpt}
+                                excerptEs={excerptEs}
+                            />
                         )}
 
                         {activeSection === "image" && (
-                            <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Cover Image</label>
-                                    {coverImageUrl ? (
-                                        <div className="relative rounded-2xl overflow-hidden border border-border group">
-                                            <img
-                                                src={coverImageUrl}
-                                                alt="Cover"
-                                                className="w-full aspect-video object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
-                                                <label className="px-4 py-2 rounded-xl bg-muted backdrop-blur-sm text-sm font-medium cursor-pointer hover:bg-accent transition-colors flex items-center gap-2">
-                                                    <Upload className="w-4 h-4" /> Replace
-                                                    <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCoverImageUrl("")}
-                                                    className="px-4 py-2 rounded-xl bg-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors flex items-center gap-2"
-                                                >
-                                                    <Trash2 className="w-4 h-4" /> Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <label
-                                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                                            onDragLeave={() => setDragOver(false)}
-                                            onDrop={handleDrop}
-                                            className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed aspect-video cursor-pointer transition-all duration-300 ${dragOver
-                                                ? "border-primary bg-primary/10 scale-[1.01]"
-                                                : "border-border bg-muted/30 hover:border-border hover:bg-muted/50"
-                                                }`}
-                                        >
-                                            {uploading ? (
-                                                <div className="text-center">
-                                                    <Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
-                                                    <p className="text-sm text-muted-foreground">Uploading...</p>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center">
-                                                    <div className="p-4 rounded-2xl bg-muted/50 mb-4 inline-block">
-                                                        <Upload className="w-8 h-8 text-muted-foreground/40" />
-                                                    </div>
-                                                    <p className="text-sm font-medium mb-1">Drop image here or click to upload</p>
-                                                    <p className="text-xs text-muted-foreground/50">JPEG, PNG, WebP, GIF · Max 5MB</p>
-                                                </div>
-                                            )}
-                                            <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-                                        </label>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">AI Image Prompt</label>
-                                    <textarea
-                                        value={imagePrompt}
-                                        onChange={(e) => setImagePrompt(e.target.value)}
-                                        placeholder="Describe the ideal image — used as placeholder text and for future AI image generation"
-                                        className={`${INPUT_CLASS} h-24 resize-none`}
-                                    />
-                                    <p className="text-[10px] text-muted-foreground mt-1.5">AI uses this to generate descriptions. Shows as placeholder when no image is uploaded.</p>
-                                </div>
-                            </div>
+                            <PostEditorMedia 
+                                coverImageUrl={coverImageUrl}
+                                setCoverImageUrl={setCoverImageUrl}
+                                imagePrompt={imagePrompt}
+                                setImagePrompt={setImagePrompt}
+                                uploading={uploading}
+                                handleFileSelect={handleFileSelect}
+                                handleDrop={handleDrop}
+                                dragOver={dragOver}
+                                setDragOver={setDragOver}
+                            />
                         )}
                     </div>
 
@@ -2022,117 +1129,6 @@ function PostEditorModal({
     );
 }
 
-function GenerationConfigModal({
-    affiliateLinks,
-    onGenerate,
-    onClose,
-    loading
-}: {
-    affiliateLinks: AffiliateLink[];
-    onGenerate: (config: any) => void;
-    onClose: () => void;
-    loading: boolean;
-}) {
-    const [provider, setProvider] = useState("random");
-    const [customProvider, setCustomProvider] = useState("");
-    const [model, setModel] = useState("gemini-2.5-flash");
-    const [wordCount, setWordCount] = useState("1500");
-    const [instructions, setInstructions] = useState("");
-
-    const INPUT_CLASS = "w-full px-4 py-3 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-200";
-
-    const handleRun = () => {
-        onGenerate({
-            provider_name: provider === "custom" ? customProvider : (provider === "random" ? undefined : provider),
-            model: model,
-            target_word_count: parseInt(wordCount),
-            extra_instructions: instructions
-        });
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60 backdrop-blur-md flex items-center justify-center p-4" onClick={onClose}>
-            <div
-                className="w-full max-w-lg rounded-3xl border border-[color:var(--glass-border)] bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="px-6 py-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                            <Sparkles className="w-5 h-5" />
-                        </div>
-                        <h3 className="font-bold text-lg">AI Command Center</h3>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors"><X className="w-5 h-5" /></button>
-                </div>
-
-                <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Provider</label>
-                        <select value={provider} onChange={(e) => setProvider(e.target.value)} className={INPUT_CLASS}>
-                            <option value="random">🎲 Random Affiliate</option>
-                            {affiliateLinks.map(a => (
-                                <option key={a.id} value={a.provider_name}>{a.provider_name}</option>
-                            ))}
-                            <option value="custom">✍️ Custom Name</option>
-                        </select>
-                        {provider === "custom" && (
-                            <input
-                                type="text"
-                                placeholder="e.g. AWS, Vultr"
-                                value={customProvider}
-                                onChange={(e) => setCustomProvider(e.target.value)}
-                                className={`mt-2 ${INPUT_CLASS}`}
-                            />
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">AI Model</label>
-                            <select value={model} onChange={(e) => setModel(e.target.value)} className={INPUT_CLASS}>
-                                <option value="gemini-2.5-flash">🚀 Gemini 2.5 Flash</option>
-                                <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
-                                <option value="gemini-1.5-flash">✨ Gemini 1.5 Flash</option>
-                            </select>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Article Length</label>
-                            <select value={wordCount} onChange={(e) => setWordCount(e.target.value)} className={INPUT_CLASS}>
-                                <option value="800">Short (~800 words)</option>
-                                <option value="1500">Standard (~1500 words)</option>
-                                <option value="2500">Deep Dive (~2500+ words)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">What do you want the post to be about? <span className="text-red-500">*</span></label>
-                        <textarea
-                            value={instructions}
-                            onChange={(e) => setInstructions(e.target.value)}
-                            placeholder="e.g. Write a tutorial on how to install WordPress on this provider, focusing on their custom dashboard. Keep the tone very upbeat."
-                            className={`${INPUT_CLASS} min-h-[120px] resize-y`}
-                            required
-                        />
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-3 border-t border-border/50">
-                        <Button variant="ghost" onClick={onClose} disabled={loading} className="rounded-xl">Cancel</Button>
-                        <Button
-                            onClick={handleRun}
-                            disabled={loading || !instructions.trim()}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-6"
-                        >
-                            {loading ? <Clock className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                            {loading ? "Generating..." : "Generate Post"}
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?: () => void }) {
     const [posts, setPosts] = useState<Post[]>([]);
