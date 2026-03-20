@@ -11,7 +11,6 @@ export class PostReviewAudit implements TaskGenerator {
         const supabase = createAdminClient();
         const tasks: AdminTask[] = [];
 
-        // 1. Fetch Draft Posts that are AI Generated
         const { data: drafts, error } = await supabase
             .from('posts')
             .select('id, title, created_at, slug')
@@ -21,8 +20,6 @@ export class PostReviewAudit implements TaskGenerator {
         if (error) throw new Error(`Failed to fetch draft posts: ${error.message}`);
         if (!drafts || drafts.length === 0) return [];
 
-        // 2. Fetch Existing Review Tasks to avoid duplicates
-        // We look for tasks where metadata->post_id matches
         const { data: existingTasks, error: taskError } = await supabase
             .from('admin_tasks')
             .select('metadata')
@@ -34,7 +31,6 @@ export class PostReviewAudit implements TaskGenerator {
             existingTasks?.map(t => (t.metadata as any)?.post_id).filter(Boolean)
         );
 
-        // 3. Generate Tasks for new drafts
         for (const post of drafts) {
             if (processedPostIds.has(post.id)) continue;
 

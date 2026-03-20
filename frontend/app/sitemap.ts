@@ -4,13 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
 
-    // Use direct client for sitemap to avoid cookie/header dependency of SSR client
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Get all published posts
     const { data: posts } = await supabase
         .from('posts')
         .select('slug, updated_at, published_at')
@@ -24,7 +22,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
     }));
 
-    // Get all hosting providers
     const { data: hostingProviders } = await supabase
         .from('hosting_providers')
         .select('slug, updated_at');
@@ -36,7 +33,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
     }));
 
-    // Get all VPN providers
     const { data: vpnProviders } = await supabase
         .from('vpn_providers')
         .select('slug, updated_at');

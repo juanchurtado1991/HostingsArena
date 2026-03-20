@@ -116,7 +116,7 @@ export function ProviderSelector({ type, onSelect, selectedProvider, className }
                                 logger.log('SEARCH', 'Provider selected via CLICK (Div)', { name: provider.provider_name });
                                 onSelect(provider);
                                 setOpen(false);
-                                setSearchTerm(""); // Reset search after select
+                                setSearchTerm("");
                             }}
                         >
                             <Check

@@ -78,7 +78,6 @@ export function TaskCard({ task, onResolve, onDismiss }: TaskCardProps) {
                     </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex flex-col gap-2 flex-shrink-0">
                     <Button
                         size="sm"

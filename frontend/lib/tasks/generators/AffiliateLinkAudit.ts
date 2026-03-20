@@ -2,14 +2,7 @@ import type { TaskGenerator } from '../TaskGeneratorFactory';
 import type { AdminTask } from '../types';
 import { createAdminClient } from '../supabaseAdmin';
 
-/**
- * AffiliateLinkAudit Task Generator
- * 
- * Scans hosting_providers and vpn_providers for missing affiliate links.
- * Creates CRITICAL priority tasks for any provider without a link in affiliate_partners.
- * 
- * This is a "Revenue Protection" generator - missing links = lost money.
- */
+
 export class AffiliateLinkAudit implements TaskGenerator {
     readonly name = 'AffiliateLinkAudit';
     readonly description = 'Detects providers without affiliate links configured';
@@ -53,23 +46,19 @@ export class AffiliateLinkAudit implements TaskGenerator {
                 .filter(Boolean)
         );
 
-        // Track names added in THIS current scan to avoid duplicates from allProviders
         const processedInScan = new Set<string>();
 
         for (const provider of allProviders) {
             const providerName = provider.provider_name;
             const providerNameLower = providerName.toLowerCase();
 
-            // 1. Skip if already processed in this scan loop
             if (processedInScan.has(providerNameLower)) continue;
             processedInScan.add(providerNameLower);
 
-            // 2. Skip if affiliate exists and is active
             const hasAffiliate = affiliateMap.has(providerNameLower);
             const affiliateStatus = affiliateMap.get(providerNameLower);
             if (hasAffiliate && affiliateStatus === 'active') continue;
 
-            // 3. Skip if we already have a PENDING task in DB for this provider
             if (pendingProviderNames.has(providerName)) continue;
 
             const isExpired = affiliateStatus === 'expired';

@@ -22,7 +22,7 @@ export function StickyBuyBar({ providerName, price, rating, visitUrl, discount, 
 
     useEffect(() => {
         const handleScroll = () => {
-            const heroHeight = 500; // Approx height of hero section
+            const heroHeight = 500;
             if (window.scrollY > heroHeight) {
                 setIsVisible(true);
             } else {

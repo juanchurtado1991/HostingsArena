@@ -5,8 +5,8 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
-    Search, Plus, Edit3, RefreshCw, Loader2, Globe, 
-    ShieldCheck, Server, Filter, Database, Zap, Heart
+    Search, Plus, Edit3, Loader2, Globe, 
+    ShieldCheck, Server, Database, Zap
 } from "lucide-react";
 import { ProviderEditorModal } from "./ProviderEditorModal";
 import type { HostingProvider, VPNProvider } from "@/types";
@@ -22,9 +22,6 @@ export function ProviderManager() {
     const fetchProviders = useCallback(async () => {
         setLoading(true);
         try {
-            // NOTE: The original code was missing the actual fetch call.
-            // Assuming a fetch call like this would precede the error handling.
-            // For the purpose of this edit, we're only modifying the error handling logic.
             const res = await fetch(`/api/providers?type=${typeFilter}&search=${search}`);
 
             if (!res.ok) {
@@ -69,7 +66,6 @@ export function ProviderManager() {
 
     return (
         <div className="space-y-6">
-            {/* Header / Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <GlassCard className="p-6">
                     <div className="flex items-center gap-4">
@@ -114,7 +110,6 @@ export function ProviderManager() {
                 </GlassCard>
             </div>
 
-            {/* Filters */}
             <GlassCard className="p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-96">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -149,7 +144,6 @@ export function ProviderManager() {
                 </div>
             </GlassCard>
 
-            {/* Provider List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {loading ? (
                     <div className="col-span-full py-20 flex flex-col items-center gap-4">

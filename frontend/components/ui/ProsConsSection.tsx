@@ -16,7 +16,6 @@ export function ProsConsSection({ pros = [], cons = [], title }: ProsConsSection
         <section className="space-y-6">
             {title && <h3 className="text-2xl font-bold tracking-tight">{title}</h3>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Pros */}
                 <GlassCard className="border-green-500/10 bg-green-500/[0.02]">
                     <h4 className="flex items-center gap-2 text-green-600 dark:text-green-400 font-bold mb-4">
                         <Check className="w-5 h-5" /> What we Liked
@@ -32,7 +31,6 @@ export function ProsConsSection({ pros = [], cons = [], title }: ProsConsSection
                     </ul>
                 </GlassCard>
 
-                {/* Cons */}
                 <GlassCard className="border-red-500/10 bg-red-500/[0.02]">
                     <h4 className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold mb-4">
                         <X className="w-5 h-5" /> What to Consider

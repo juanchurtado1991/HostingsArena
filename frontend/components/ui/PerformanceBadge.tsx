@@ -31,7 +31,6 @@ export function PerformanceBadge({ grade, className, size = "md" }: PerformanceB
             sizes[size],
             className
         )}>
-            {/* Decorative Glow */}
             <div className="absolute inset-0 rounded-2xl bg-current opacity-5 blur-xl -z-10" />
             {normalizedGrade}
         </div>

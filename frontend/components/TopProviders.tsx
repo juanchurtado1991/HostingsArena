@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/button";
-import { Check, Star, Trophy, ArrowRight, Copy } from "lucide-react";
+import { Check, Trophy, Copy } from "lucide-react";
 import Link from "next/link";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
@@ -17,7 +16,7 @@ const TOP_PROVIDERS = [
         features: ["Free Domain", "Unmetered Bandwidth", "24/7 Support"],
         color: "from-purple-500/20 to-blue-500/20",
         badge: "Best Overall 2026",
-        affiliateLink: "https://www.hostg.xyz/SH..." // Placeholder for real link
+        affiliateLink: "https://www.hostg.xyz/SH..."
     },
     {
         rank: 2,
@@ -57,8 +56,6 @@ export interface TopProviderData {
     promoDiscount?: string;
 }
 
-// Placeholder for defaultText, assuming it would be imported or defined elsewhere
-// For the purpose of this edit, we'll define a minimal one to avoid errors.
 const defaultText = {
     en: {
         top_providers: {
@@ -92,7 +89,7 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
             features: ["Free Domain", "Unmetered Bandwidth", "24/7 Support"],
             color: "from-purple-500/20 to-blue-500/20",
             badge: "Best Overall 2026",
-            affiliateLink: "https://www.hostg.xyz/SH..." // Placeholder for real link
+            affiliateLink: "https://www.hostg.xyz/SH..."
         },
         {
             rank: 2,
@@ -122,11 +119,6 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
     return (
         <section className="container mx-auto px-4 md:px-6 relative z-20 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
-                {/* Re-order array to put Rank 1 in the middle for visual symmetry if desired, 
-            but for a standard grid 1-2-3 is often better. 
-            User asked for symmetry. A 1-2-3 grid is symmetrical in alignment. 
-            Let's keep the array order but make them identical in size.
-        */}
                 {displayProviders.sort((a, b) => a.rank - b.rank).map((provider) => (
                     <GlassCard
                         key={provider.name}
@@ -138,10 +130,7 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
                             }
             `}
                     >
-                        {/* Background Gradient */}
                         <div className={`absolute inset-0 bg-gradient-to-br ${provider.color} opacity-10`} />
-
-                        {/* Badge (Only for Rank 1 & 2 to balance? Or just Rank 1) */}
                         {provider.badge && (
                             <div className={`absolute top-0 right-0 text-xs font-bold px-3 py-1 rounded-bl-xl border-l border-b backdrop-blur-md
                  ${provider.rank === 1 ? 'bg-primary text-primary-foreground border-primary' : 'bg-white/10 text-muted-foreground border-white/10'}
@@ -151,7 +140,6 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
                         )}
 
                         <div className="relative z-10 flex flex-col h-full p-6">
-                            {/* Header */}
                             <div className="flex items-center gap-4 mb-6">
                                 <div className={`flex items-center justify-center w-12 h-12 rounded-2xl font-bold border shadow-inner text-lg
                     ${provider.rank === 1 ? 'bg-primary/20 border-primary/30 text-primary' : 'bg-background/50 border-white/10 text-muted-foreground'}
@@ -164,7 +152,6 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
                                 </div>
                             </div>
 
-                            {/* Price */}
                             <div className="mb-8 p-4 rounded-2xl bg-background/40 border border-white/5 text-center">
                                 <div className="flex items-center justify-center gap-1 mb-1">
                                     <span className="text-sm text-muted-foreground line-through opacity-70">$10.99</span>
@@ -193,13 +180,13 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
                                     <div className="text-center mb-1.5 flex items-center justify-center gap-2">
                                         <div className="h-px bg-white/10 flex-1"></div>
                                         <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                                            {provider.promoDiscount 
+                                            {provider.promoDiscount
                                                 ? (lang === "es" ? `Obtén ${provider.promoDiscount}% OFF con:` : `Get ${provider.promoDiscount}% OFF with:`)
                                                 : (lang === "es" ? "Con este código:" : "With this code:")}
                                         </span>
                                         <div className="h-px bg-white/10 flex-1"></div>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => handleCopy(provider.promoCode!)}
                                         className="w-full relative overflow-hidden flex items-center justify-center p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-yellow-500/15 to-amber-500/10 border border-yellow-500/30 hover:border-yellow-400/50 hover:bg-yellow-500/20 active:bg-yellow-500/30 transition-all cursor-pointer group shadow-[0_0_15px_rgba(234,179,8,0.1)] hover:shadow-[0_0_20px_rgba(234,179,8,0.2)]"
                                         title={lang === "es" ? "Haz clic para copiar" : "Click to copy promo code"}
@@ -219,7 +206,6 @@ export function TopProviders({ dict, lang = 'en', providers }: { dict?: any, lan
                                 </div>
                             )}
 
-                            {/* CTAs */}
                             <div className="space-y-3 mt-auto">
                                 <AffiliateButton
                                     className={`w-full font-bold text-lg h-12 rounded-xl shadow-lg transition-all

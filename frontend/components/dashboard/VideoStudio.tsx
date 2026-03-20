@@ -24,7 +24,6 @@ export function VideoStudio({ dict, lang }: VideoStudioProps) {
         <div className={styles.glassEngine}>
             <div className={styles.studioContent}>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12" style={{ display: 'none' }}>
-                    {/* Header removed as per user request to save space */}
                 </div>
 
                 <div className={cn("w-full transition-all duration-700", currentPhase === 3 ? styles.maxGrow : "max-w-[1600px] mx-auto")}>

@@ -3,7 +3,7 @@ export type ReviewType = "hosting" | "vpn";
 interface ReviewJsonLdProps {
     providerName: string;
     description: string;
-    rating: number; // 0-10 or 0-100
+    rating: number; 
     slug: string;
     type: ReviewType;
     pros?: string[];
@@ -27,7 +27,7 @@ export function ReviewJsonLd({
 }: ReviewJsonLdProps) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.hostingsarena.com";
     const url = `${siteUrl}/${type}/${slug}`;
-    const scaledRating = rating > 10 ? rating / 10 : rating; // Normalize to 0-10 scale
+    const scaledRating = rating > 10 ? rating / 10 : rating; 
 
     const schema = {
         "@context": "https://schema.org",
@@ -57,13 +57,12 @@ export function ReviewJsonLd({
         "aggregateRating": {
             "@type": "AggregateRating",
             "ratingValue": scaledRating.toFixed(1),
-            "reviewCount": "1", // Self-review
+            "reviewCount": "1", 
             "bestRating": "10",
             "worstRating": "1"
         }
     };
 
-    // Add Offer if price is available
     if (price) {
         (schema as any).offers = {
             "@type": "Offer",

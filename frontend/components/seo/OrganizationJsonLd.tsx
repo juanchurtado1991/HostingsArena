@@ -6,7 +6,7 @@ export function OrganizationJsonLd() {
         "@type": "Organization",
         "name": "HostingsArena",
         "url": siteUrl,
-        "logo": `${siteUrl}/logo-wide.jpg`, // Updated to real logo
+        "logo": `${siteUrl}/logo-wide.jpg`,
         "sameAs": [
             "https://x.com/HostingsArena",
             "https://www.facebook.com/profile.php?id=61588177618478",

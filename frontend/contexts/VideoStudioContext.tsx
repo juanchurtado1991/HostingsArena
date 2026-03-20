@@ -26,14 +26,13 @@ export interface Clip {
     motionEffect?: string;
     title?: string;
     volume?: number;
-    pan?: number; // -1 to 1
+    pan?: number; 
     blurEnabled?: boolean;
-    sceneReferenceId?: string; // Links back to a scene for data integrity if needed
-    // Spatial properties for Layer-based editing
-    x?: number; // Percentage of width (0-100)
-    y?: number; // Percentage of height (0-100)
-    scale?: number; // 1.0 = 100%
-    opacity?: number; // 0.0 to 1.0
+    sceneReferenceId?: string; 
+    x?: number; 
+    y?: number; 
+    scale?: number; 
+    opacity?: number; 
     sfxUrl?: string;
     sfxDurationFrames?: number;
     sfxVolume?: number;
@@ -72,7 +71,6 @@ interface Scene {
 }
 
 interface VideoStudioContextValue {
-    // Project Settings
     title: string;
     setTitle: (v: string) => void;
     format: '9:16' | '16:9';
@@ -83,15 +81,11 @@ interface VideoStudioContextValue {
     setNewsFocus: (v: string) => void;
     targetDuration: number;
     setTargetDuration: (v: number) => void;
-
-    // Workflow State
     currentPhase: number;
     setCurrentPhase: (v: number) => void;
     error: string | null;
     setError: (v: string | null) => void;
     isLoaded: boolean;
-
-    // Media & Scene State (Phase 1 & 2)
     scenes: Scene[];
     setScenes: React.Dispatch<React.SetStateAction<Scene[]>>;
     updateScene: (index: number, updates: Partial<Scene>) => void;
@@ -99,18 +93,13 @@ interface VideoStudioContextValue {
     audioTrack?: Clip[];
     musicTrack?: Clip[];
     overlayTrack?: Clip[];
-    
-    // NLE Layers State
     layers: Layer[];
     setLayers: React.Dispatch<React.SetStateAction<Layer[]>>;
     addLayer: () => void;
     removeLayer: (id: string) => void;
     reorderLayers: (newOrder: string[]) => void;
-
     durationInFrames: number;
     setDurationInFrames: (v: number) => void;
-
-    // Audio & Voice State
     selectedVoice: string;
     setSelectedVoice: (v: string) => void;
     customVoiceUrl?: string;
@@ -129,15 +118,11 @@ interface VideoStudioContextValue {
     setNewsCardSfxUrl: (v: string | undefined) => void;
     voiceSpeed: number;
     setVoiceSpeed: (v: number) => void;
-
-    // Processing States
     isGeneratingScript: boolean;
     setIsGeneratingScript: (v: boolean) => void;
     isPreparingAssembly: boolean;
     syncEta: number;
     prepareAssemblyData: () => Promise<void>;
-
-    // Video Output State
     isGeneratingVideo: boolean;
     setIsGeneratingVideo: (v: boolean) => void;
     renderProgress: number;
@@ -159,7 +144,7 @@ interface VideoStudioContextValue {
         outputFormat: 'mp4' | 'webm' | 'mov';
     };
     setExportSettings: (v: any) => void;
-    // Clip Actions
+
     addClip: (layerId: string, clip: Partial<Clip>) => void;
     updateClip: (clipId: string, updates: Partial<Clip>) => void;
     deleteClip: (clipId: string) => void;
@@ -177,7 +162,6 @@ const VideoStudioContext = createContext<VideoStudioContextValue | undefined>(un
 const STORAGE_KEY = "hostingarena_studio_v2";
 
 export function VideoStudioProvider({ children, initialLang = "en" }: { children: ReactNode, initialLang?: string }) {
-    // Core State
     const [isLoaded, setIsLoaded] = useState(false);
     const [title, setTitle] = useState("Tech News Summary");
     const [format, setFormat] = useState<'9:16' | '16:9'>("16:9");
@@ -186,14 +170,9 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     const [targetDuration, setTargetDuration] = useState(60);
     const [currentPhase, setCurrentPhase] = useState(1);
     const [error, setError] = useState<string | null>(null);
-
     const [scenes, setScenes] = useState<Scene[]>([]);
-    
-    // NLE Layers
     const [layers, setLayers] = useState<Layer[]>([]);
-
     const [durationInFrames, setDurationInFrames] = useState(1800);
-
     const [selectedVoice, setSelectedVoice] = useState("en-US-AndrewNeural");
     const [customVoiceUrl, setCustomVoiceUrl] = useState<string>();
     const [bgMusicUrl, setBgMusicUrl] = useState<string>();
@@ -203,14 +182,9 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     const [outroSfxUrl, setOutroSfxUrl] = useState<string>();
     const [newsCardSfxUrl, setNewsCardSfxUrl] = useState<string>();
     const [voiceSpeed, setVoiceSpeed] = useState(1.0);
-
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
-    
-    // Assembly State
     const [isPreparingAssembly, setIsPreparingAssembly] = useState(false);
     const [syncEta, setSyncEta] = useState(0);
-
-    // Export State
     const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
     const [renderProgress, setRenderProgress] = useState(0);
     const [renderStep, setRenderStep] = useState("");
@@ -226,7 +200,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         outputFormat: 'mp4',
     });
 
-    // Undo/Redo History
     interface HistoryItem {
         scenes: Scene[];
         layers: Layer[];
@@ -242,7 +215,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 layers: [...l]
             };
             
-            // Don't push if it's identical to last one
             if (next.length > 0) {
                 const last = next[next.length - 1];
                 if (JSON.stringify(last) === JSON.stringify(newItem)) return prev;
@@ -275,7 +247,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         }
     }, [history, historyIndex]);
 
-    // Auto-update total duration based on clips (NLE Support)
     useEffect(() => {
         if (layers.length > 0) {
             const newDuration = SyncEngine.getClipsDurationInFrames(layers);
@@ -285,7 +256,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         }
     }, [layers, durationInFrames]);
 
-    // Initialize history once loaded
     useEffect(() => {
         if (isLoaded && history.length === 0 && scenes.length > 0) {
             setHistory([{ 
@@ -296,7 +266,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         }
     }, [isLoaded, scenes, layers, history.length]);
 
-    // Persistence Logic
     useEffect(() => {
         const savedState = localStorage.getItem(STORAGE_KEY);
         if (savedState) {
@@ -306,7 +275,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 if (data.layers) {
                     setLayers(data.layers);
                 }
-                // Fallback for legacy tracks migration
                 else if (data.videoTrack) {
                     const legacyLayers = [
                         { id: 'l1', name: 'Imagen / Video', clips: data.videoTrack || [] },
@@ -339,7 +307,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         setIsLoaded(true);
     }, []);
 
-    // [REPAIR EFFECT] Ensure layers have correct names and IDs even if saved in corrupted state
     useEffect(() => {
         if (!isLoaded || layers.length === 0) return;
         
@@ -384,7 +351,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         newsFocus, customVoiceUrl, voiceSpeed, targetDuration, isLoaded
     ]);
 
-    // Actions
     const updateScene = useCallback((index: number, updates: Partial<Scene>) => {
         setScenes(prev => {
             const next = [...prev];
@@ -392,14 +358,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             return next;
         });
     }, []);
-
-    const getAudioDuration = (url: string): Promise<number> => {
-        return new Promise((resolve, reject) => {
-            const audio = new Audio(url);
-            audio.onloadedmetadata = () => resolve(audio.duration);
-            audio.onerror = () => reject("Failed to load audio");
-        });
-    };
 
     const isPreparingRef = useRef(false);
 
@@ -454,9 +412,8 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         setDurationInFrames(totalFrames);
                         setSyncEta(Math.ceil(audioObj.duration));
 
-                        // [SYNC FIX] Mirror to useStudioStore for Custom Voice Path
                         const store = useStudioStore.getState();
-                        store.setScenes(scenes); // Custom path doesn't "update" scenes with timestamps yet, but we need the refs
+                        store.setScenes(scenes);
                         store.setLayers(initialLayers);
                         store.setDurationInFrames(totalFrames);
                         store.setTitle(title);
@@ -472,7 +429,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             const validScenes = scenes.filter(s => s.speech.trim());
             setSyncEta(Math.ceil(validScenes.length * 2));
 
-            // ─── STEP 1: Generate audio for EACH scene in parallel ───
             const FALLBACK_VOICES: Record<string, string> = {
                 es: 'es-MX-JorgeNeural',
                 en: 'en-US-AndrewNeural',
@@ -490,7 +446,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             const sceneAudioData = await Promise.all(validScenes.map(async (scene, i) => {
                 let res = await generateVoice(scene.speech, selectedVoice);
 
-                // Retry with fallback voice if the primary voice fails
                 if (!res.ok) {
                     const fallback = FALLBACK_VOICES[voiceLang] || FALLBACK_VOICES.en;
                     console.warn(`[StudioVoice] Scene ${i+1} failed with ${selectedVoice}, retrying with fallback ${fallback}...`);
@@ -503,10 +458,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 }
 
                 const data = await res.json();
-                
-                // CRÍTICO: No pedir duración al cliente (onloadedmetadata). 
-                // Usar ÚNICAMENTE la duración lógica calculada por el servidor (data.duration), 
-                // ya que el archivo físico WebM puede tener metadatos de duración corruptos en el navegador.
                 const duration = data.duration || 3;
 
                 console.log(`[StudioVoice] API Result - Scene ${i} - URL: ${data.url}, Duración Servidor: ${duration.toFixed(3)}s`);
@@ -517,18 +468,14 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 };
             }));
 
-            // ─── STEP 2: Position audio and video clips ───
             const updatedScenes = [...scenes];
             let activeValidIdx = 0;
             
-            // Generate visual context (Assets API) in parallel with Audio 
-            // but we'll do it sequentially here for simplicity and to avoid rate limits
             for (let i = 0; i < updatedScenes.length; i++) {
                 const scene = updatedScenes[i];
                 const isSpeechless = !scene.speech.trim();
                 const sceneDurationSec = isSpeechless ? 3 : (sceneAudioData[activeValidIdx]?.duration || 3);
                 
-                // Fetch dynamic asset if not manually overridden
                 let dynamicAssetUrl = scene.assetUrl;
                 if (!dynamicAssetUrl && scene.speech.trim()) {
                     try {
@@ -556,12 +503,11 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         voiceUrl: audioData.url,
                         wordTimestamps: audioData.wordTimestamps,
                         duration: sceneDurationSec,
-                        assetUrl: dynamicAssetUrl || scene.visual, // Fallback to visual (which might be a static URL)
-                        titleCardEnabled: true // FORCE News Title Card for narrator scenes
+                        assetUrl: dynamicAssetUrl || scene.visual,
+                        titleCardEnabled: true 
                     };
                     activeValidIdx++;
                 } else {
-                    // Speechless scenes only need 1s of breathing room, not 3s.
                     updatedScenes[i] = { 
                         ...scene, 
                         duration: 1,
@@ -594,7 +540,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             const newLowerThirdClips: Clip[] = [];
             const newAudioClips: Clip[] = [];
 
-            // 1. Add Intro Clip
             if (introFrames > 0) {
                 newVideoTrack.push({
                     id: 'c-intro',
@@ -611,7 +556,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 });
             }
 
-            // 2. Add Scene Clips (Video & Audio & Overlays)
             const usedUrls = new Set<string>();
             const titleCardFrames = SyncEngine.secondsToFrames(SyncEngine.TITLE_CARD_SECONDS);
 
@@ -620,7 +564,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 
                 const isTitleCardEnabled = scene.titleCardEnabled !== false;
 
-                // Audio (Starts exactly at timing.startFrame, which accounts for Title Card offset)
                 if (scene.voiceUrl && scene.speech.trim()) {
                     newAudioClips.push({
                         id: `a-scene-${i}`,
@@ -632,7 +575,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                     });
                     
                     if (isTitleCardEnabled) {
-                        // News Lower Third Overlay
                         newLowerThirdClips.push({
                             id: `lower-third-${i}`,
                             type: 'overlay',
@@ -646,7 +588,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                     }
                 }
 
-                // Title Card Overlay Clip (Inserted into Video Track Layer 1)
                 if (isTitleCardEnabled) {
                     newVideoTrack.push({
                         id: `v-title-${i}`,
@@ -662,7 +603,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                     } as any);
                 }
 
-                // Video/Image Segments (Start at timing.startFrame)
                 const hasSegments = scene.mediaSegments && scene.mediaSegments.length > 0;
                 const segmentsToUse = hasSegments 
                     ? scene.mediaSegments! 
@@ -675,7 +615,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                         motionEffect: 'ken-burns' as const
                     }));
 
-                // Update usedUrls to prevent duplicate backgrounds in subsequent scenes
                 segmentsToUse.forEach(seg => usedUrls.add(seg.url));
 
                 let segOffset = 0;
@@ -698,12 +637,8 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 });
             });
 
-            // 3. Outro is now rendered dynamically at the end of Composition.tsx
-            // and no longer inserted into the NLE track to prevent overlapping issues.
-
             setScenes(updatedScenes);
 
-            // ─── STEP 5: Music track (covers everything) ───
             const musicUrlToUse = bgMusicUrl || "/assets/bg-music.mp3";
             const newMusicTrack: Clip[] = [{
                 id: 'm-background',
@@ -714,7 +649,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 volume: bgMusicVolume,
             }];
 
-            // Add Outro SFX if exists
             if (outroSfxUrl) {
                 const outroFrames = SyncEngine.getOutroFrames();
                 newAudioClips.push({
@@ -744,7 +678,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             setLayers(finalLayers);
             setDurationInFrames(totalProjectFrames);
             
-            // [SYNC FIX] Mirror to useStudioStore so Phase 3 Editor and Render have the latest state
             const store = useStudioStore.getState();
             store.setScenes(updatedScenes);
             store.setLayers(finalLayers);
@@ -819,7 +752,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 throw new Error(errorDetails);
             }
 
-            // SSE Consumption - Robust buffer handling
             const reader = renderResponse.body.getReader();
             const decoder = new TextDecoder();
             let finalVideoUrl = null;
@@ -831,11 +763,10 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
 
                 buffer += decoder.decode(value, { stream: true });
                 
-                // SSE events are separated by double newlines
                 let boundary = buffer.indexOf('\n\n');
                 while (boundary !== -1) {
                     const chunk = buffer.slice(0, boundary);
-                    buffer = buffer.slice(boundary + 2); // advance past the \n\n
+                    buffer = buffer.slice(boundary + 2);
                     
                     const lines = chunk.split('\n');
                     for (const line of lines) {
@@ -858,11 +789,10 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                                 const raw = parseFloat(data.rawProgress);
                                 if (!isNaN(raw)) {
                                     console.log(`[SSE Client] ${new Date().toISOString()} - Received progress: ${raw}`);
-                                    const realPct = 5 + (raw * 90); // scale 0-1 to 5-95%
+                                    const realPct = 5 + (raw * 90); 
                                     setRenderProgress(Math.round(realPct));
                                     setRenderStep(data.message || (data.status === "uploading" ? "Uploading to Cloud..." : "Compositing News Scenes..."));
 
-                                    // Calculate real ETA based on elapsed time vs progress
                                     const elapsedSec = (Date.now() - renderStartTime) / 1000;
                                     if (raw > 0.05) { 
                                         const totalEstimatedSec = elapsedSec / raw;
@@ -877,16 +807,15 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                                 }
                             }
 
-                            // Keep looking for complete even if progress goes to 1
                             if (data.status === "complete") {
                                 console.log("[SSE Client] Render Complete Event Received!", data.videoUrl);
                                 finalVideoUrl = data.videoUrl;
-                                setVideoUrl(data.videoUrl); // Set immediately
+                                setVideoUrl(data.videoUrl); 
                                 setRenderStep("Finalizing MP4 container...");
                             }
 
                         } catch (e: any) {
-                            if (e.message.includes("Streaming render failed")) throw e; // Bubble up explicit server errors
+                            if (e.message.includes("Streaming render failed")) throw e;
                             console.warn("[SSE Client] Failed to parse SSE line", trimmedLine, e);
                         }
                     }
@@ -894,7 +823,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 }
             }
 
-            // Final verification before marking as finished
             if (!finalVideoUrl) {
                 throw new Error("Render stream ended without receiving a completion event or video URL.");
             }
@@ -956,7 +884,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                     src: clip.src || '',
                     startFrame: clip.startFrame ?? 0,
                     durationInFrames: clip.durationInFrames ?? 150,
-                    x: 50, // Default center
+                    x: 50, 
                     y: 50,
                     scale: 1,
                     opacity: 1,
@@ -1036,7 +964,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 const nextClips = [...layer.clips];
                 [nextClips[idx], nextClips[newIdx]] = [nextClips[newIdx], nextClips[idx]];
 
-                // Re-calculate startFrames to maintain magnetic behavior
                 let currentPos = nextClips[0].startFrame;
                 const repositioned = nextClips.map(c => {
                     const u = { ...c, startFrame: currentPos };
@@ -1056,7 +983,6 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             console.error('[VideoStudioContext] Cleanup failed:', err);
         });
 
-        // 1. Reset Context State
         setScenes([]);
         setLayers([]);
         setTitle('Tech News Summary');
@@ -1075,14 +1001,11 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         setHistory([]);
         setHistoryIndex(-1);
 
-        // 2. Reset [Zustand] Studio Store (Crucial for Phase 3/4 Sync)
         useStudioStore.getState().resetStore();
 
-        // 3. Clear all persistence keys
-        localStorage.removeItem(STORAGE_KEY); // "hostingarena_studio_v2"
-        localStorage.removeItem('hostingarena_editor_draft'); // Phase 3 Editor specific key
+        localStorage.removeItem(STORAGE_KEY); 
+        localStorage.removeItem('hostingarena_editor_draft');
 
-        // 4. Clear persistent asset cache (images, videos, SFX)
         clearAssetCache();
     }, []);
 
@@ -1093,7 +1016,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         
         const link = document.createElement('a');
         link.href = proxyUrl;
-        link.download = filename; // Still helpful for some browsers
+        link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

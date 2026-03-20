@@ -26,7 +26,6 @@ export async function getDefaultCompareProviders(type: 'hosting' | 'vpn') {
     
     const table = type === 'hosting' ? 'hosting_providers' : 'vpn_providers';
     
-    // We fetch a handful of top providers
     const { data } = await supabase
         .from(table)
         .select('*')
@@ -35,10 +34,8 @@ export async function getDefaultCompareProviders(type: 'hosting' | 'vpn') {
 
     const activeProviders = (data || []).filter(p => activeNames.has(p.provider_name.toLowerCase()));
     
-    // Select the first two that have affiliates
     let selected = activeProviders.slice(0, 2);
     
-    // Fallback if we don't have enough active affiliates
     if (selected.length < 2 && data) {
          for (const p of data) {
              if (!selected.find(s => s.id === p.id)) {

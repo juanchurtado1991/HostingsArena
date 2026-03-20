@@ -59,33 +59,19 @@ const INPUT_CLASS = "w-full px-4 py-3 rounded-xl bg-white border border-gray-200
 const LABEL_CLASS = "block text-[11px] font-bold text-gray-500 uppercase tracking-widest ml-1 mb-1.5";
 
 interface AffiliateFormModalProps {
-    /** Modal title */
     title: string;
-    /** Subtitle shown below title */
     subtitle: string;
-    /** Initial form values */
     initialData: AffiliateFormData;
-    /** Whether provider_name is locked (editing mode) */
     providerLocked?: boolean;
-    /** List of real providers from DB for dropdown */
     providerOptions?: ProviderOption[];
-    /** Show "Lost Revenue" warning banner */
     showWarning?: boolean;
-    /** Provider name for the warning message */
     warningProvider?: string;
-    /** Label for the submit button */
     submitLabel: string;
-    /** Gradient class for the submit button */
     submitGradient?: string;
-    /** Icon gradient for the header */
     headerGradient?: string;
-    /** Icon color class */
     headerIconColor?: string;
-    /** Whether to show the Status field */
     showStatus?: boolean;
-    /** Called with form data on submit. Return a promise — modal handles loading/error */
     onSubmit: (data: AffiliateFormData) => Promise<void>;
-    /** Called when modal is closed */
     onClose: () => void;
 }
 
@@ -163,7 +149,6 @@ export function AffiliateFormModal({
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -172,7 +157,6 @@ export function AffiliateFormModal({
                 className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-all"
             />
 
-            {/* Modal */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -181,7 +165,6 @@ export function AffiliateFormModal({
                 className="relative w-full max-w-4xl rounded-3xl bg-white shadow-2xl overflow-visible border border-gray-100 flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between p-8 pb-6 border-b border-gray-100 bg-gray-50/50 rounded-t-3xl">
                     <div className="flex items-center gap-5">
                         <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${headerGradient} shadow-sm border border-white`}>
@@ -200,7 +183,6 @@ export function AffiliateFormModal({
                     </button>
                 </div>
 
-                {/* Warning Banner */}
                 <AnimatePresence>
                     {showWarning && warningProvider && (
                         <motion.div
@@ -221,13 +203,10 @@ export function AffiliateFormModal({
                     )}
                 </AnimatePresence>
 
-                {/* Form Content - Scrollable if needed, but designed to not need it */}
                 <form onSubmit={handleSubmit} className="p-8 overflow-y-auto custom-scrollbar">
                     <div className="grid grid-cols-12 gap-6">
 
-                        {/* LEFT COLUMN: Main Info & Credentials */}
                         <div className="col-span-12 lg:col-span-7 space-y-6">
-                            {/* Provider Selection */}
                             <div className="space-y-1.5">
                                 <label className={LABEL_CLASS}>Provider *</label>
                                 {showDropdown ? (
@@ -337,7 +316,6 @@ export function AffiliateFormModal({
                                 )}
                             </div>
 
-                            {/* Affiliate Link */}
                             <div className="space-y-1.5 pt-2">
                                 <label className={LABEL_CLASS}>Affiliate Link *</label>
                                 <div className="relative group">
@@ -353,7 +331,6 @@ export function AffiliateFormModal({
                                 </div>
                             </div>
 
-                            {/* Promo Code & Discount */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <label className={LABEL_CLASS}>Promo Code (Optional)</label>
@@ -383,7 +360,6 @@ export function AffiliateFormModal({
                                 </div>
                             </div>
 
-                            {/* Dashboard URL & Payment Method */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <label className={LABEL_CLASS}>Dashboard URL</label>
@@ -414,7 +390,6 @@ export function AffiliateFormModal({
                                 </div>
                             </div>
 
-                            {/* Account Credentials Section */}
                             <div className="pt-4">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="p-1.5 rounded bg-blue-50">
@@ -493,7 +468,6 @@ export function AffiliateFormModal({
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: Configuration Details */}
                         <div className="col-span-12 lg:col-span-5 space-y-6 lg:pl-6 lg:border-l border-gray-100">
 
                             <div className="space-y-1.5">
@@ -613,7 +587,6 @@ export function AffiliateFormModal({
                     </div>
                 </form>
 
-                {/* Footer and Status */}
                 <div className="px-8 mt-auto pb-6">
                     {error && (
                         <motion.div

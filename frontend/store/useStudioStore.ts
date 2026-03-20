@@ -22,7 +22,6 @@ interface TransientState {
 }
 
 interface StudioState extends UndoableState, TransientState {
-    // Actions - Undoable
     setScenes: (scenes: Scene[]) => void;
     setLayers: (layers: Layer[]) => void;
     updateLayer: (layerId: string, updates: Partial<Layer>) => void;
@@ -31,7 +30,6 @@ interface StudioState extends UndoableState, TransientState {
     setFormat: (format: '9:16' | '16:9') => void;
     setDurationInFrames: (duration: number) => void;
 
-    // Actions - Transient
     setCurrentTime: (time: number) => void;
     setIsPlayingPreview: (isPlaying: boolean) => void;
     setSelectedClipId: (id: string | null) => void;
@@ -40,7 +38,6 @@ interface StudioState extends UndoableState, TransientState {
     setVoiceSpeed: (speed: number) => void;
     resetStore: () => void;
 
-    // History
     history: UndoableState[];
     historyIndex: number;
     undo: () => void;
@@ -70,7 +67,6 @@ export const useStudioStore = create<StudioState>()(
         history: [],
         historyIndex: -1,
 
-        // --- Undoable Actions ---
         setScenes: (scenes) => set({ scenes }),
         setLayers: (layers) => set({ layers }),
         
@@ -89,7 +85,6 @@ export const useStudioStore = create<StudioState>()(
         setFormat: (format) => set({ format }),
         setDurationInFrames: (durationInFrames) => set({ durationInFrames }),
 
-        // --- Transient Actions ---
         setCurrentTime: (currentTime) => set({ currentTime }),
         setIsPlayingPreview: (isPlayingPreview) => set({ isPlayingPreview }),
         setSelectedClipId: (selectedClipId) => set({ selectedClipId }),
@@ -112,12 +107,10 @@ export const useStudioStore = create<StudioState>()(
             });
         },
 
-        // --- History Logic ---
         pushToHistory: () => {
             const { scenes, layers, title, format, durationInFrames, history, historyIndex } = get();
             const newState: UndoableState = { scenes, layers, title, format, durationInFrames };
             
-            // Equality check to avoid redundant snapshots
             if (historyIndex >= 0) {
                 const lastState = history[historyIndex];
                 if (JSON.stringify(lastState) === JSON.stringify(newState)) return;

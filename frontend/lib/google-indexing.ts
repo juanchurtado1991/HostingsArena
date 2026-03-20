@@ -13,9 +13,7 @@ export async function requestIndexing(url: string) {
     }
 
     if (privateKey) {
-        // Remove surrounding quotes if they exist
         privateKey = privateKey.replace(/^"|"$/g, '');
-        // Handle escaped newlines
         privateKey = privateKey.replace(/\\n/g, '\n');
     }
 

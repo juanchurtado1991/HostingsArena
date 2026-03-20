@@ -1,11 +1,5 @@
 import { createAdminClient } from "@/lib/tasks/supabaseAdmin";
 
-/**
- * Fetches the affiliate link for a provider from the database.
- * Falls back to website_url if no active affiliate link exists.
- * 
- * Used server-side in detail pages to ensure all CTAs use affiliate links.
- */
 export async function getAffiliateUrl(
     providerName: string,
     fallbackUrl: string
@@ -29,11 +23,6 @@ export async function getAffiliateUrl(
     return fallbackUrl;
 }
 
-/**
- * Batch-fetches affiliate links for multiple providers at once.
- * Returns a Map of provider_name -> affiliate_link.
- * Used in list pages to minimize DB calls.
- */
 export async function getAffiliateUrlBatch(
     providers: { provider_name: string; website_url: string }[]
 ): Promise<Map<string, string>> {
@@ -68,10 +57,6 @@ export async function getAffiliateUrlBatch(
     return urlMap;
 }
 
-/**
- * Returns a Set of provider names (lowercased) that have an active affiliate link.
- * Useful for sorting providers globally before pagination.
- */
 export async function getActiveAffiliatePartners(): Promise<Set<string>> {
     try {
         const supabase = createAdminClient();

@@ -246,9 +246,7 @@ export function AnalyticsCard() {
                 </div>
             </div>
 
-            {/* Summary Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {/* Views Summary */}
                 <div className="p-4 rounded-2xl bg-muted/40 border border-border/50">
                     <div className="flex items-center gap-2 mb-2 text-blue-400">
                         <Eye className="w-4 h-4" />
@@ -270,7 +268,6 @@ export function AnalyticsCard() {
                     </div>
                 </div>
 
-                {/* Clicks Summary */}
                 <div className="p-4 rounded-2xl bg-muted/40 border border-border/50">
                     <div className="flex items-center gap-2 mb-2 text-green-400">
                         <MousePointerClick className="w-4 h-4" />
@@ -292,7 +289,6 @@ export function AnalyticsCard() {
                     </div>
                 </div>
 
-                {/* Conversion Summary */}
                 <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-primary mb-1" />
                     <p className="text-2xl font-black text-primary">{dynamicCTR}%</p>
@@ -300,7 +296,6 @@ export function AnalyticsCard() {
                 </div>
             </div>
 
-            {/* Mini Bar Chart */}
             {data.dailyTraffic.length > 0 && (
                 <div className="mb-6">
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">Traffic Distribution (Views vs Clicks)</p>
@@ -314,7 +309,6 @@ export function AnalyticsCard() {
                 </div>
             )}
 
-            {/* Tabs */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
                 {views.map(v => (
                     <button
@@ -331,7 +325,6 @@ export function AnalyticsCard() {
                 ))}
             </div>
 
-            {/* Tab Content */}
             <div className="space-y-1.5">
                 {activeView === "posts" && (
                     data.topPosts.length > 0 ? data.topPosts.map((p, i) => (
@@ -380,7 +373,6 @@ export function AnalyticsCard() {
                                 <span className="text-xs font-bold text-muted-foreground w-5">{i + 1}</span>
                                 <span className="text-sm">
                                     <span className="mr-2 text-lg">
-                                        {/* Simple flag mapping or emoji if needed, or just remove if name is enough */}
                                         {`https://flagcdn.com/24x18/${c.country.toLowerCase()}.png` ? <img src={`https://flagcdn.com/24x18/${c.country.toLowerCase()}.png`} alt={c.country} className="inline w-4 h-3 object-cover mr-1 rounded-[1px]" onError={(e) => e.currentTarget.style.display = 'none'} /> : "🌍"}
                                     </span>
                                     {getCountryName(c.country)}
@@ -418,7 +410,6 @@ export function AnalyticsCard() {
                 {activeView === "visitors" && (
                     data.recentActivity?.length > 0 ? (
                         <>
-                            {/* MOBILE: compact activity cards */}
                             <div className="block md:hidden space-y-1.5">
                                 {data.recentActivity.map((v, i) => (
                                     <div key={i} className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
@@ -437,7 +428,6 @@ export function AnalyticsCard() {
                                 ))}
                             </div>
 
-                            {/* DESKTOP: full table */}
                             <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left text-sm">
                                     <thead className="text-xs text-muted-foreground border-b border-border/50">

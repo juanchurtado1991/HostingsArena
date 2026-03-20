@@ -68,12 +68,10 @@ export function PublishSummaryModal({
     const localePrefix = activeLang === 'es' ? '/es' : '/en';
     const finalPostUrl = postUrl.replace(/https:\/\/hostingsarena\.com\/news\//, `https://hostingsarena.com${localePrefix}/news/`);
 
-    // Helper to check if text already contains the URL or hashtags to avoid duplication
     const buildFullText = (baseText?: string) => {
         if (!baseText) return "";
         let text = baseText;
 
-        // Only append hashtags if they aren't already there
         if (currentContent?.hashtags && currentContent.hashtags.length > 0) {
             const hashtagsStr = currentContent.hashtags.join(' ');
             if (!text.includes(currentContent.hashtags[0])) {
@@ -81,8 +79,6 @@ export function PublishSummaryModal({
             }
         }
 
-        // Only append URL if it's not already there (AI or handleSave might have added it)
-        // We look for any version of the hostingsarena news link
         if (!text.match(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\//)) {
             text += `\n\n${finalPostUrl}`;
         }
@@ -97,13 +93,11 @@ export function PublishSummaryModal({
     return (
         <div
             className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4"
-            onClick={(e) => e.stopPropagation()} // Prevent closing PostEditor
+            onClick={(e) => e.stopPropagation()} 
         >
             <div className="w-full max-w-xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl p-6 md:p-8 transform transition-all scale-100 border border-zinc-100 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
 
-                {/* Header / Icon */}
                 <div className="flex flex-col items-center justify-center mb-6">
-                    {/* ... (keep status icons) ... */}
                     {status === 'loading' && (
                         <div className="p-4 rounded-full bg-blue-50 text-blue-500 mb-4 animate-pulse">
                             <Loader2 className="w-8 h-8 animate-spin" />
@@ -133,9 +127,8 @@ export function PublishSummaryModal({
                     </p>
                 </div>
 
-                {/* Content */}
                 <div className="space-y-6">
-                    {/* HostingArena Link & Google Indexing Status */}
+
                     {(status === 'success' || status === 'loading') && (
                         <div className="flex flex-col gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                             <div className="flex items-center justify-between">
@@ -166,7 +159,6 @@ export function PublishSummaryModal({
                                 ))}
                             </div>
 
-                            {/* Google Indexing Row */}
                             <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-white dark:bg-zinc-700 rounded-lg shadow-sm border border-zinc-100 dark:border-zinc-600">
@@ -202,7 +194,6 @@ export function PublishSummaryModal({
                         </div>
                     )}
 
-                    {/* Language Toggle */}
                     {status === 'success' && (
                         <div className="flex justify-center">
                             <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
@@ -228,10 +219,8 @@ export function PublishSummaryModal({
                         </div>
                     )}
 
-                    {/* Manual Copy Sections */}
                     {status === 'success' && (
                         <div className="grid gap-6">
-                            {/* X (Twitter) Copy */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-semibold">
@@ -270,7 +259,6 @@ export function PublishSummaryModal({
                                 </div>
                             </div>
 
-                            {/* Facebook Copy */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-semibold">
@@ -304,7 +292,6 @@ export function PublishSummaryModal({
                                 </div>
                             </div>
 
-                            {/* LinkedIn Copy */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-semibold">
@@ -345,7 +332,6 @@ export function PublishSummaryModal({
                         </div>
                     )}
 
-                    {/* Error Details */}
                     {status === 'error' && (
                         <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 text-sm text-red-600 dark:text-red-400">
                             <p className="font-semibold mb-1">Error Details:</p>
@@ -354,7 +340,6 @@ export function PublishSummaryModal({
                     )}
                 </div>
 
-                {/* Footer Actions */}
                 <div className="mt-8 flex justify-center">
                     <Button
                         onClick={onClose}

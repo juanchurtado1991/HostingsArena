@@ -1,5 +1,4 @@
 "use client";
-// Bumping file for re-compile to fix potential Turbopack stale build issue
 
 import React, { useState, useEffect, useCallback, useRef, FormEvent, ChangeEvent } from "react";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
@@ -56,7 +55,6 @@ export interface Post {
     social_li_text: string | null;
     social_hashtags: string[] | null;
     updated_at?: string;
-    // Multi-language fields
     title_es?: string | null;
     content_es?: string | null;
     excerpt_es?: string | null;
@@ -174,7 +172,6 @@ const ResizableImage = (props: any) => {
     );
 };
 
-// Custom Font Size Extension
 const FontSize = Extension.create({
     name: 'fontSize',
     addGlobalAttributes() {
@@ -215,14 +212,11 @@ const FontSize = Extension.create({
     },
 })
 
-// Helper to normalize URLs
 const normalizeUrl = (url: string) => {
     if (!url) return "";
-    // If it starts with / or has a protocol, leave it
     if (url.startsWith('/') || /^[a-z]+:\/\//i.test(url)) {
         return url;
     }
-    // Otherwise, prepend https://
     return `https://${url}`;
 };
 
@@ -283,7 +277,6 @@ function EditorToolbar({
 
     return (
         <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border/50 bg-muted/20 overflow-x-auto no-scrollbar">
-            {/* History */}
             <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().undo().run()} title="Undo (⌘Z)">
                     <Undo2 className="w-4 h-4" />
@@ -295,7 +288,6 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Formatting */}
             <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold (⌘B)">
                     <Bold className="w-4 h-4" />
@@ -312,8 +304,6 @@ function EditorToolbar({
             </ToolbarGroup>
 
             <ToolbarDivider />
-
-            {/* Size & Color */}
             <ToolbarGroup>
                 <div className="flex items-center gap-1 bg-background/50 rounded-xl px-2 h-9 ring-1 ring-border/50">
                     <Type className="w-3.5 h-3.5 text-muted-foreground" />
@@ -395,7 +385,6 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Headings */}
             <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} title="Heading 1">
                     <Heading1 className="w-4 h-4" />
@@ -410,7 +399,6 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Alignment & Lists */}
             <ToolbarGroup>
                 <ToolbarBtn onClick={() => editor.chain().focus().setTextAlign("left").run()} active={editor.isActive({ textAlign: "left" })} title="Align Left">
                     <AlignLeft className="w-4 h-4" />
@@ -431,7 +419,6 @@ function EditorToolbar({
 
             <ToolbarDivider />
 
-            {/* Insert Media & Links */}
             <ToolbarGroup>
                 <ToolbarBtn onClick={() => fileInputRef.current?.click()} title="Insert Image">
                     <ImageIcon className="w-4 h-4" />
@@ -450,7 +437,6 @@ function EditorToolbar({
                     }}
                 />
 
-                {/* Hyperlink */}
                 <ToolbarBtn
                     onClick={() => {
                         const previousUrl = editor.getAttributes('link').href || "";
@@ -463,14 +449,12 @@ function EditorToolbar({
                     <LinkIcon className="w-4 h-4" />
                 </ToolbarBtn>
 
-                {/* Versus */}
                 <ToolbarBtn onClick={() => setShowVsMenu(true)} active={showVsMenu} title="Insert Versus Comparison">
                     <div className="flex items-center gap-0.5">
                         <span className="text-[10px] font-black">VS</span>
                     </div>
                 </ToolbarBtn>
 
-                {/* Affiliate */}
                 <button
                     type="button"
                     onClick={() => setShowAffiliateMenu(true)}
@@ -482,7 +466,6 @@ function EditorToolbar({
                 </button>
             </ToolbarGroup>
 
-            {/* Link Modal (Fixed Central) */}
             {showLinkMenu && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowLinkMenu(false)} />
@@ -547,7 +530,6 @@ function EditorToolbar({
                 </div>
             )}
 
-            {/* VS Modal (Fixed Central) */}
             {showVsMenu && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowVsMenu(false)} />
@@ -638,7 +620,6 @@ function EditorToolbar({
                 </div>
             )}
 
-            {/* Affiliate Modal (Fixed Central) */}
             {showAffiliateMenu && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAffiliateMenu(false)} />
@@ -713,19 +694,16 @@ function PostEditorModal({
     const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const lastSavedSnapshotRef = useRef<string>("");
-    const editLangRef = useRef<'en' | 'es'>(post ? 'en' : 'en'); // Track target lang for sync
-    const isSwappingLangRef = useRef(false); // Guard for programmatic updates
+    const editLangRef = useRef<'en' | 'es'>(post ? 'en' : 'en'); 
+    const isSwappingLangRef = useRef(false); 
     const [scheduledDate, setScheduledDate] = useState<string>("");
 
     useEffect(() => {
         if (post?.published_at) {
-            // Convert UTC to UTC-6 for display
             const d = new Date(post.published_at);
-            // El Salvador offset is -6 hours (-360 minutes)
             const svTime = new Date(d.getTime() - 6 * 60 * 60 * 1000);
             setScheduledDate(svTime.toISOString().slice(0, 16));
         } else {
-            // Initialize with current SV time
             const d = new Date();
             const svTime = new Date(d.getTime() - 6 * 60 * 60 * 1000);
             setScheduledDate(svTime.toISOString().slice(0, 16));
@@ -734,7 +712,6 @@ function PostEditorModal({
 
     const getUtcPublishDate = () => {
         if (!scheduledDate) return new Date().toISOString();
-        // scheduledDate is "YYYY-MM-DDTHH:mm" representing UTC-6
         const dateObj = new Date(`${scheduledDate}:00-06:00`);
         return dateObj.toISOString();
     };
@@ -748,14 +725,10 @@ function PostEditorModal({
     const [socialTags, setSocialTags] = useState(post?.social_hashtags?.join(" ") || "");
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
-    const [tick, setTick] = useState(0); // Used to force re-render on editor updates
-
+    const [tick, setTick] = useState(0); 
     const [editLang, setEditLang] = useState<'en' | 'es'>('en');
     const [isTranslating, setIsTranslating] = useState(false);
-
-    // EN Fields
     const [contentEn, setContentEn] = useState(post?.content || "");
-    // ES Fields
     const [titleEs, setTitleEs] = useState(post?.title_es || "");
     const [contentEs, setContentEs] = useState(post?.content_es || "");
     const [excerptEs, setExcerptEs] = useState(post?.excerpt_es || "");
@@ -773,7 +746,6 @@ function PostEditorModal({
         isSwappingLangRef.current = true;
         editLangRef.current = targetLang;
         
-        // Save current editor content to state before switching
         if (editor) {
             const currentHTML = editor.getHTML();
             if (editLang === 'en') {
@@ -782,9 +754,7 @@ function PostEditorModal({
                 setContentEs(currentHTML);
             }
 
-            // Set new content
             const nextHTML = targetLang === 'en' ? contentEn : contentEs;
-            // Only update if different to avoid cursor jumps / re-renders if content happens to be same
             if (editor.getHTML() !== nextHTML) {
                 editor.commands.setContent(nextHTML);
             }
@@ -859,10 +829,9 @@ function PostEditorModal({
     const handleGenerateSocial = async () => {
         if (isTranslating) return;
         try {
-            setIsTranslating(true); // Reuse translating state for loading UI
+            setIsTranslating(true); 
             setError(null);
 
-            // Determine content to send
             const contentToSend = editLang === 'en'
                 ? (editor?.getHTML() || contentEn)
                 : (contentEs || editor?.getHTML() || "");
@@ -909,13 +878,11 @@ function PostEditorModal({
         }
     };
 
-    // Publish Modal State
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [publishStatus, setPublishStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [publishError, setPublishError] = useState<string | undefined>(undefined);
     const [indexingStatus, setIndexingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const [shouldIndexGoogle, setShouldIndexGoogle] = useState(true); // New state for Google Indexing toggle
-
+    const [shouldIndexGoogle, setShouldIndexGoogle] = useState(true); 
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -993,7 +960,6 @@ function PostEditorModal({
             } else {
                 setContentEs(html);
             }
-            // Trigger a re-render for word counts etc
             setTick(t => t + 1);
         },
         editorProps: {
@@ -1003,8 +969,6 @@ function PostEditorModal({
         },
     });
 
-    // Update state when post changes (e.g. after AI generation)
-    // 1. Load initial data from post (EXCLUDING editor content syncing)
     useEffect(() => {
         if (post) {
             setTitle(post.title);
@@ -1022,7 +986,6 @@ function PostEditorModal({
             setSocialFb(post.social_fb_text || "");
             setSocialLi(post.social_li_text || "");
             setSocialTags(post.social_hashtags?.join(" ") || "");
-            // Multi-language fields
             setTitleEs(post.title_es || "");
             setExcerptEs(post.excerpt_es || "");
             setSeoTitleEs(post.seo_title_es || "");
@@ -1033,7 +996,6 @@ function PostEditorModal({
             setSocialTagsEs(post.social_hashtags_es?.join(" ") || "");
             setKeywordsEs(post.target_keywords_es?.join(", ") || "");
 
-            // Initialize last saved snapshot to prevent immediate auto-save on load
             const initialSnapshot = JSON.stringify({
                 title: post.title,
                 content: post.content,
@@ -1048,51 +1010,16 @@ function PostEditorModal({
             });
             lastSavedSnapshotRef.current = initialSnapshot;
         }
-    }, [post]); // Only re-run if post object changes (e.g. initial load or save)
+    }, [post]); 
 
-    // 2. Sync editor content when language changes
     useEffect(() => {
         if (post && editor) {
-            // We only want to set content if it matches the SAVED content for that language
-            // OR if we are switching languages and want to load the other language's content.
-            // But we must be careful not to overwrite unsaved changes if we just switched back and forth.
-            // Actually, the editor instance preserves content? No, we setContent.
-
-            // Allow the editor to maintain its own state if we are just switching tabs? 
-            // The issue is that we have ONE editor instance for both languages.
-            // So we MUST swap content when editLang changes.
-
-            // To prevent overwriting unsaved changes during a session:
-            // We should store the "current" editor content into the state variables (contentEn/contentEs) 
-            // BEFORE switching. But `handleLangSwitch` does that?
-
-            // Let's check handleLangSwitch. 
-            // If handleLangSwitch handles the saving of current content to state, 
-            // then this useEffect should ONLY initially load content or safeguard.
-
-            // Wait, this useEffect logic:
-            // const contentToSet = editLang === 'en' ? post.content : post.content_es;
-            // This clearly resets to POST (saved) content. This is the bug.
-
-            // We should remove this useEffect logic entirely and rely on handleLangSwitch 
-            // to swap content between `contentEn` and `contentEs` state variables.
-            // But we need to initialize the editor with the correct language content on mount.
-
-            // So: ONLY run this if editor is empty? Or on mount?
-            // Better: only set content if it's the FIRST load.
-
-            // Actually, let's look at `handleLangSwitch`. 
-            // For now, I will remove the editor syncing from here and trust handleLangSwitch?
-            // No, on initial load `editLang` is 'en', we need to load `post.content`.
-
-            // I'll leave a minimized version that only runs if editor is empty.
             const contentToSet = editLang === 'en' ? (contentEn || post.content) : (contentEs || post.content_es);
             if (contentToSet && editor.getText().trim() === "" && editor.getHTML() === "<p></p>") {
                 editor.commands.setContent(contentToSet);
             }
         }
-    }, [editor, post]); // Remove editLang from here to stop auto-reset. 
-    // Handled by handleLangSwitch instead.
+    }, [editor, post]); 
 
     const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
     const charCount = editor?.getText()?.length || 0;
@@ -1125,7 +1052,7 @@ function PostEditorModal({
                     },
                 ],
             })
-            .insertContent(" ") // Add a space after
+            .insertContent(" ") 
             .run();
     };
 
@@ -1189,7 +1116,6 @@ function PostEditorModal({
         const finalContentEn = editLang === 'en' ? currentHTML : contentEn;
         const finalContentEs = editLang === 'es' ? currentHTML : contentEs;
 
-        // Create snapshot of current data
         const currentSnapshot = JSON.stringify({
             title,
             content: finalContentEn,
@@ -1203,7 +1129,6 @@ function PostEditorModal({
             keywords: keywords?.split(",").map(k => k.trim()).join(","),
         });
 
-        // Only save if something has actually changed since last save
         if (currentSnapshot === lastSavedSnapshotRef.current) {
             return;
         }
@@ -1258,7 +1183,6 @@ function PostEditorModal({
         onSave, isAutoSaving
     ]);
 
-    // Auto-save debounce effect
     useEffect(() => {
         if (!post?.id) return;
 
@@ -1309,7 +1233,6 @@ function PostEditorModal({
             let finalSocialTagsEs = socialTagsEs;
             let finalKeywordsEs = keywordsEs;
 
-            // Auto-translate if ES fields are empty and we are in EN
             if (!titleEs.trim() && !finalContentEs.trim() && editLang === 'en') {
                 console.log("ES copy missing, auto-translating...");
                 const translated = await handleTranslate(false);
@@ -1324,8 +1247,6 @@ function PostEditorModal({
                     finalSocialLiEs = translated.social_li_text;
                     finalSocialTagsEs = Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : (translated.social_hashtags || "");
                     finalKeywordsEs = Array.isArray(translated.target_keywords) ? translated.target_keywords.join(", ") : (translated.target_keywords || "");
-
-                    // Also update state so UI reflects it immediately
                     setKeywordsEs(finalKeywordsEs);
                 }
             }
@@ -1349,7 +1270,6 @@ function PostEditorModal({
                 social_fb_text: socialFb || null,
                 social_li_text: socialLi || null,
                 social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
-                // Multi-language fields
                 title_es: finalTitleEs || null,
                 content_es: finalContentEs || null,
                 excerpt_es: finalExcerptEs || null,
@@ -1362,7 +1282,6 @@ function PostEditorModal({
                 target_keywords_es: finalKeywordsEs ? finalKeywordsEs.split(",").map(k => k.trim()).filter(Boolean) : null,
             });
 
-            // Auto-append URL to social fields if missing and publishing
             const baseUrl = `https://hostingsarena.com`;
             const enLiveUrl = `${baseUrl}/en/news/${slug}`;
             const esLiveUrl = `${baseUrl}/es/news/${slug}`;
@@ -1370,15 +1289,12 @@ function PostEditorModal({
             if (publish) {
                 const updatedSocials: Partial<Post> = {};
 
-                // Helper to fix links in a social text
                 const fixSocialLink = (text: string | null, liveUrl: string) => {
                     if (!text) return null;
-                    // Robust regex to remove ALL variations of hostingsarena news links
                     const cleaned = text.replace(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\/[^\s]+(?=\s|$)/g, '').trim();
                     return `${cleaned}\n\n${liveUrl}`;
                 };
 
-                // EN Socials
                 const newTwEn = fixSocialLink(socialTw, enLiveUrl);
                 const newFbEn = fixSocialLink(socialFb, enLiveUrl);
                 const newLiEn = fixSocialLink(socialLi, enLiveUrl);
@@ -1387,7 +1303,6 @@ function PostEditorModal({
                 if (newFbEn) { setSocialFb(newFbEn); updatedSocials.social_fb_text = newFbEn; }
                 if (newLiEn) { setSocialLi(newLiEn); updatedSocials.social_li_text = newLiEn; }
 
-                // ES Socials
                 const newTwEs = fixSocialLink(socialTwEs, esLiveUrl);
                 const newFbEs = fixSocialLink(socialFbEs, esLiveUrl);
                 const newLiEs = fixSocialLink(socialLiEs, esLiveUrl);
@@ -1396,7 +1311,6 @@ function PostEditorModal({
                 if (newFbEs) { setSocialFbEs(newFbEs); updatedSocials.social_fb_text_es = newFbEs; }
                 if (newLiEs) { setSocialLiEs(newLiEs); updatedSocials.social_li_text_es = newLiEs; }
 
-                // Save all updated social fields
                 if (Object.keys(updatedSocials).length > 0) {
                     await onSave({
                         id: post?.id || (savedPost as any)?.post?.id,
@@ -1405,15 +1319,11 @@ function PostEditorModal({
                 }
             }
 
-            // If it was a new post, onSave should return the data with the new ID
-            // The API returns { post: data }
             const postId = (savedPost as any)?.post?.id || post?.id;
 
             if (publish && postId) {
-                // Check if post is scheduled for the future
                 const isScheduledFuture = new Date(getUtcPublishDate()).getTime() > new Date().getTime();
 
-                // Trigger Google Indexing only if enabled AND post is not scheduled for future
                 if (shouldIndexGoogle && !isScheduledFuture) {
                     setIndexingStatus('loading');
                     try {
@@ -1430,16 +1340,14 @@ function PostEditorModal({
                         } else {
                             console.error("Google Indexing failed:", idxData.message || idxData.error);
                             setIndexingStatus('error');
-                            // Store the error in state if we want to show it in the summary modal
                             setPublishError(idxData.message || idxData.error);
                         }
                     } catch (idxErr) {
                         console.error("Google Indexing trigger failed:", idxErr);
                         setIndexingStatus('error');
-                        // We don't fail the whole publish for indexing, as the post is already live
                     }
                 } else {
-                    setIndexingStatus('idle'); // Ensure it stays idle if not enabled or if scheduled
+                    setIndexingStatus('idle');
                 }
 
                 setPublishStatus('success');
@@ -1473,14 +1381,11 @@ function PostEditorModal({
 
     return (
         <div className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60 backdrop-blur-md" onClick={onClose}>
-            {/* Near-fullscreen modal with padding */}
             <div
                 className="absolute inset-3 md:inset-6 rounded-3xl border border-[color:var(--glass-border)] bg-card shadow-2xl shadow-black/20 dark:shadow-black/50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* ── Premium Header ── */}
                 <div className="flex flex-col border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
-                    {/* Row 1 — Title + Close */}
                     <div className="flex items-center justify-between px-4 md:px-6 pt-3 pb-2 md:pt-4 md:pb-3">
                         <div className="flex items-center gap-3">
                             <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/15 shadow-lg shadow-primary/10 shrink-0">
@@ -1517,9 +1422,7 @@ function PostEditorModal({
                         </button>
                     </div>
 
-                    {/* Row 2 — Controls */}
                     <div className="flex items-center gap-2 px-4 md:px-6 pb-3 overflow-x-auto scrollbar-hide">
-                        {/* Status Toggle */}
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border shrink-0">
                             <select
                                 value={status}
@@ -1531,7 +1434,6 @@ function PostEditorModal({
                             </select>
                         </div>
 
-                        {/* Publish Date */}
                         {status === 'published' && (
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border shrink-0" title="Publish Date (El Salvador Time UTC-6)">
                                 <input
@@ -1543,7 +1445,6 @@ function PostEditorModal({
                             </div>
                         )}
 
-                        {/* Google Indexing Toggle */}
                         <div
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/50 border border-border cursor-pointer hover:bg-muted/80 transition-colors shrink-0"
                             onClick={() => setShouldIndexGoogle(!shouldIndexGoogle)}
@@ -1553,10 +1454,8 @@ function PostEditorModal({
                             <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-bold">G-Index</span>
                         </div>
 
-                        {/* Spacer */}
                         <div className="flex-1" />
 
-                        {/* Save */}
                         <div className="flex gap-1.5 shrink-0">
                             <Button
                                 onClick={() => handleSave()}
@@ -1577,11 +1476,8 @@ function PostEditorModal({
                     </div>
                 </div>
 
-                {/* ── Main Content ── */}
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_360px] overflow-hidden">
-                    {/* Left Panel — Editor */}
                     <div className="flex flex-col overflow-hidden border-r border-border/50">
-                        {/* Title Area */}
                         <div className="px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4 border-b border-border/50">
                             <input
                                 type="text"
@@ -1602,7 +1498,6 @@ function PostEditorModal({
                             </div>
                         </div>
 
-                        {/* Section Tabs */}
                         <div className="flex overflow-x-auto scrollbar-hide px-3 md:px-5 border-b border-border/50 bg-muted/20">
                             {sectionTabs.map(tab => (
                                 <button
@@ -1619,12 +1514,10 @@ function PostEditorModal({
                             ))}
                         </div>
 
-                        {/* Content Area */}
                         {activeSection === "content" && (
                             <div className="flex flex-col flex-1 overflow-hidden">
                                 <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border/50 bg-muted/20 overflow-x-auto no-scrollbar justify-between">
                                     <div className="flex flex-wrap items-center gap-1">
-                                        {/* Language Tabs */}
                                         <div className="flex items-center gap-1 p-1 bg-background/50 border border-border rounded-xl mr-2">
                                             <button
                                                 type="button"
@@ -1642,7 +1535,6 @@ function PostEditorModal({
                                             </button>
                                         </div>
 
-                                        {/* History Group */}
                                         <ToolbarGroup>
                                             <ToolbarBtn onClick={() => editor?.chain().focus().undo().run()} title="Undo (⌘Z)">
                                                 <Undo2 className="w-4 h-4" />
@@ -1654,7 +1546,6 @@ function PostEditorModal({
 
                                         <ToolbarDivider />
 
-                                        {/* Magic Translate Button */}
                                         {editLang === 'en' && (
                                             <button
                                                 type="button"
@@ -1823,7 +1714,6 @@ function PostEditorModal({
 
                         {activeSection === "social" && (
                             <div className="flex-1 overflow-y-auto p-8 space-y-8">
-                                {/* Header with Regenerate Button */}
                                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl border border-blue-500/10 mb-6">
                                     <div>
                                         <h3 className="text-sm font-bold text-foreground">Social Media Content ({editLang.toUpperCase()})</h3>
@@ -1838,7 +1728,6 @@ function PostEditorModal({
                                         REGENERATE SOCIAL (AI)
                                     </button>
                                 </div>
-                                {/* Twitter / X */}
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
@@ -1848,7 +1737,6 @@ function PostEditorModal({
                                         <span className={`text-[10px] font-mono ${(editLang === 'es' ? socialTwEs : socialTw).length > 280 ? "text-red-400" : "text-muted-foreground"}`}>{(editLang === 'es' ? socialTwEs : socialTw).length}/280</span>
                                     </div>
 
-                                    {/* Preview Card */}
                                     <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
                                         <div className="flex gap-3">
                                             <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0" />
@@ -1877,14 +1765,12 @@ function PostEditorModal({
 
                                 <div className="h-px bg-border/50" />
 
-                                {/* Facebook */}
                                 <div className="space-y-4">
                                     <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
                                         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-foreground" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"></path></svg>
                                         Facebook Post ({editLang.toUpperCase()})
                                     </label>
 
-                                    {/* Preview Card */}
                                     <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
                                         <div className="flex gap-2 mb-3">
                                             <div className="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0" />
@@ -1917,14 +1803,12 @@ function PostEditorModal({
 
                                 <div className="h-px bg-border/50" />
 
-                                {/* LinkedIn */}
                                 <div className="space-y-4">
                                     <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest flex items-center gap-2">
                                         <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-[#0077b5]" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
                                         LinkedIn Post ({editLang.toUpperCase()})
                                     </label>
 
-                                    {/* Preview Card */}
                                     <div className="p-4 rounded-xl border border-border/50 bg-card max-w-md mx-auto shadow-sm">
                                         <div className="flex gap-2 mb-3">
                                             <div className="w-10 h-10 rounded-sm bg-primary/10 flex-shrink-0" />
@@ -1956,7 +1840,6 @@ function PostEditorModal({
 
                                 <div className="h-px bg-border/50" />
 
-                                {/* Hashtags */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Hashtags {editLang === 'es' ? '(ES)' : '(EN)'}</label>
                                     <input
@@ -1981,7 +1864,6 @@ function PostEditorModal({
 
                         {activeSection === "image" && (
                             <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                                {/* Upload Zone */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Cover Image</label>
                                     {coverImageUrl ? (
@@ -2034,7 +1916,6 @@ function PostEditorModal({
                                     )}
                                 </div>
 
-                                {/* AI Image Prompt */}
                                 <div>
                                     <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">AI Image Prompt</label>
                                     <textarea
@@ -2049,10 +1930,8 @@ function PostEditorModal({
                         )}
                     </div>
 
-                    {/* ── Right Sidebar ── */}
                     <div className="flex flex-col overflow-y-auto bg-muted/20">
                         <div className="p-6 space-y-6">
-                            {/* Excerpt */}
                             <div>
                                 <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Excerpt {editLang === 'es' ? '(ES)' : '(EN)'}</label>
                                 <textarea
@@ -2063,7 +1942,6 @@ function PostEditorModal({
                                 />
                             </div>
 
-                            {/* Category */}
                             <div>
                                 <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Category</label>
                                 <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLASS}>
@@ -2072,14 +1950,12 @@ function PostEditorModal({
                                 </select>
                             </div>
 
-                            {/* Related Provider */}
                             <div>
                                 <label className="block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-2.5">Related Provider</label>
                                 <input type="text" value={relatedProvider} onChange={(e) => setRelatedProvider(e.target.value)} placeholder="e.g. NordVPN, Hostinger" className={INPUT_CLASS} />
                                 <p className="text-[10px] text-muted-foreground mt-1.5">Links to affiliate partner for "Check Deal" button</p>
                             </div>
 
-                            {/* AI Quality Bar */}
                             {post?.is_ai_generated && post?.ai_quality_score && (
                                 <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-primary/60 mb-2">AI Quality Score</p>
@@ -2095,7 +1971,6 @@ function PostEditorModal({
                                 </div>
                             )}
 
-                            {/* Quick Stats */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/50 text-center">
                                     <p className="text-lg font-bold tabular-nums">{wordCount}</p>
@@ -2114,7 +1989,6 @@ function PostEditorModal({
                             )}
                         </div>
 
-                        {/* Bottom Actions */}
                         <div className="mt-auto p-6 border-t border-border/50">
                             <Button variant="outline" onClick={onClose} className="w-full rounded-2xl text-sm h-10" disabled={saving}>
                                 Cancel
@@ -2182,7 +2056,6 @@ function GenerationConfigModal({
                 className="w-full max-w-lg rounded-3xl border border-[color:var(--glass-border)] bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="px-6 py-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-primary/10 text-primary">
@@ -2194,7 +2067,6 @@ function GenerationConfigModal({
                 </div>
 
                 <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-                    {/* Provider */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Provider</label>
                         <select value={provider} onChange={(e) => setProvider(e.target.value)} className={INPUT_CLASS}>
@@ -2215,7 +2087,6 @@ function GenerationConfigModal({
                         )}
                     </div>
 
-                    {/* Model & Length */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">AI Model</label>
@@ -2235,7 +2106,6 @@ function GenerationConfigModal({
                         </div>
                     </div>
 
-                    {/* Custom Prompt */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">What do you want the post to be about? <span className="text-red-500">*</span></label>
                         <textarea
@@ -2247,7 +2117,6 @@ function GenerationConfigModal({
                         />
                     </div>
 
-                    {/* Footer */}
                     <div className="pt-4 flex justify-end gap-3 border-t border-border/50">
                         <Button variant="ghost" onClick={onClose} disabled={loading} className="rounded-xl">Cancel</Button>
                         <Button
@@ -2276,14 +2145,10 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
     const [generating, setGenerating] = useState(false);
     const [affiliateLinks, setAffiliateLinks] = useState<AffiliateLink[]>([]);
     const [deletingId, setDeletingId] = useState<string | null>(null);
-
-    // Generation Progress State
     const [generationProgress, setGenerationProgress] = useState(0);
     const [generationStatus, setGenerationStatus] = useState("");
     const [showProgressOverlay, setShowProgressOverlay] = useState(false);
     const [showGenModal, setShowGenModal] = useState(false);
-
-    // Summary Modal State for Card Actions
     const [summaryPost, setSummaryPost] = useState<Post | null>(null);
 
     const fetchPosts = useCallback(async () => {
@@ -2335,14 +2200,12 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Failed to save");
-        // We no longer close the modal here to allow the user to see the publish summary or continue editing
         fetchPosts();
         return result;
     };
 
     const handleManualIndex = async (post: Post) => {
         try {
-            // Index both languages
             const urls = [
                 `https://hostingsarena.com/en/news/${post.slug}`,
                 `https://hostingsarena.com/es/news/${post.slug}`
@@ -2455,17 +2318,12 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
         setShowProgressOverlay(false);
         setGenerating(false);
         fetchPosts();
-
-        if (successCount < totalToGenerate) {
-            // Optional: alert(`Completed ${successCount} of ${totalToGenerate} posts.`);
-        }
     };
 
     const totalPages = Math.ceil(total / 12);
 
     return (
         <div className="space-y-6">
-            {/* Warning Banner for No Affiliates */}
             {affiliateLinks.length === 0 && !loading && (
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-2">
                     <div className="flex items-center gap-3">
@@ -2489,7 +2347,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 </div>
             )}
 
-            {/* Controls */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <div className="flex gap-2 items-center">
                     <div className="relative">
@@ -2543,7 +2400,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 </div>
             </div>
 
-            {/* Stats Bar */}
             <div className="flex gap-3 text-xs">
                 <span className="bg-muted/50 px-3 py-1.5 rounded-lg text-muted-foreground">{total} total posts</span>
                 <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/10">
@@ -2554,7 +2410,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 </span>
             </div>
 
-            {/* Post Grid */}
             {loading ? (
                 <div className="text-center py-16 text-muted-foreground">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
@@ -2581,10 +2436,8 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {posts.map(post => (
                             <GlassCard key={post.id} className="flex flex-col hover:scale-[1.01] transition-transform">
-                                {/* Image Placeholder or Cover Image */}
                                 <div className="bg-gray-500/10 h-36 rounded-t-xl flex items-center justify-center relative overflow-hidden border-b border-border/50">
                                     {post.cover_image_url ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img 
                                             src={post.cover_image_url} 
                                             alt={post.title}
@@ -2710,7 +2563,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 </>
             )}
 
-            {/* Progress Overlay */}
             {showProgressOverlay && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
                     <GlassCard className="w-full max-w-md p-8 shadow-2xl border-primary/20 bg-card/80">
@@ -2749,7 +2601,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 </div>
             )}
 
-            {/* Generation Config Modal */}
             {showGenModal && (
                 <GenerationConfigModal
                     affiliateLinks={affiliateLinks}
@@ -2759,7 +2610,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                 />
             )}
 
-            {/* Quick Share Summary Modal */}
             {summaryPost && (
                 <PublishSummaryModal
                     isOpen={!!summaryPost}
@@ -2781,7 +2631,6 @@ export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?
                     indexingStatus="idle"
                 />
             )}
-            {/* Editor Modal */}
             {editingPost !== null && (
                 <PostEditorModal
                     post={editingPost === "new" ? null : editingPost}

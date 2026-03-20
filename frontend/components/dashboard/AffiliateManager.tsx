@@ -79,7 +79,6 @@ export function AffiliateManager() {
                 const hosting = await hostingRes.json();
                 const vpn = await vpnRes.json();
 
-                // Deduplicate by name using a Map
                 const uniqueMap = new Map<string, ProviderOption>();
 
                 if (Array.isArray(hosting)) {
@@ -107,12 +106,10 @@ export function AffiliateManager() {
     }, []);
 
     const availableProviders = useMemo(() => {
-        // Filter out providers that already have an affiliate entry
         const usedNames = new Set(affiliates.map(a => a.provider_name));
         return allProviders.filter(p => !usedNames.has(p.name));
     }, [allProviders, affiliates]);
 
-    // Extract unique networks for filter
     const uniqueNetworks = useMemo(() => {
         const networks = new Set(affiliates.map(a => a.network).filter((n): n is string => !!n));
         return Array.from(networks).sort();
@@ -124,9 +121,6 @@ export function AffiliateManager() {
             const params = new URLSearchParams();
             if (search) params.set("search", search);
             if (statusFilter !== "all") params.set("status", statusFilter);
-            // Network filter is done client-side usually if not supported by API yet, 
-            // but let's see if we can just filter the results if the API doesn't support it.
-            // For now, let's filter client-side to be safe unless we updated the API for it.
 
             const res = await fetch(`/api/admin/affiliates?${params}`);
             const data = await res.json();
@@ -241,7 +235,6 @@ export function AffiliateManager() {
 
     return (
         <div className="space-y-8">
-            {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 {[
                     { label: "Total Partners", value: stats.total, icon: Globe, gradient: "from-blue-500/20 to-indigo-500/20", color: "text-blue-400" },
@@ -264,7 +257,6 @@ export function AffiliateManager() {
                 ))}
             </div>
 
-            {/* Affiliate Guide Panel */}
             {showGuide && (
                 <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/5 via-card/80 to-blue-500/5 backdrop-blur-sm overflow-hidden animate-in slide-in-from-top-2 duration-300">
                     <div className="p-6">
@@ -342,10 +334,8 @@ export function AffiliateManager() {
                 </div>
             )}
 
-            {/* Controls Bar */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    {/* Search */}
                     <div className="relative flex-1 md:w-64">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
@@ -357,7 +347,6 @@ export function AffiliateManager() {
                         />
                     </div>
 
-                    {/* Status Filter */}
                     <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto max-w-full scrollbar-hide">
                         {["all", "active", "paused", "expired", "processing_approval", "rejected"].map((s) => (
                             <button
@@ -373,7 +362,6 @@ export function AffiliateManager() {
                         ))}
                     </div>
 
-                    {/* Network Filter */}
                     <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                             <Filter className="w-3.5 h-3.5" />
@@ -451,12 +439,10 @@ export function AffiliateManager() {
                                 key={aff.id}
                                 className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-white/[0.12] hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5"
                             >
-                                {/* Status Ribbon */}
-                                {/* Status Ribbon */}
+
                                 <div className={cn("absolute top-0 left-0 right-0 h-1 bg-gradient-to-r", statusCfg.ribbon)} />
 
                                 <div className="p-5">
-                                    {/* Header */}
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10 border border-primary/10 flex items-center justify-center text-primary font-bold text-sm">
@@ -478,7 +464,6 @@ export function AffiliateManager() {
                                         </button>
                                     </div>
 
-                                    {/* Link Preview */}
                                     <div className="relative mb-4">
                                         <div className="bg-black/30 rounded-xl p-3 pr-10 border border-white/5 group-hover:border-white/10 transition-colors">
                                             <code className="text-[11px] text-muted-foreground break-all font-mono leading-relaxed">
@@ -500,7 +485,6 @@ export function AffiliateManager() {
                                         )}
                                     </div>
 
-                                    {/* Reminder Alert */}
                                     {aff.reminder_at && (
                                         <div className={`mb-4 flex items-start gap-2 p-2.5 rounded-xl border ${new Date(aff.reminder_at) <= new Date()
                                             ? "bg-amber-500/10 border-amber-500/20"
@@ -525,7 +509,6 @@ export function AffiliateManager() {
                                         </div>
                                     )}
 
-                                    {/* Meta Info */}
                                     <div className="flex flex-wrap gap-2 mb-4">
                                         {aff.commission_rate && (
                                             <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/10">
@@ -554,7 +537,6 @@ export function AffiliateManager() {
                                         )}
                                     </div>
 
-                                    {/* Actions */}
                                     <div className="flex gap-2 pt-3 border-t border-white/5">
                                         <button
                                             onClick={() => openEditModal(aff)}
@@ -589,7 +571,6 @@ export function AffiliateManager() {
                 </div>
             )}
 
-            {/* Add/Edit Modal */}
             {showModal && (
                 <AffiliateFormModal
                     title={editingAffiliate ? "Edit Affiliate" : "Add Affiliate Partner"}

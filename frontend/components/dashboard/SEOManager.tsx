@@ -79,8 +79,6 @@ export function SEOManager({ lang, dict }: SEOManagerProps) {
 
             completed++;
             setProgress(Math.round((completed / urls.length) * 100));
-            
-            // Limit rate to avoid Google API quota issues if necessary
             await new Promise(r => setTimeout(r, 200)); 
         }
         setLoading(false);

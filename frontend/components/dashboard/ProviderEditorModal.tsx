@@ -125,7 +125,6 @@ export function ProviderEditorModal({ isOpen, onClose, onSave, provider, type }:
                 className="relative w-full max-w-6xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="p-8 pb-4 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-primary/10 rounded-2xl text-primary">
@@ -146,7 +145,6 @@ export function ProviderEditorModal({ isOpen, onClose, onSave, provider, type }:
                 </div>
 
                 <div className="flex flex-1 overflow-hidden">
-                    {/* Sidebar Tabs */}
                     <div className="w-64 border-r border-gray-100 bg-gray-50/50 p-6 space-y-2">
                         {TABS.map((tab) => (
                             <button
@@ -165,7 +163,6 @@ export function ProviderEditorModal({ isOpen, onClose, onSave, provider, type }:
                         ))}
                     </div>
 
-                    {/* Content Area */}
                     <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                         {activeTab === 'general' && (
                             <div className="grid grid-cols-2 gap-6">
@@ -498,7 +495,6 @@ export function ProviderEditorModal({ isOpen, onClose, onSave, provider, type }:
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="p-8 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
                     {error ? (
                         <div className="text-red-500 text-sm flex items-center gap-2">

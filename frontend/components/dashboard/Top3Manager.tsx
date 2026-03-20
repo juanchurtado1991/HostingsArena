@@ -25,7 +25,6 @@ export function Top3Manager() {
             if (data.affiliates) {
                 setAffiliates(data.affiliates);
                 
-                // Initialize top 3 from fetched data
                 const initialTop3: (string | null)[] = [null, null, null];
                 data.affiliates.forEach((aff: AffiliatePartner) => {
                     if (aff.homepage_rank === 1) initialTop3[0] = aff.id;
@@ -47,8 +46,6 @@ export function Top3Manager() {
 
     const handleSelectChange = (index: number, affiliateId: string) => {
         const newSelected = [...selectedTop3];
-        // If the affiliate is already selected elsewhere, swapping logic could be complex, 
-        // so we just clear it from the other slot for simplicity.
         const existingIndex = newSelected.indexOf(affiliateId);
         if (existingIndex !== -1 && existingIndex !== index && affiliateId !== "") {
             newSelected[existingIndex] = null;
@@ -71,7 +68,7 @@ export function Top3Manager() {
                 throw new Error(data.error || "Failed to save top 3");
             }
             alert("Top 3 saved successfully!");
-            fetchAffiliates(); // Refresh to ensure UI matches DB state
+            fetchAffiliates(); 
         } catch (error: any) {
             console.error("Save error:", error);
             alert("Error saving: " + error.message);

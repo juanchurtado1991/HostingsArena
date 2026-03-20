@@ -2,17 +2,6 @@ import type { TaskGenerator } from '../TaskGeneratorFactory';
 import type { AdminTask, ScraperStatus } from '../types';
 import { createAdminClient } from '../supabaseAdmin';
 
-/**
- * ScraperHealthCheck Task Generator
- * 
- * Monitors scraper_status for failures or stale data.
- * Creates tasks when:
- * - status = 'error' → HIGH priority
- * - status = 'warning' → HIGH priority  
- * - last_run > 3 days ago → NORMAL priority
- * 
- * This is a "Data Integrity" generator - bad scrapers = stale prices = lost trust.
- */
 export class ScraperHealthCheck implements TaskGenerator {
     readonly name = 'ScraperHealthCheck';
     readonly description = 'Detects failing or stale scrapers';
@@ -44,18 +33,14 @@ export class ScraperHealthCheck implements TaskGenerator {
         const now = new Date();
         const staleThreshold = new Date(now.getTime() - this.STALE_THRESHOLD_DAYS * 24 * 60 * 60 * 1000);
 
-        // 🛡️ AUTO-RESOLVE LOGIC
-        // If we have a pending task for a provider that is now SUCCESS, resolve it.
         if (existingTasks && existingTasks.length > 0) {
             for (const task of existingTasks) {
                 const meta = task.metadata as Record<string, unknown>;
                 const providerName = meta?.provider_name as string;
                 if (!providerName) continue;
 
-                // Find current status
                 const currentStatus = (scrapers || []).find(s => s.provider_name === providerName);
 
-                // If scraper is healthy (success) OR removed (not found in status table?), resolve.
                 if (!currentStatus) {
                     await supabase
                         .from('admin_tasks')

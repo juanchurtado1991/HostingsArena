@@ -1,0 +1,40 @@
+# .continueignore - HostingArena Optimization
+# Reduces context from 85k to ~50k tokens for better local LLM performance
+
+# Massive Data Files (Keep schemas, ignore raw JSON)
+data/verified_data.json
+data/migrations/
+supabase/migrations/
+
+# Scraper Logic (Ignore if doing frontend/video work)
+scrapers/
+venv/
+requirements.txt
+
+# Build and Dependencies
+node_modules/
+.next/
+dist/
+build/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Assets and Media
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.ico
+
+# Environment and Secrets
+.env
+.env.*
+service_account.json
+
+# Local Meta
+.agent/
+.cursor/
+.continue/

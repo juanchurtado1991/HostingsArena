@@ -47,12 +47,10 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
       console.log('[Navbar] Checking role for UID:', uid);
 
       try {
-        // Create a timeout promise (increase to 15s for more reliability)
         const timeout = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Query timeout')), 15000)
         );
 
-        // Race the query against the timeout
         const { data: profile, error }: any = await Promise.race([
           supabase
             .from('profiles')
@@ -63,7 +61,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         ]);
 
         if (error) {
-          // Log as info if it's just a missing profile (expected for new users)
           if (error.code === 'PGRST116') {
             console.log('[Navbar] Profile not created yet.');
           } else {
@@ -88,7 +85,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
           }
         }
       } catch (err: any) {
-        // Only log if it's NOT a timeout to avoid spamming the user
         if (err.message === 'Query timeout') {
           console.warn('[Navbar] Role check timed out. Falling back to cached state.');
         } else {
@@ -96,7 +92,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         }
 
         if (mounted) {
-          // Fallback to cached value if it's a timeout, or false if it's an error
           const cached = localStorage.getItem('isAdmin') === 'true';
           setIsAdmin(cached);
         }
@@ -138,7 +133,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
     };
   }, [supabase]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -151,7 +145,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   const handleSignOut = async () => {
     logger.log('AUTH', "Initiating Sign Out...");
     try {
-      // 1. Clear local state immediately for visual feedback
       setUser(null);
       setIsAdmin(false);
 
@@ -159,11 +152,7 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
         localStorage.removeItem('isAdmin');
       }
 
-      // 2. Call Supabase Sign Out
-      // We don't await this if we want speed, but awaiting ensures cookies are cleared
       await supabase.auth.signOut();
-
-      // 3. Force a hard refresh/redirect to ensure all cache and cookies are flushed
       window.location.href = `/${lang}/login`;
 
     } catch (err) {

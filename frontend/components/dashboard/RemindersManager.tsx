@@ -23,7 +23,6 @@ export function RemindersManager() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
-    // Form state
     const [message, setMessage] = useState("");
     const [mention, setMention] = useState("");
     const [date, setDate] = useState("");
@@ -31,9 +30,8 @@ export function RemindersManager() {
     const [isRecurring, setIsRecurring] = useState(false);
     const [pattern, setPattern] = useState("daily");
 
-    // Robust way to get El Salvador time strings
     const getSVTimeString = (date: Date = new Date()) => {
-        return new Intl.DateTimeFormat('en-CA', { // en-CA gives YYYY-MM-DD
+        return new Intl.DateTimeFormat('en-CA', { 
             timeZone: 'America/El_Salvador',
             year: 'numeric',
             month: '2-digit',
@@ -45,7 +43,6 @@ export function RemindersManager() {
     };
 
     useEffect(() => {
-        // format: "2026-02-20, 17:15"
         const svNowStr = getSVTimeString();
         const [dPart, tPart] = svNowStr.split(', ');
         
@@ -74,15 +71,10 @@ export function RemindersManager() {
         setSubmitting(true);
 
         try {
-            // components from inputs
             const [y, m, d] = date.split('-').map(Number);
             const [h, min] = time.split(':').map(Number);
             
-            // Construct UTC Date by manually offsetting UTC-6
-            // We create a Date object in UTC and then adjust it to represent the correct point in time
             const utcDate = new Date(Date.UTC(y, m - 1, d, h, min));
-            
-            // El Salvador is UTC-6, so to get the UTC timestamp, we add 6 hours
             utcDate.setHours(utcDate.getHours() + 6);
 
             const res = await fetch('/api/admin/slack/reminders', {
@@ -103,7 +95,6 @@ export function RemindersManager() {
                 throw new Error(data.error || 'Error al agendar');
             }
 
-            // Reset form
             setMessage("");
             setMention("");
             fetchReminders();
@@ -136,7 +127,6 @@ export function RemindersManager() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Header Info */}
             <div className="flex flex-col md:flex-row gap-6">
                 <GlassCard className="p-6 md:w-1/3 border-white/[0.05]">
                     <div className="p-3 w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4 flex items-center justify-center">
@@ -148,7 +138,6 @@ export function RemindersManager() {
                     </p>
                 </GlassCard>
 
-                {/* Form */}
                 <GlassCard className="p-6 flex-1 border-white/[0.05]">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                         <Plus className="w-4 h-4 text-primary" />
@@ -260,7 +249,6 @@ export function RemindersManager() {
                 </GlassCard>
             </div>
 
-            {/* List */}
             <GlassCard className="p-6 border-white/[0.05]">
                 <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />

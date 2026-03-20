@@ -1,33 +1,20 @@
 import { staticFile } from 'remotion';
 
-/**
- * Shared utility for resolving asset URLs in the Video Studio.
- * Handles:
- * 1. Symbolic URLs (intro, outro)
- * 2. API proxying for external assets (Supabase, Pexels) to bypass CORS.
- * 3. Local asset resolution via staticFile.
- * 4. Production baseUrl prepending.
- * 5. Preview-mode performance optimizations (low-res external assets).
- */
 export const resolveAsset = (url?: string, baseUrl?: string) => {
     if (!url) return undefined;
     if (url === 'intro' || url === 'outro') return url;
 
     const isPreview = !baseUrl;
 
-    // 1. Data/Blob/Local API URLs return as-is
     if (url.startsWith('api/') || url.startsWith('/api') || url.startsWith('blob:') || url.startsWith('data:')) {
         return url;
     }
 
-    // 2. External HTTP(S) URLs need proxying to bypass CORS
     if (url.startsWith('http') && !url.includes('localhost') && !url.includes('127.0.0.1')) {
         let finalUrl = url;
         
-        // [PERF UPGRADE] If we are in PREVIEW mode, we use low-res versions for faster caching
         if (isPreview) {
             if (url.includes('images.pexels.com')) {
-                // Pexels images: force small dimensions via query params
                 try {
                     const u = new URL(url);
                     u.searchParams.set('auto', 'compress');
@@ -38,24 +25,19 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
                     finalUrl = u.toString();
                 } catch { /* pass through */ }
             } else if (url.includes('pexels.com') && /\.(mp4|webm)/i.test(url)) {
-                // Pexels videos: swap HD for SD
                 finalUrl = url.replace(/hd_1920_1080/gi, 'sd_640_360')
                               .replace(/hd_1280_720/gi, 'sd_640_360');
             }
         }
 
-        // [STABILITY] BYPASS PROXY for known CORS-friendly CDNs (Preview & Production)
-        // This avoids Vercel proxy bottlenecks and local dev server hangs.
         const isCdn = url.includes('pexels.com') || url.includes('jamendo.com') || url.includes('pixabay.com') || url.includes('supabase.co');
         if (isCdn) {
-            // Apply low-res optimization for Supabase images if applicable
             if (url.includes('supabase.co') && /\.(jpg|jpeg|png|webp|avif)/i.test(url)) {
                 return finalUrl + (finalUrl.includes('?') ? '&' : '?') + 'width=640&quality=60';
             }
             return finalUrl;
         }
 
-        // 2. Production absolute URLs for remaining unknown assets
         if (baseUrl && baseUrl.length > 0) {
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
             return `${cleanBaseUrl}/api/proxy?url=${encodeURIComponent(finalUrl)}`;
@@ -64,7 +46,6 @@ export const resolveAsset = (url?: string, baseUrl?: string) => {
         return `/api/proxy?url=${encodeURIComponent(finalUrl)}`;
     }
 
-    // 3. Local assets
     const cleanPath = url.startsWith('/') ? url : `/${url}`;
     if (baseUrl && baseUrl.length > 0) {
         return `${baseUrl}${cleanPath}`;

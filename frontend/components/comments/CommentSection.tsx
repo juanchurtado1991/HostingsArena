@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 interface Comment {
   id: string;
   user_id?: string;
-  author_name?: string; // For news guest comments
+  author_name?: string; 
   content: string;
   created_at: string;
   status: string;
@@ -25,7 +25,7 @@ interface CommentSectionProps {
 export default function CommentSection({ type, slug, lang }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [authorName, setAuthorName] = useState(""); // For news/guest
+  const [authorName, setAuthorName] = useState("");
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -127,7 +127,6 @@ export default function CommentSection({ type, slug, lang }: CommentSectionProps
         </h3>
       </div>
 
-      {/* Input Section */}
       <div className="mb-12 bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-4">
           {!user && isPost && (
@@ -179,7 +178,6 @@ export default function CommentSection({ type, slug, lang }: CommentSectionProps
         </form>
       </div>
 
-      {/* List */}
       <div className="space-y-6">
         {loading ? (
           <div className="flex flex-col items-center py-12 gap-3 opacity-50">

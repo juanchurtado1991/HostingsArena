@@ -44,9 +44,6 @@ export function ComparisonTable({ data, title, type = "hosting", affiliateUrls }
   };
 
   const priceWinner = getWinner('pricing_monthly', true);
-  const renewalWinner = getWinner('renewal_price', true);
-
-  // Build rows data for both layout types
   const hostingRows = [
     { label: 'Intro Price', icon: <Zap className="w-4 h-4 text-green-500" />, key: 'pricing_monthly', render: (p: any, i: number) => (
       <div className={`text-2xl md:text-4xl font-black ${i === priceWinner ? "text-green-500" : "text-foreground"}`}>
@@ -112,7 +109,6 @@ export function ComparisonTable({ data, title, type = "hosting", affiliateUrls }
         </div>
       </div>
 
-      {/* MOBILE: Card-based layout — one column per provider, stacked */}
       <div className="block md:hidden">
         {data.map((provider, providerIdx) => (
           <div key={providerIdx} className={`p-4 border-b border-white/5 ${providerIdx > 0 ? 'border-t-4 border-t-primary/20' : ''}`}>
@@ -129,7 +125,6 @@ export function ComparisonTable({ data, title, type = "hosting", affiliateUrls }
               )}
             </div>
 
-            {/* Rows as key-value pairs */}
             <div className="space-y-3">
               {rows.map((row, rowIdx) => (
                 <div key={rowIdx} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
@@ -159,7 +154,6 @@ export function ComparisonTable({ data, title, type = "hosting", affiliateUrls }
         ))}
       </div>
 
-      {/* DESKTOP: Full table with horizontal scroll fallback */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -193,7 +187,6 @@ export function ComparisonTable({ data, title, type = "hosting", affiliateUrls }
               </tr>
             ))}
 
-            {/* CTA row */}
             <tr className="bg-white/5">
               <td className="p-8 text-center">
                 <div className="flex flex-col items-center gap-2">

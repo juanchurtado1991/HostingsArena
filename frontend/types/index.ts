@@ -1,8 +1,3 @@
-/**
- * Shared TypeScript types for HostingArena
- */
-
-// Used by ComparisonTable and Editor
 export interface HostingProvider {
     id?: string;
     provider_name: string;
@@ -29,7 +24,6 @@ export interface HostingProvider {
     raw_data?: Record<string, any>;
     last_updated?: string;
     created_at?: string;
-    // Enriched Specs
     web_server?: string;
     control_panel?: string;
     backup_frequency?: string;
@@ -42,7 +36,6 @@ export interface HostingProvider {
     databases_allowed?: number | string;
 }
 
-// Used by VPN pages and Editor
 export interface VPNProvider {
     id?: string;
     provider_name: string;
@@ -75,7 +68,6 @@ export interface VPNProvider {
     audits?: string[];
 }
 
-// Used by lib/data.ts
 export interface ProviderData {
     hosting: HostingProvider[];
     vpn: VPNProvider[];

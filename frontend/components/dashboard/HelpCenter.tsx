@@ -17,7 +17,6 @@ interface HelpCenterProps {
     lang: string;
 }
 
-// Accordion section component for clean mobile layout
 function AccordionSection({ title, icon: Icon, children, defaultOpen = false }: {
     title: string;
     icon: any;
@@ -143,7 +142,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── NEWSROOM ─────────────────────────────────────────────────────────────
             case "newsroom":
                 return (
                     <div className="space-y-4">
@@ -221,7 +219,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── AFFILIATES ───────────────────────────────────────────────────────────
             case "affiliates":
                 return (
                     <div className="space-y-4">
@@ -288,7 +285,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── ANALYTICS ────────────────────────────────────────────────────────────
             case "analytics":
                 return (
                     <div className="space-y-4">
@@ -336,7 +332,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── SCRAPERS ─────────────────────────────────────────────────────────────
             case "scrapers":
                 return (
                     <div className="space-y-4">
@@ -389,7 +384,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── TASKS ────────────────────────────────────────────────────────────────
             case "tasks":
                 return (
                     <div className="space-y-4">
@@ -435,7 +429,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── SEO ─────────────────────────────────────────────────────────────────
             case "seo":
                 return (
                     <div className="space-y-4">
@@ -484,7 +477,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── REMINDERS ───────────────────────────────────────────────────────────
             case "reminders":
                 return (
                     <div className="space-y-4">
@@ -544,7 +536,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── PROVIDERS ───────────────────────────────────────────────────────────
             case "providers":
                 return (
                     <div className="space-y-4">
@@ -594,7 +585,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </div>
                 );
 
-            // ─── WORKFLOWS ───────────────────────────────────────────────────────────
             case "workflows":
                 return (
                     <div className="space-y-4">
@@ -657,7 +647,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
 
     return (
         <GlassCard className="overflow-hidden p-0 border-white/10 shadow-2xl">
-            {/* Mobile: horizontal scrollable nav tabs */}
             <div className="md:hidden border-b border-white/10 bg-white/5">
                 <div className="flex overflow-x-auto scrollbar-hide px-3 py-2 gap-1">
                     {categories.map((cat) => (
@@ -679,7 +668,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
             </div>
 
             <div className="flex h-[calc(100vh-220px)] md:h-[calc(100vh-200px)] overflow-hidden">
-                {/* Desktop: sidebar */}
                 <div className="hidden md:flex flex-col w-56 xl:w-64 border-r border-white/10 bg-white/[0.02] shrink-0">
                     <div className="p-4 border-b border-white/5">
                         <h3 className="font-bold flex items-center gap-2 text-foreground">
@@ -707,7 +695,6 @@ export function HelpCenter({ dict, lang }: HelpCenterProps) {
                     </nav>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="max-w-2xl mx-auto pb-16 animate-in fade-in slide-in-from-right-4 duration-300" key={activeCategory}>
                         {renderContent()}

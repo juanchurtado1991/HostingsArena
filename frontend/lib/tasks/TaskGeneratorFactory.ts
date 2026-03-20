@@ -1,23 +1,12 @@
 import type { AdminTask, TaskPriority, TaskType } from './types';
 
-/**
- * Base interface for all task generators.
- * Each generator scans for specific conditions and returns tasks to create.
- */
+
 export interface TaskGenerator {
-    /** Unique identifier for this generator */
     readonly name: string;
-
-    /** Human-readable description */
     readonly description: string;
-
-    /** Scan for issues and return tasks to create */
     scan(): Promise<AdminTask[]>;
 }
 
-/**
- * Factory to run all registered task generators.
- */
 export class TaskGeneratorFactory {
     private generators: TaskGenerator[] = [];
 

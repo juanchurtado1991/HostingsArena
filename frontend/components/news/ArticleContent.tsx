@@ -16,9 +16,6 @@ export function ArticleContent({ content, className }: ArticleContentProps) {
         const container = containerRef.current;
         if (!container) return;
 
-        // Find all links that might be affiliate links
-        // The editor will add data-provider attribute to affiliate links
-        // But we also want to catch old links if possible, or just rely on the new ones
         const links = container.querySelectorAll("a");
 
         const handleClick = (e: MouseEvent) => {
@@ -26,10 +23,6 @@ export function ArticleContent({ content, className }: ArticleContentProps) {
             const provider = target.getAttribute("data-provider") || target.title || target.textContent || "External Link";
             const href = target.getAttribute("href") || "";
 
-            // Track if:
-            // 1. Explicitly marked by editor (data-provider or data-affiliate)
-            // 2. Contains our redirect pattern (/go/)
-            // 3. Is an external link (starts with http) and not to our own domain
             const isAffiliate = target.getAttribute("data-affiliate") === "true" || target.getAttribute("data-provider");
             const isRedirect = href.includes("/go/");
             const isExternal = href.startsWith("http") && !href.includes(window.location.hostname);

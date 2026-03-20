@@ -1,22 +1,10 @@
-/**
- * Persistent Asset Cache for Video Studio
- * Uses the browser Cache API to store proxied media assets (images, videos, SFX)
- * across page refreshes. Cleared on project reset.
- */
-
 const CACHE_NAME = 'ha-studio-assets';
 
-/**
- * Check if Cache API is available in the current environment
- */
+
 const isCacheAvailable = (): boolean => {
     return typeof caches !== 'undefined';
 };
 
-/**
- * Fetch a URL, serving from cache if available, otherwise fetching from network and caching.
- * Returns the Response object (clone-safe).
- */
 export async function fetchWithCache(url: string): Promise<Response> {
     if (!isCacheAvailable()) {
         return fetch(url);
@@ -30,11 +18,9 @@ export async function fetchWithCache(url: string): Promise<Response> {
             return cached;
         }
 
-        // Fetch from network
         const response = await fetch(url);
         
         if (response.ok) {
-            // Cache a clone (response body can only be consumed once)
             cache.put(url, response.clone());
         }
         
@@ -45,10 +31,6 @@ export async function fetchWithCache(url: string): Promise<Response> {
     }
 }
 
-/**
- * Pre-warm the cache for a URL without consuming the response.
- * Returns true if the asset was already cached (cache hit).
- */
 export async function prewarmCache(url: string): Promise<boolean> {
     if (!isCacheAvailable()) return false;
 
@@ -57,10 +39,9 @@ export async function prewarmCache(url: string): Promise<boolean> {
         const cached = await cache.match(url);
         
         if (cached) {
-            return true; // Already cached
+            return true; 
         }
 
-        // Fetch and store
         const response = await fetch(url);
         if (response.ok) {
             await cache.put(url, response);
@@ -72,10 +53,6 @@ export async function prewarmCache(url: string): Promise<boolean> {
     }
 }
 
-/**
- * Delete the entire asset cache bucket.
- * Called on project reset to free storage.
- */
 export async function clearAssetCache(): Promise<void> {
     if (!isCacheAvailable()) return;
 
@@ -87,9 +64,6 @@ export async function clearAssetCache(): Promise<void> {
     }
 }
 
-/**
- * Get cache statistics for debugging.
- */
 export async function getCacheStats(): Promise<{ count: number }> {
     if (!isCacheAvailable()) return { count: 0 };
 

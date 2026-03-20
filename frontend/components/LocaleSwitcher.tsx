@@ -2,9 +2,7 @@
 
 import * as React from "react";
 import { ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
-// UI imports removed for native select
 
 const languages = [
     { value: "en", label: "English", flag: "🇺🇸" },
@@ -16,8 +14,6 @@ export function LocaleSwitcher() {
     const pathname = usePathname();
     const router = useRouter();
 
-    // Deduce current language from URL (e.g. /en/...)
-    // Segments: ["", "en", "hosting"]
     const segments = pathname.split("/");
     const currentLang = segments[1]?.length === 2 ? segments[1] : "en";
 
@@ -31,22 +27,14 @@ export function LocaleSwitcher() {
         setValue(newLang);
         setOpen(false);
 
-        // Redirect logic
-        // If current path starts with a locale, replace it.
-        // If not (e.g. root /), prepend it.
-        // But our middleware ensures everything has locale except excluded ones.
-
         let newPath = "";
         if (segments.length > 1 && languages.some(l => l.value === segments[1])) {
-            // Replace existing locale
             const rest = segments.slice(2).join("/");
             newPath = `/${newLang}${rest ? `/${rest}` : ''}`;
         } else {
-            // Should not happen with middleware, but fallback:
             newPath = `/${newLang}${pathname}`;
         }
 
-        // Fix double slash if any
         newPath = newPath.replace("//", "/");
 
         router.push(newPath);

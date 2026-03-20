@@ -45,7 +45,6 @@ export function NewsFilters({ categories, lang, dict }: NewsFiltersProps) {
 
     return (
         <div className="space-y-6 mb-4">
-            {/* Search Bar */}
             <div className="relative max-w-2xl mx-auto">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -65,7 +64,6 @@ export function NewsFilters({ categories, lang, dict }: NewsFiltersProps) {
                 )}
             </div>
 
-            {/* Tags / Categories */}
             <div className="flex flex-wrap justify-center gap-2">
                 <button
                     onClick={() => updateFilters(search, "all")}
