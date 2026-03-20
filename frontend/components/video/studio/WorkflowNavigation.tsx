@@ -46,7 +46,6 @@ export function WorkflowNavigation() {
 
     const handleProceed = async () => {
         if (currentPhase === 2) {
-            // Validation: Must have voice and music
             const hasVoice = (selectedVoice !== 'custom' && selectedVoice) || (selectedVoice === 'custom' && customVoiceUrl);
             const hasMusic = !!bgMusicUrl;
 
@@ -65,7 +64,6 @@ export function WorkflowNavigation() {
                 setError(null);
                 await prepareAssemblyData();
                 
-                // --- Store Hydration ---
                 setStoreLayers(layers);
                 setStoreScenes(scenes);
                 setStoreTitle(title);
@@ -87,7 +85,6 @@ export function WorkflowNavigation() {
         <div className="w-full sticky top-0 z-[100] px-8 py-2 flex justify-center">
             <div className="flex items-center justify-between bg-studio-surface/80 backdrop-blur-[32px] rounded-full border border-studio-border px-6 h-12 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-black/5 w-full max-w-5xl">
                 
-                {/* Left: Branding & Return */}
                 <div className="flex items-center gap-10">
                     <Link href={`/${lang}/dashboard`} className="flex items-center gap-3 text-zinc-400 hover:text-zinc-900 transition-all text-[9px] font-black uppercase tracking-[0.2em] group/back shrink-0">
                         <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center border border-black/5 group-hover/back:border-black/10 group-hover/back:bg-black/10 transition-all">
@@ -106,7 +103,6 @@ export function WorkflowNavigation() {
                     </div>
                 </div>
 
-                {/* Middle: Progress & Format */}
                 <div className="flex items-center gap-10">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 bg-studio-accent/10 px-3 py-1.5 rounded-full border border-studio-accent/20 shrink-0">
@@ -134,7 +130,6 @@ export function WorkflowNavigation() {
                     </div>
                 </div>
 
-                {/* Right: Actions */}
                 <div className="flex items-center gap-4">
                     <Button
                         variant="ghost"

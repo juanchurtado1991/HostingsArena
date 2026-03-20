@@ -99,8 +99,8 @@ export function Phase1Ideation() {
         const cleanSpeech = (block: string): string => {
             return block
                 .replace(/\[.*?\]/g, '')
-                .replace(/^(speech|script):\s*/i, '') // Remove labels at start
-                .replace(/\n(speech|script):\s*/gi, '\n') // Remove labels after newlines
+                .replace(/^(speech|script):\s*/i, '') 
+                .replace(/\n(speech|script):\s*/gi, '\n') 
                 .replace(/\n{3,}/g, '\n\n')
                 .trim();
         };
@@ -111,8 +111,6 @@ export function Phase1Ideation() {
         let parsedScenes: ParsedScene[] = [];
 
         if (visualMatches.length >= 1) {
-            // IMPORTANT: We intentionally ignore ANY text before the first [Visual:] tag.
-            // That content is always AI preamble/metadata and should never be narrated.
             visualMatches.forEach((match, i) => {
                 const visual = match[1];
                 const nextMatchIndex = visualMatches[i + 1]?.index || text.length;
@@ -260,11 +258,9 @@ export function Phase1Ideation() {
                 const parsed = parseScript(data.script, format);
                 const usedUrls = new Set<string>();
 
-                // v6.3: Use live Pexels search per scene, with static library as fallback
                 const scenesWithMedia = await Promise.all(parsed.map(async (s: any, i: number) => {
                     let batch: MediaItem[] = [];
 
-                    // Try live Pexels search using AI-generated pexelsQuery
                     const searchQuery = s.pexelsQuery || s.visual;
                     try {
                         const res = await fetch('/api/admin/video/assets', {
@@ -275,7 +271,6 @@ export function Phase1Ideation() {
                         if (res.ok) {
                             const { results } = await res.json();
                             if (results && results.length > 0) {
-                                // Filter out already-used URLs
                                 batch = results.filter((r: MediaItem) => !usedUrls.has(r.url));
                             }
                         }
@@ -283,7 +278,6 @@ export function Phase1Ideation() {
                         logger.warn('Live Pexels search failed, falling back to static library', e);
                     }
 
-                    // Fallback to static library if live search returned nothing
                     if (batch.length === 0) {
                         batch = findBestMixedMediaBatch(s.visual, 2, 2, usedUrls);
                     }
@@ -310,7 +304,6 @@ export function Phase1Ideation() {
                 }));
 
                 setScenes(scenesWithMedia);
-                // Advance to phase 2 automatically when valid script is created
                 setCurrentPhase(2);
             }
         } catch (err: any) {

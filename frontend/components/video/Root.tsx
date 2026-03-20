@@ -7,7 +7,7 @@ export const RemotionVideo: React.FC = () => {
             <Composition
                 id="HostingShort"
                 component={HostingComposition as any}
-                durationInFrames={1800} // 60 seconds at 30fps
+                durationInFrames={1800}
                 fps={30}
                 width={1080}
                 height={1920}

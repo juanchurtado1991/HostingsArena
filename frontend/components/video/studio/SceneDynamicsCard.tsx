@@ -18,7 +18,6 @@ const TEXT_STYLE_OPTIONS: { value: TextStyleMode; label: string; desc: string }[
 ];
 
 export function SceneDynamicsCard() {
-    // TODO: Wire these to VideoStudioContext when tempo/textStyle state is added
     const [tempo, setTempo] = useState<TempoMode>('standard');
     const [textStyle, setTextStyle] = useState<TextStyleMode>('classic');
 
@@ -33,7 +32,6 @@ export function SceneDynamicsCard() {
                 </div>
             </div>
 
-            {/* Tempo Section */}
             <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-2 px-1">
                     <Film className="w-3 h-3 text-studio-accent" />
@@ -62,7 +60,6 @@ export function SceneDynamicsCard() {
                 </div>
             </div>
 
-            {/* Text Style Section */}
             <div className="space-y-3">
                 <div className="flex items-center gap-2 px-1">
                     <Type className="w-3 h-3 text-studio-accent" />
@@ -90,7 +87,6 @@ export function SceneDynamicsCard() {
                 </div>
             </div>
 
-            {/* Gradient Accent */}
             <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-violet-500/5 rounded-full blur-[80px] opacity-20 group-hover:opacity-100 transition-opacity pointer-events-none" />
         </div>
     );

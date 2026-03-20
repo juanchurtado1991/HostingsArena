@@ -21,7 +21,6 @@ const VideoPlayer = dynamic(() => import('@/components/video/VideoPlayer').then(
 const STORAGE_KEY = 'hostingarena_editor_draft';
 
 export function Phase3Editor() {
-    // Atomic Store Selectors (Prevents re-renders for other state changes)
     const layers = useStudioStore(s => s.layers);
     const scenes = useStudioStore(s => s.scenes);
     const title = useStudioStore(s => s.title);
@@ -32,7 +31,6 @@ export function Phase3Editor() {
     const selectedClipId = useStudioStore(s => s.selectedClipId);
     const voiceSpeed = useStudioStore(s => s.voiceSpeed);
 
-    // Actions
     const setLayers = useStudioStore(s => s.setLayers);
     const setScenes = useStudioStore(s => s.setScenes);
     const setTitle = useStudioStore(s => s.setTitle);
@@ -60,11 +58,9 @@ export function Phase3Editor() {
         setScenes: setCtxScenes,
     } = useVideoStudio();
 
-    // Auto-Save Status
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // 1. Initial Load from LocalStorage
     useEffect(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
@@ -84,9 +80,7 @@ export function Phase3Editor() {
         }
     }, [setLayers, setScenes, setTitle, setFormat, setDurationInFramesStore]);
 
-    // 2. Hydration Fallback from Context (if no localStorage layers)
     useEffect(() => {
-        // Check if localStorage has any useful layers
         const saved = localStorage.getItem(STORAGE_KEY);
         let storedLayersCount = 0;
         if (saved) {
@@ -96,8 +90,6 @@ export function Phase3Editor() {
             } catch (_) {}
         }
         
-        // Always hydrate from context if store is empty AND context has data,
-        // regardless of whether a stale localStorage draft exists.
         if (layers.length === 0 && ctxLayers.length > 0) {
             setLayers(ctxLayers);
             setScenes(ctxScenes);
@@ -108,18 +100,12 @@ export function Phase3Editor() {
         }
     }, [layers.length, ctxLayers, ctxScenes, ctxTitle, ctxFormat, ctxDuration, setLayers, setScenes, setTitle, setFormat, setDurationInFramesStore, pushToHistory]);
 
-    // 2b. Always sync durationInFrames from context when it has a real value
-    // This fixes the 60s cutoff: context restores the real duration from its own localStorage,
-    // but Phase3Editor's localStorage may have loaded the stale default (1800).
     useEffect(() => {
         if (ctxDuration && ctxDuration !== 1800 && ctxDuration !== durationInFrames) {
             setDurationInFramesStore(ctxDuration);
         }
     }, [ctxDuration, durationInFrames, setDurationInFramesStore]);
 
-    // 2c. Sync Zustand layers → Context (fixes SFX persistence across both save paths)
-    // When Phase3Editor edits clips (e.g. SFX attach), updateClip only touches Zustand.
-    // This effect keeps Context's layers in sync so its auto-save also captures SFX data.
     useEffect(() => {
         if (layers.length > 0) {
             setCtxLayers(layers);
@@ -132,19 +118,16 @@ export function Phase3Editor() {
         }
     }, [scenes, setCtxScenes]);
 
-    // 2d. Auto-expand duration if clips exceed current limit
     useEffect(() => {
         if (layers.length === 0) return;
         
         const contentDuration = SyncEngine.getClipsDurationInFrames(layers);
-        // Only expand or adjust if significantly different or content exceeds current
         if (contentDuration > durationInFrames) {
             console.log(`[TimelineSync] Expanding duration to match content: ${contentDuration} frames`);
             setDurationInFramesStore(contentDuration);
         }
     }, [layers, durationInFrames, setDurationInFramesStore]);
 
-    // 3. Auto-Save Effect (Debounced + beforeunload support)
     useEffect(() => {
         if (layers.length === 0) return;
 
@@ -166,10 +149,9 @@ export function Phase3Editor() {
         const timer = setTimeout(() => {
             setIsSaving(true);
             executeSave();
-        }, 1500); // 1.5 second debounce
+        }, 1500); 
 
         const handleBeforeUnload = () => {
-             // Synchronous save before page unloads to prevent losing quick edits like slider drags
              localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
         };
 
@@ -184,7 +166,6 @@ export function Phase3Editor() {
     const canUndo = historyIndex > 0;
     const canRedo = historyIndex < history.length - 1;
 
-    // Local UI State
     const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
     const [isAudioPickerOpen, setIsAudioPickerOpen] = useState(false);
     const [addingToTrack, setAddingToTrack] = useState<string | null>(null);
@@ -202,7 +183,6 @@ export function Phase3Editor() {
     const pxPerSec = 100;
     const fps = SyncEngine.FPS;
 
-    // Snap Points
     const snapPoints = useMemo(() => {
         const points = new Set<number>();
         points.add(0);
@@ -216,7 +196,6 @@ export function Phase3Editor() {
         return Array.from(points).sort((a, b) => a - b);
     }, [layers, durationInFrames]);
 
-    // Hotkeys
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
@@ -228,7 +207,6 @@ export function Phase3Editor() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [undo, redo, canUndo, canRedo]);
 
-    // Drag and Resize Handlers
     useEffect(() => {
         if (!dragState) return;
 
@@ -254,7 +232,7 @@ export function Phase3Editor() {
 
         const handleMouseUp = () => {
             setDragState(null);
-            pushToHistory(); // Finish interaction
+            pushToHistory();
         };
 
         window.addEventListener('mousemove', handleMouseMove);
@@ -299,13 +277,12 @@ export function Phase3Editor() {
     const handleSplit = () => {
         if (!selectedClipId) return;
         const frame = Math.round(currentTime * fps);
-        // ... implementation of split logic moved to actions or handled here
         pushToHistory();
     };
 
     const handleReplaceAsset = () => {
         if (!selectedClip) return;
-        setAddingToTrack(selectedClipId); // Reuse this to indicate we are replacing
+        setAddingToTrack(selectedClipId);
         if (selectedClip.type === 'audio' || selectedClip.type === 'music') {
             setAddingToTrackType('audio');
             setIsAudioPickerOpen(true);
@@ -338,9 +315,7 @@ export function Phase3Editor() {
 
     return (
         <div className="flex flex-col gap-3 h-[calc(100vh-84px)] select-none animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            {/* Player + Inspector: flex-1 absorbs all available vertical space */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0 overflow-hidden">
-                {/* Left: Player Area */}
                 <div className="lg:col-span-8 flex flex-col min-h-0">
                     <div className="bg-transparent rounded-3xl overflow-hidden border border-black/5 shadow-2xl flex-1 relative group ring-1 ring-black/5 min-h-0">
                         <VideoPlayer 
@@ -353,7 +328,6 @@ export function Phase3Editor() {
                             voiceSpeed={voiceSpeed}
                             showSafeAreas={showSafeAreas}
                         />
-                        {/* Canvas Editor is above the player but below the controls */}
                         <CanvasEditor />
                         
                         <div className="absolute top-6 right-6 flex gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 z-[80]">
@@ -373,7 +347,6 @@ export function Phase3Editor() {
                             </Button>
                         </div>
 
-                        {/* Playback Controls - HIGH LUXURY DESIGN */}
                         <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-white/95 via-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none z-[80] transform translate-y-[10px] group-hover:translate-y-0">
                             <div className="flex items-center gap-6 pointer-events-auto">
                                 <div className="flex items-center gap-3">
@@ -430,7 +403,6 @@ export function Phase3Editor() {
                                         onChange={(e) => setCurrentTime(parseFloat(e.target.value))}
                                         className="absolute inset-x-4 w-[calc(100%-32px)] h-1.5 opacity-0 cursor-pointer z-10"
                                     />
-                                    {/* System thumb indicator */}
                                     <div 
                                         className="absolute w-4 h-4 rounded-full bg-white shadow-xl pointer-events-none transition-all duration-100"
                                         style={{ left: `calc(${ (currentTime / (durationInFrames/fps)) * 100 }% - 8px)` }}
@@ -446,7 +418,6 @@ export function Phase3Editor() {
                     </div>
                 </div>
 
-                {/* Right: Inspector */}
                 <div className="lg:col-span-4 flex flex-col h-full ring-1 ring-black/5 rounded-3xl overflow-hidden bg-transparent backdrop-blur-md border border-black/5 min-h-0">
                     <div className="glass-card flex flex-col h-full overflow-hidden border-none rounded-none p-5 pb-0">
                         <div className="flex items-center justify-between mb-4 border-b border-studio-border pb-3">
@@ -486,7 +457,6 @@ export function Phase3Editor() {
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
                                     
-                                    {/* Replace Overlay */}
                                     <div className="absolute inset-0 bg-studio-accent/10 opacity-0 group-hover/preview:opacity-100 flex flex-col items-center justify-center transition-all duration-300">
                                         <div className="bg-white/80 backdrop-blur-md p-4 rounded-full border border-studio-accent/30 scale-90 group-hover/preview:scale-100 transition-transform">
                                             <Sparkles className="w-6 h-6 text-studio-accent" />
@@ -495,7 +465,6 @@ export function Phase3Editor() {
                                     </div>
                                 </div>
 
-                                {/* Properties */}
                                 <div className="space-y-6">
                                     <div className="flex gap-4">
                                         <Button 
@@ -639,7 +608,7 @@ export function Phase3Editor() {
                                                             className="w-full h-1 bg-black/5 rounded-full appearance-none accent-studio-accent cursor-pointer"
                                                         />
                                                     </div>
-                                                    {/* SFX Fade Controls */}
+
                                                     <div className="flex justify-between items-center px-1 pt-2">
                                                         <span className="text-[9px] font-black uppercase text-zinc-400 tracking-widest">Fade In</span>
                                                         <span className="text-[10px] font-mono font-bold text-studio-accent bg-studio-accent/5 px-2 py-0.5 rounded-md border border-studio-accent/20">
@@ -685,7 +654,6 @@ export function Phase3Editor() {
                 </div>
             </div>
 
-            {/* Timeline: flex-none — takes only what its tracks need, no dead space */}
             <div className="flex-none">
                 <TimelineContainer 
                     durationInFrames={durationInFrames} 
@@ -735,7 +703,6 @@ export function Phase3Editor() {
                 </TimelineContainer>
             </div>
 
-            {/* Pickers */}
             <MediaPicker 
                 isOpen={isMediaPickerOpen}
                 onClose={() => { setIsMediaPickerOpen(false); setAddingToTrack(null); setAddingToTrackType(null); }}
@@ -747,13 +714,11 @@ export function Phase3Editor() {
                     const type = (typeof item !== 'string' && item.type) ? item.type : (url.match(/\.(mp4|webm|mov)(\?.*)?$/i) ? 'video' : 'image');
                     
                     if (selectedClip && addingToTrack === selectedClip.id) {
-                        // Replacement logic
                         updateClip(selectedClip.id, { src: url, type: type as Clip['type'] });
                         setAddingToTrack(null);
                         setAddingToTrackType(null);
                         setIsMediaPickerOpen(false);
                     } else if (addingToTrack) {
-                        // Addition logic
                         const newClip: Clip = {
                             id: `${type}-${Date.now()}`,
                             type: type as Clip['type'],
@@ -778,16 +743,13 @@ export function Phase3Editor() {
                 onClose={() => { setIsAudioPickerOpen(false); setAddingToTrack(null); setAddingToTrackType(null); }}
                 title="Librería de Audio y SFX"
                 onConfirm={(url: string, label: string) => {
-                    // Logic: If addingToTrack matches the selectedClipId, it's a replacement or an SFX
                     if (selectedClip && addingToTrack === selectedClip.id) {
                         if (selectedClip.type === 'audio' || selectedClip.type === 'music') {
-                            // Replacement of an audio/music clip
                             updateClip(selectedClip.id, { 
                                 src: url,
                                 title: label || url.split('/').pop()?.split('?')[0],
                             } as any);
                         } else {
-                            // SFX Attachment to image/video clip
                             console.log('[SFX ATTACH DEBUG] clipId:', selectedClip.id, 'sfxUrl:', url, 'type:', selectedClip.type);
                             updateClip(selectedClip.id, { 
                                 sfxUrl: url,
@@ -817,7 +779,6 @@ export function Phase3Editor() {
     );
 }
 
-// Optimized Time Display to prevent Phase3Editor frame churning
 function PlaybackTimeDisplay({ durationInFrames, fps }: { durationInFrames: number, fps: number }) {
     const currentTime = useStudioStore(s => s.currentTime);
     

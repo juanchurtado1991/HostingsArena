@@ -17,7 +17,6 @@ export const TimeRuler = memo(({
     hideHeader = false 
 }: TimeRulerProps) => {
     
-    // Generate tick marks every second, with a stamp every 5 seconds
     const ticks = Array.from({ length: Math.ceil(totalSeconds) + 1 }).map((_, i) => i);
 
     const formatTimestamp = (secs: number) => {
@@ -26,21 +25,19 @@ export const TimeRuler = memo(({
         return `${m}:${s}`;
     };
 
-    const HEADER_WIDTH = 112; // Matches w-28
+    const HEADER_WIDTH = 112;
 
     return (
         <div 
             className={cn("h-8 border-b border-black/5 sticky top-0 bg-white/80 backdrop-blur-xl z-50 flex items-stretch", className)}
             style={{ width: '100%' }}
         >
-            {/* Sticky Corner for Ruler */}
             {!hideHeader && (
                 <div className="sticky left-0 w-28 shrink-0 bg-white border-r border-black/5 z-40 flex items-center justify-center">
                     <span className="text-[8px] font-black text-zinc-300 uppercase tracking-widest">Tiempo</span>
                 </div>
             )}
  
-            {/* Ticks Area */}
             <div className="relative flex-1">
                 {ticks.map(tick => {
                     const isMajor = tick % 5 === 0;

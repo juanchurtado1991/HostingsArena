@@ -34,7 +34,6 @@ export const TimelineContainer = memo(({
     
     const HEADER_WIDTH = 112;
     
-    // Convert duration frames to seconds for width calc
     const totalSeconds = durationInFrames / fps;
     const pxPerSec = zoomLevel * 10; 
     const timelineWidth = totalSeconds * pxPerSec + HEADER_WIDTH;
@@ -42,29 +41,24 @@ export const TimelineContainer = memo(({
     const isPlaying = useStudioStore(s => s.isPlayingPreview);
     const lastManualScroll = useRef<number>(0);
 
-    // Auto-scroll logic: Follow the playhead
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container || !isPlaying) return;
         
-        // Don't auto-scroll if the user just moved the timeline (2s cooldown)
         if (Date.now() - lastManualScroll.current < 2000) return;
 
         const playheadPx = (currentFrame / fps) * pxPerSec + HEADER_WIDTH;
         const scrollLeft = container.scrollLeft;
         const viewportWidth = container.clientWidth;
-
-        // Keep a 20% padding at the edges before scrolling
         const padding = viewportWidth * 0.2;
         
-        // If playhead goes beyond right edge padding
         if (playheadPx > scrollLeft + viewportWidth - padding) {
             container.scrollTo({
-                left: playheadPx - (viewportWidth * 0.4), // Scroll to 40% of viewport
+                left: playheadPx - (viewportWidth * 0.4), 
                 behavior: 'auto'
             });
         } 
-        // If playhead goes before left edge padding (and is not in the fixed header area)
+
         else if (playheadPx < scrollLeft + padding && playheadPx > HEADER_WIDTH) {
             container.scrollTo({
                 left: Math.max(0, playheadPx - (viewportWidth * 0.4)),
@@ -73,13 +67,11 @@ export const TimelineContainer = memo(({
         }
     }, [currentFrame, fps, pxPerSec, isPlaying]);
 
-    // Handle manual scroll detection
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
         const handleScroll = () => {
-            // Only mark as manual if NOT playing or if scroll delta is significant
             lastManualScroll.current = Date.now();
         };
 
@@ -89,9 +81,7 @@ export const TimelineContainer = memo(({
 
     return (
         <div className={cn("w-full h-auto bg-white/80 backdrop-blur-xl border border-black/5 rounded-3xl flex flex-col relative overflow-hidden shadow-2xl ring-1 ring-black/5", className)}>
-            {/* Toolbar Area — h-8 matches sidebar Tiempo header */}
             <div className="h-8 bg-black/5 border-b border-black/10 flex items-center shrink-0">
-                {/* Fixed Corner for Toolbar */}
                 <div className="w-28 shrink-0 bg-black/10 border-r border-black/10 h-full flex items-center justify-center">
                     <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Tools</span>
                 </div>
@@ -127,16 +117,13 @@ export const TimelineContainer = memo(({
             </div>
             
             <div className="flex-1 flex overflow-hidden">
-                {/* Fixed Sidebar for Headers — flex-col with gap-0 ensures rows align exactly */}
                 <div className="w-28 shrink-0 flex flex-col bg-white border-r border-black/10 z-30 overflow-hidden">
-                    {/* This row is h-8 to match the TimeRuler h-8 row on the right */}
                     <div className="h-8 border-b border-black/5 shrink-0 bg-black/5 flex items-center justify-center">
                          <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Tiempo</span>
                     </div>
                     {sidebar}
                 </div>
 
-                {/* Scrollable Timeline Area */}
                 <div 
                     ref={scrollContainerRef}
                     className="flex-1 overflow-x-scroll overflow-y-hidden relative timeline-scroll-area [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
@@ -149,7 +136,7 @@ export const TimelineContainer = memo(({
                             totalSeconds={totalSeconds} 
                             pxPerSec={pxPerSec} 
                             fps={fps}
-                            hideHeader={true} // New prop to hide internal ruler header
+                            hideHeader={true}
                         />
                         
                         <div className="relative w-full">
@@ -162,7 +149,7 @@ export const TimelineContainer = memo(({
                             pxPerSec={pxPerSec}
                             onDrag={onFrameChange}
                             snapPoints={snapPoints}
-                            headerOffset={0} // No offset needed inside the scroll container
+                            headerOffset={0}
                         />
                     </div>
                 </div>

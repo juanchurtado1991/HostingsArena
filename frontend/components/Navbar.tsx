@@ -37,7 +37,6 @@ export function Navbar({ dict, lang = 'en' }: NavbarProps) {
   useEffect(() => {
     let mounted = true;
 
-    // Fast path: Check localStorage first for immediate UI update
     if (typeof window !== 'undefined') {
       const cachedAdmin = localStorage.getItem('isAdmin') === 'true';
       if (cachedAdmin) setIsAdmin(true);

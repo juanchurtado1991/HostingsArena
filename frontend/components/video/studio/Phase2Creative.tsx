@@ -151,7 +151,6 @@ export function Phase2Creative() {
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-6xl mx-auto">
-            {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-2 relative z-10">
                 <div className="space-y-1">
                     <div className="flex items-center gap-4">
@@ -166,9 +165,7 @@ export function Phase2Creative() {
                 <div className="flex items-center gap-4" />
             </div>
 
-            {/* Global Selections Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-2">
-                {/* Voice Selection Card */}
                 <div 
                     className="p-8 glass-card border-studio-border relative group cursor-pointer overflow-hidden transition-all hover:bg-black/[0.01]"
                     onClick={() => setIsVoicePickerOpen(true)}
@@ -205,12 +202,9 @@ export function Phase2Creative() {
                         </div>
                     </div>
 
-
-                    {/* Gradient Accent */}
                     <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-studio-accent/5 rounded-full blur-[80px] opacity-20 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
 
-                {/* Music Selection Card */}
                 <div 
                     className="p-8 glass-card border-studio-border relative group cursor-pointer overflow-hidden transition-all hover:bg-black/[0.01]"
                     onClick={() => { setActiveSfxTarget('bg'); setIsAudioPickerOpen(true); }}
@@ -270,11 +264,9 @@ export function Phase2Creative() {
                         </div>
                     </div>
 
-                    {/* Gradient Accent */}
                     <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-indigo-500/5 rounded-full blur-[80px] opacity-20 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
 
-                {/* SFX Selection Card (NEW) */}
                 <div 
                     className="p-8 glass-card border-studio-border relative group overflow-hidden transition-all hover:bg-black/[0.01]"
                 >
@@ -320,12 +312,10 @@ export function Phase2Creative() {
                         ))}
                     </div>
 
-                    {/* Gradient Accent */}
                     <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-amber-500/5 rounded-full blur-[80px] opacity-20 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
             </div>
 
-            {/* Script Editor Section */}
             <div className="px-2 space-y-8">
                 <div className="flex items-center justify-between border-b border-black/5 pb-8 relative z-10">
                     <div className="flex items-center gap-4">
@@ -348,7 +338,6 @@ export function Phase2Creative() {
                         <div key={idx} className="glass-card border-studio-border p-10 group hover:bg-black/[0.01] transition-all relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-r from-studio-accent/0 via-studio-accent/0 to-studio-accent/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                             <div className="flex flex-col md:flex-row gap-8 relative z-10">
-                                {/* Scene Header/Counter */}
                                 <div className="flex flex-row md:flex-col items-center justify-between md:justify-start gap-6 md:w-24">
                                     <div className="w-14 h-14 rounded-full bg-studio-surface border border-studio-border flex items-center justify-center text-lg font-bold text-studio-accent shadow-xl ring-2 ring-studio-accent/10 transition-all">
                                         {idx + 1}
@@ -371,7 +360,6 @@ export function Phase2Creative() {
                                     </div>
                                 </div>
 
-                                {/* Script Editor */}
                                 <div className="flex-1 space-y-5">
                                     <div className="flex items-center justify-between px-2">
                                         <span className="text-[11px] font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-2">
@@ -391,7 +379,6 @@ export function Phase2Creative() {
                                         <div className="absolute inset-0 rounded-[1.5rem] pointer-events-none border border-studio-accent/0 group-focus-within/textarea:border-studio-accent/5 transition-all" />
                                     </div>
                                     
-                                    {/* Brief Visual Hint */}
                                     <div className="flex items-center gap-4 px-6 py-4 bg-studio-surface/30 rounded-2xl border border-studio-border focus-within:border-studio-accent/30 transition-all group/hint">
                                         <Info className="w-4 h-4 text-studio-accent/60 shrink-0 group-focus-within/hint:text-studio-accent transition-all" />
                                         <input 
@@ -402,7 +389,6 @@ export function Phase2Creative() {
                                         />
                                     </div>
 
-                                    {/* News Title Card Extension */}
                                     <div className="flex flex-col gap-4 p-6 bg-studio-accent/5 rounded-3xl border border-studio-accent/10 relative overflow-hidden group/news">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
@@ -417,7 +403,6 @@ export function Phase2Creative() {
                                                     const newState = !isEnabled;
                                                     const updates: any = { titleCardEnabled: newState };
                                                     if (newState && !scene.headline) {
-                                                        // Auto-generate headline from visual context or first sentence of speech
                                                         const context = scene.visual.split(',')[0] || scene.speech.split('.')[0];
                                                         updates.headline = context.trim().substring(0, 40);
                                                     }
@@ -454,14 +439,12 @@ export function Phase2Creative() {
                                 </div>
                             </div>
 
-                            {/* Decorative line */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-studio-accent/5 rounded-full blur-[60px] opacity-10 pointer-events-none" />
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Footer Tip */}
             <div className="px-2 text-center mt-12">
                 <div className="inline-flex items-center gap-4 px-10 py-5 bg-studio-bg border border-studio-border rounded-3xl text-[10px] font-black uppercase tracking-[0.2em] text-studio-accent/80 shadow-2xl">
                     <Sparkles className="w-5 h-5 animate-pulse" />
@@ -469,7 +452,6 @@ export function Phase2Creative() {
                 </div>
             </div>
 
-            {/* Modals */}
             <VoicePicker
                 isOpen={isVoicePickerOpen}
                 onClose={() => setIsVoicePickerOpen(false)}

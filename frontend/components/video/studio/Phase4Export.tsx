@@ -17,14 +17,12 @@ function SettingRow<K extends keyof ExportSettings>({
 }) {
     return (
         <div className="flex items-center gap-4 flex-1 min-h-0">
-            {/* Left label — fixed width */}
             <div className="w-36 shrink-0 flex items-center gap-2.5">
                 <div className="p-2 bg-studio-accent/10 rounded-lg border border-studio-accent/20 text-studio-accent shrink-0">
                     <Icon className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.15em] leading-tight">{label}</span>
             </div>
-            {/* Right: 3 option buttons in a row */}
             <div className="flex-1 flex gap-3 h-full">
                 {options.map(opt => {
                     const isActive = exportSettings[settingKey] === opt.id;
@@ -64,12 +62,10 @@ export function Phase4Export() {
 
     return (
         <div className="h-[calc(100vh-84px)] flex items-stretch gap-0 animate-in fade-in duration-500 overflow-hidden rounded-2xl border border-studio-border ring-1 ring-black/5 shadow-2xl relative bg-studio-surface/50 backdrop-blur-2xl">
-            {/* Ambient glows */}
             <div className="absolute -top-40 -right-40 w-96 h-96 bg-studio-accent/5 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-24 left-1/3 w-80 h-40 bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none" />
 
             {isGeneratingVideo ? (
-                /* ── RENDERING STATE ── */
                 <div className="flex-1 flex flex-col items-center justify-center gap-10 relative z-10">
                     <div className="relative w-56 h-56">
                         <div className="absolute inset-0 rounded-full border border-studio-accent/20 animate-ping opacity-20" />
@@ -98,7 +94,6 @@ export function Phase4Export() {
                 </div>
 
             ) : renderFinished ? (
-                /* ── DONE STATE ── */
                 <div className="flex-1 flex flex-col items-center justify-center gap-8 animate-in fade-in zoom-in relative z-10">
                     <div className="relative">
                         <div className="absolute inset-0 rounded-full bg-studio-accent/15 blur-3xl scale-[2] animate-pulse" />
@@ -121,11 +116,8 @@ export function Phase4Export() {
                 </div>
 
             ) : (
-                /* ── SETTINGS STATE ── */
                 <>
-                    {/* Left: 4 horizontal setting rows — fills height evenly */}
                     <div className="flex-1 flex flex-col p-8 gap-3 relative z-10 border-r border-zinc-200/50">
-                        {/* Header */}
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-studio-accent/10 rounded-xl border border-studio-accent/20 text-studio-accent">
                                 <Sparkles className="w-4 h-4" />
@@ -136,7 +128,6 @@ export function Phase4Export() {
                             </div>
                         </div>
 
-                        {/* 4 rows — each takes flex-1 so they share height equally */}
                         <SettingRow icon={Sparkles} label="Resolution" settingKey="resolution" exportSettings={exportSettings} setExportSettings={setExportSettings}
                             options={[
                                 { id: '720p'  as const, label: '720p',  desc: 'Social' },
@@ -170,7 +161,6 @@ export function Phase4Export() {
                         />
                     </div>
 
-                    {/* Right: Render Panel */}
                     <div className="w-72 shrink-0 flex flex-col items-center justify-between p-8 relative z-10">
                         <div className="flex flex-col items-center text-center gap-5 pt-4">
                             <div className="relative">
@@ -185,7 +175,6 @@ export function Phase4Export() {
                             </div>
                         </div>
 
-                        {/* Config summary */}
                         <div className="w-full space-y-2">
                             <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-center mb-3">Selected Config</div>
                             {([

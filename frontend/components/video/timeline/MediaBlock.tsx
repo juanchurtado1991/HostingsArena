@@ -37,7 +37,6 @@ export const MediaBlock = memo(({
     className
 }: MediaBlockProps) => {
     
-    // Calculate precise width and position based on frame math
     const leftPx = (startFrame / fps) * pxPerSec;
     const widthPx = (durationInFrames / fps) * pxPerSec;
 
@@ -61,15 +60,12 @@ export const MediaBlock = memo(({
         sfx: Mic
     }[type];
 
-    // Detection for symbolic/special clips to avoid 404s and show premium placeholders
     const isSpecialClip = url === 'intro' || url === 'outro' || url === 'news-card' || url === 'news-anchor' || url === 'news-lower-third';
     
-    // Improved thumbnail logic
     const renderThumbnail = () => {
         if (!url || type === 'audio' || type === 'music' || type === 'sfx') return null;
 
         if (isSpecialClip) {
-            // High-Lux Placeholder for special segments
             return (
                 <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm pointer-events-none">
                     {url === 'intro' && <Globe className="w-8 h-8 text-blue-500/40" />}
@@ -105,7 +101,6 @@ export const MediaBlock = memo(({
                 width: `${Math.max(widthPx, 20)}px` 
             }}
         >
-            {/* Audio Waveform for Audio/Music tracks (Only if real URL) */}
             {url && !isSpecialClip && (type === 'audio' || type === 'music') && (
                 <div className="absolute inset-0 pointer-events-none">
                     <AudioWaveform 
@@ -116,7 +111,6 @@ export const MediaBlock = memo(({
                 </div>
             )}
 
-            {/* Background Thumbnail if available */}
             {renderThumbnail()}
             
             <div className="relative z-10 flex items-center gap-1.5 px-2 w-full h-full">
@@ -126,7 +120,6 @@ export const MediaBlock = memo(({
                 </span>
             </div>
 
-            {/* Selection Handles (Unlocked for all media types) */}
             {isSelected && (
                 <>
                     <div 

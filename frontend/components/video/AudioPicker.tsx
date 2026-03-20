@@ -17,7 +17,7 @@ interface AudioPickerProps {
     onClose: () => void;
     selectedUrl?: string;
     title?: string;
-    activeSegmentId?: string; // Para saber qué segmento estamos editando
+    activeSegmentId?: string; 
 }
 
 export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "Audio Library", activeSegmentId }: AudioPickerProps) {
@@ -32,13 +32,11 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [visibleCount, setVisibleCount] = useState(30);
 
-    // Filtrado memoizado para performance
     const filteredAudio = useMemo(() => {
         const library = tab === 'music' ? MUSIC_LIBRARY : 
                        tab === 'sfx' ? SFX_LIBRARY : 
                        ALL_AUDIO;
         
-        // Deduplicate by ID to avoid React key collisions
         const uniqueMap = new Map<string, AudioItem>();
         library.forEach(item => {
             if (!uniqueMap.has(item.id)) uniqueMap.set(item.id, item);
@@ -50,12 +48,10 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
         );
     }, [search, tab]);
 
-    // Resetear scroll y visibilidad al cambiar tab o búsqueda
     useEffect(() => {
         setVisibleCount(30);
     }, [tab, search]);
 
-    // Cleanup audio
     useEffect(() => {
         return () => {
             if (audioRef.current) {
@@ -65,7 +61,6 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
         };
     }, []);
 
-    // Sincronizar selección inicial
     useEffect(() => {
         if (selectedUrl) {
             const item = ALL_AUDIO.find(a => a.url === selectedUrl);
@@ -92,14 +87,13 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
 
         setIsUploading(true);
         try {
-            // Mock upload - en prod usaría Supabase Storage
             const url = URL.createObjectURL(file);
             const newItem: AudioItem = {
                 id: `upload-${Date.now()}`,
                 label: file.name,
                 url: url,
                 keywords: ['upload', 'custom'],
-                type: 'sfx' // Default to sfx for uploads
+                type: 'sfx'
             };
             setSelectedItem(newItem);
             setTab('upload');
@@ -118,7 +112,6 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
             
             <div className="relative w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden bg-studio-surface rounded-none border border-studio-border shadow-[0_32px_64px_rgba(0,0,0,0.1)] animate-in fade-in zoom-in duration-500 glass-card">
                 
-                {/* Header */}
                 <div className="p-8 border-b border-black/5 flex items-center justify-between gap-8 bg-black/[0.01]">
                     <div className="flex items-center gap-8">
                         <div className="space-y-1">
@@ -151,7 +144,6 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
 
                 <div className="flex-1 flex overflow-hidden bg-studio-bg/30">
                     
-                    {/* Browser Area */}
                     <div className="flex-1 flex flex-col p-8 min-w-0 border-r border-studio-border">
                         {tab === 'music' || tab === 'sfx' ? (
                             <>
@@ -279,7 +271,6 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
                         )}
                     </div>
 
-                    {/* Sidebar - Master Monitor */}
                     <div className="w-96 p-10 flex flex-col bg-zinc-50 shrink-0 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-studio-accent/5 rounded-full blur-[100px] -mr-32 -mt-32 opacity-20" />
 
@@ -289,7 +280,6 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
                         </div>
                         
                         <div className="flex-1 space-y-10 text-center relative z-10 overflow-y-auto custom-scrollbar pr-2 mb-6">
-                            {/* Waveform Visualization area */}
                             <div className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden border border-studio-border bg-white shadow-inner flex flex-col items-center justify-center group/monitor">
                                 <div className="absolute inset-0 bg-gradient-to-b from-studio-accent/[0.02] to-transparent" />
                                 

@@ -20,7 +20,6 @@ export const AudioWaveform = ({ url, color = "currentColor", className }: AudioW
         const loadPeaks = async () => {
             setIsLoading(true);
             try {
-                // We request more samples than pixels to allow for better interpolation
                 const p = await getAudioPeaks(url, 1000);
                 setPeaks(p);
             } catch (err) {
@@ -55,11 +54,10 @@ export const AudioWaveform = ({ url, color = "currentColor", className }: AudioW
         ctx.strokeStyle = color;
         ctx.lineWidth = 1;
 
-        // Draw symmetric waveform
         const step = width / (peaks.length - 1);
         for (let i = 0; i < peaks.length; i++) {
             const x = i * step;
-            const peakHeight = peaks[i] * (height / 2) * 0.8; // 80% of max height
+            const peakHeight = peaks[i] * (height / 2) * 0.8; 
             
             ctx.moveTo(x, midY - peakHeight);
             ctx.lineTo(x, midY + peakHeight);

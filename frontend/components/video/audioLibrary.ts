@@ -1,9 +1,3 @@
-/**
- * Curated Tech Audio Library
- * 2000 music tracks (Jamendo) + 2000 SFX (Jamendo)
- * Generated via Jamendo API
- */
-
 export type AudioType = 'music' | 'sfx';
 
 export interface AudioItem {
@@ -15,7 +9,6 @@ export interface AudioItem {
     duration?: number;
 }
 
-// --- MUSIC (NEWS & TECH FOCUS) ---
 export const MUSIC_LIBRARY: AudioItem[] = [
     {
         "id": "1245164",

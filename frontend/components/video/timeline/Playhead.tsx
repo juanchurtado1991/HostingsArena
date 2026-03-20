@@ -25,7 +25,6 @@ export const Playhead = memo(({
     
     const HEADER_WIDTH = headerOffset;
     
-    // Convert frame to X pixel position
     const posX = (currentFrame / fps) * pxPerSec + HEADER_WIDTH;
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -37,18 +36,14 @@ export const Playhead = memo(({
     const handleMouseMove = (e: MouseEvent) => {
         if (!isDragging.current) return;
         
-        // Find the timeline container to get relative position
         const container = document.querySelector('.timeline-scroll-area');
         if (!container) return;
         
         const rect = container.getBoundingClientRect();
-        // Subtract HEADER_WIDTH because the draggable area starts after the header
         const mouseX = e.clientX - rect.left + container.scrollLeft - HEADER_WIDTH;
         
-        // Convert pixel to frame
         let targetFrame = Math.round((mouseX / pxPerSec) * fps);
         
-        // Snap logic
         const snapThresholdPx = 10;
         const snapThresholdFrames = (snapThresholdPx / pxPerSec) * fps;
         
@@ -76,7 +71,6 @@ export const Playhead = memo(({
                 transform: 'translateX(-50%)' 
             }}
         >
-            {/* Playhead Top Triangle/Handle */}
             <div 
                 className="w-4 h-4 rounded-t-sm bg-studio-accent border-b border-studio-accent shadow-lg flex items-center justify-center cursor-ew-resize pointer-events-auto hover:scale-110 transition-transform"
                 onMouseDown={handleMouseDown}
@@ -84,7 +78,6 @@ export const Playhead = memo(({
                 <Scissors className="w-2 h-2 text-white" />
             </div>
             
-            {/* Playhead Line */}
             <div className="w-px bg-studio-accent flex-1 shadow-[0_0_10px_rgba(0,122,255,0.3)]" />
         </div>
     );
