@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/GlassCard";
 
 import { AffiliateLink } from "./types";
+import { normalizeUrl } from "./utils";
 
 function ToolbarBtn({
     onClick,
@@ -53,13 +54,6 @@ function ToolbarDivider() {
     return <div className="w-px h-6 bg-border/40 mx-1" />;
 }
 
-const normalizeUrl = (url: string) => {
-    if (!url) return "";
-    if (url.startsWith('/') || /^[a-z]+:\/\//i.test(url)) {
-        return url;
-    }
-    return `https://${url}`;
-};
 
 export function EditorToolbar({
     editor,

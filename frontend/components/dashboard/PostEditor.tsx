@@ -478,7 +478,7 @@ function PostEditorModal({
                 class: "tiptap focus:outline-none min-h-[500px] px-8 py-6",
             },
         },
-    });
+    }, []);
 
     useEffect(() => {
         if (post) {

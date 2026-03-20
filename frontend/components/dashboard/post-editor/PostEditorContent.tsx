@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { EditorToolbar } from "./EditorToolbar";
 import { AffiliateLink } from "./types";
+import { normalizeUrl } from "./utils";
 
 interface PostEditorContentProps {
     editor: any;
@@ -76,7 +77,6 @@ export function PostEditorContent({
                 {editor && (
                     <BubbleMenu
                         editor={editor}
-                        {...({ tippyOptions: { duration: 100 } } as any)}
                         className="flex items-center gap-0.5 p-1 bg-background/95 backdrop-blur-md border border-primary/20 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200"
                     >
                         <button
@@ -108,7 +108,8 @@ export function PostEditorContent({
                             onClick={() => {
                                 const url = window.prompt("URL", editor.getAttributes("link").href);
                                 if (url) {
-                                    editor.chain().focus().setLink({ href: url }).run();
+                                    const normalized = normalizeUrl(url);
+                                    editor.chain().focus().setLink({ href: normalized }).run();
                                 } else if (url === "") {
                                     editor.chain().focus().unsetLink().run();
                                 }
