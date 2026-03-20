@@ -7,7 +7,7 @@ export interface SceneTiming {
 
 export class SyncEngine {
     static readonly FPS = 30;
-    static readonly INTRO_SECONDS = 5;
+    static readonly INTRO_SECONDS = 6;
     static readonly OUTRO_SECONDS = 15;
     static readonly SCENE_PAUSE_SECONDS = 0.0;
     static readonly TITLE_CARD_SECONDS = 3.0; 
