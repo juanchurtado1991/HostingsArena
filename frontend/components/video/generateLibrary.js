@@ -182,122 +182,14 @@ async function main() {
         const videos = await fetchVideos();
 
         console.log(`\n🎉 Successfully fetched ${images.length} images and ${videos.length} videos.`);
-        console.log('Writing to mediaLibrary.ts (This might take a few seconds)...');
-
-        const tsContent = `/**
- * Curated Tech Media Library (Generated via API)
- * ${images.length} images (Pexels) + ${videos.length} video clips (Pexels)
- * All tech-focused, CORS-safe, and verified unique.
- */
-
-export type MediaType = 'image' | 'video';
-
-export interface MediaItem {
-    type: MediaType;
-    keywords: string[];
-    url: string;
-}
-
-export function getImageUrl(item: MediaItem, width: number, height: number): string {
-    // If URL is from Pexels, use their native API for resize/compress on the fly
-    if (item.url.includes('images.pexels.com')) {
-        return \`\${item.url}?auto=compress&cs=tinysrgb&w=\${width}&h=\${height}&fit=crop\`;
-    }
-    return item.url;
-}
-
-export function getRandomMedia(preferVideo: boolean = false): MediaItem {
-    const pool = preferVideo ? VIDEOS : IMAGES;
-    return pool[Math.floor(Math.random() * pool.length)];
-}
-
-export function findBestMediaBatch(
-    visual: string,
-    count: number,
-    excludeUrls: Set<string>,
-    preferVideo: boolean = false
-): MediaItem[] {
-    const lowerVisual = visual.toLowerCase();
-    const pool = preferVideo ? VIDEOS : IMAGES;
-
-    // 1. Calculate scores for all items not in excludeUrls
-    const scoredPool = pool
-        .filter(item => !excludeUrls.has(item.url))
-        .map(item => ({
-            item,
-            score: item.keywords.filter(kw => lowerVisual.includes(kw)).length
-        }))
-        .sort((a, b) => b.score - a.score);
-
-    // 2. Select top 'count' items
-    const results: MediaItem[] = [];
-    for (let i = 0; i < Math.min(count, scoredPool.length); i++) {
-        results.push(scoredPool[i].item);
-    }
-
-    // 3. If we don't have enough, pick random items from the pool
-    if (results.length < count) {
-        const remainingPool = pool.filter(item => !excludeUrls.has(item.url) && !results.some(r => r.url === item.url));
-        while (results.length < count && remainingPool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * remainingPool.length);
-            results.push(remainingPool.splice(randomIndex, 1)[0]);
+        const dataDir = "../../public/data";
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
         }
-    }
 
-    return results;
-}
-
-export function findBestMixedMediaBatch(
-    visual: string,
-    imageCount: number,
-    videoCount: number,
-    excludeUrls: Set<string>
-): MediaItem[] {
-    const images = findBestMediaBatch(visual, imageCount, excludeUrls, false);
-    const tempExclusions = new Set(excludeUrls);
-    images.forEach(img => tempExclusions.add(img.url));
-    
-    const videos = findBestMediaBatch(visual, videoCount, tempExclusions, true);
-    
-    return [...images, ...videos];
-}
-
-export function findBestMedia(visual: string, index: number, preferVideo: boolean = false): MediaItem {
-    const lowerVisual = visual.toLowerCase();
-    const pool = preferVideo ? VIDEOS : IMAGES;
-    let bestMatch: MediaItem = pool[index % pool.length];
-    let bestScore = 0;
-
-    for (const item of pool) {
-        const score = item.keywords.filter(kw => lowerVisual.includes(kw)).length;
-        if (score > bestScore) {
-            bestScore = score;
-            bestMatch = item;
-        }
-    }
-    return bestMatch;
-}
-
-export function resolveMediaUrl(item: MediaItem, width: number = 1920, height: number = 1080): string {
-    if (item.type === 'video') return item.url;
-    return getImageUrl(item, width, height);
-}
-
-export function getFallbackUrl(index: number, width: number, height: number): string {
-    return \`https://picsum.photos/seed/ha\${index + 777}/\${width}/\${height}\`;
-}
-
-// --- ${images.length} VERIFIED TECH IMAGES (PEXELS) ---
-export const IMAGES: MediaItem[] = ${JSON.stringify(images, null, 4)};
-
-// --- ${videos.length} VERIFIED TECH VIDEOS (PEXELS) ---
-export const VIDEOS: MediaItem[] = ${JSON.stringify(videos, null, 4)};
-
-export const ALL_MEDIA: MediaItem[] = [...IMAGES, ...VIDEOS];
-`;
-
-        fs.writeFileSync('mediaLibrary.ts', tsContent);
-        console.log('✅ Done! mediaLibrary.ts has been successfully generated with permanent URLs.');
+        fs.writeFileSync(`${dataDir}/images.json`, JSON.stringify(images, null, 4));
+        fs.writeFileSync(`${dataDir}/videos.json`, JSON.stringify(videos, null, 4));
+        console.log('✅ Done! JSON files have been generated in public/data/.');
 
     } catch (error) {
         console.error('❌ Error generating library:', error);

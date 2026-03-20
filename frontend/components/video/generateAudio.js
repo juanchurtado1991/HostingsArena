@@ -38,9 +38,6 @@ const SFX_QUERIES = [
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ==========================================
-// 2. FETCH MUSIC FROM JAMENDO
-// ==========================================
 async function fetchMusic() {
     console.log(`🎵 Fetching ${MUSIC_TARGET} music tracks...`);
     let musicMap = new Map(); // keyed by track.id for dedup
@@ -186,63 +183,14 @@ async function main() {
 
         console.log(`\n🎉 Successfully fetched ${music.length} music tracks and ${sfx.length} SFX tracks.`);
 
-        const tsContent = `/**
- * Curated Tech Audio Library
- * ${music.length} music tracks (Jamendo) + ${sfx.length} SFX (Jamendo)
- * Generated via Jamendo API
- */
-
-export type AudioType = 'music' | 'sfx';
-
-export interface AudioItem {
-    id: string;
-    type: AudioType;
-    label: string;
-    keywords: string[];
-    url: string;
-    duration?: number;
-}
-
-// --- MUSIC (NEWS & TECH FOCUS) ---
-export const MUSIC_LIBRARY: AudioItem[] = ${JSON.stringify(music, null, 4)};
-
-// --- SOUND EFFECTS (UI & TRANSITIONS) ---
-export const SFX_LIBRARY: AudioItem[] = ${JSON.stringify(sfx, null, 4)};
-
-export const ALL_AUDIO: AudioItem[] = [...MUSIC_LIBRARY, ...SFX_LIBRARY];
-
-/**
- * Find the best audio match based on context keywords
- */
-export function findBestAudio(context: string, type: AudioType = 'music'): AudioItem {
-    const pool = type === 'music' ? MUSIC_LIBRARY : SFX_LIBRARY;
-    const lowerContext = context.toLowerCase();
-    
-    let bestMatch = pool[0];
-    let maxScore = 0;
-
-    pool.forEach(item => {
-        const score = item.keywords.filter(k => lowerContext.includes(k)).length;
-        if (score > maxScore) {
-            maxScore = score;
-            bestMatch = item;
+        const dataDir = '../../public/data';
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
         }
-    });
 
-    return bestMatch;
-}
-
-/**
- * Get a random audio item from the library
- */
-export function getRandomAudio(type: AudioType = 'music'): AudioItem {
-    const pool = type === 'music' ? MUSIC_LIBRARY : SFX_LIBRARY;
-    return pool[Math.floor(Math.random() * pool.length)];
-}
-`;
-
-        fs.writeFileSync('audioLibrary.ts', tsContent);
-        console.log('✅ Done! audioLibrary.ts has been generated.');
+        fs.writeFileSync(`${dataDir}/music.json`, JSON.stringify(music, null, 4));
+        fs.writeFileSync(`${dataDir}/sfx.json`, JSON.stringify(sfx, null, 4));
+        console.log('✅ Done! JSON files have been generated in public/data/.');
 
     } catch (error) {
         console.error('❌ Error:', error);
