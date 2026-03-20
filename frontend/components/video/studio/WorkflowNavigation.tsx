@@ -30,13 +30,6 @@ export function WorkflowNavigation() {
     const params = useParams();
     const lang = params?.lang as string || 'en';
 
-    const setStoreLayers = useStudioStore(s => s.setLayers);
-    const setStoreScenes = useStudioStore(s => s.setScenes);
-    const setStoreTitle = useStudioStore(s => s.setTitle);
-    const setStoreFormat = useStudioStore(s => s.setFormat);
-    const setStoreDuration = useStudioStore(s => s.setDurationInFrames);
-    const pushStoreHistory = useStudioStore(s => s.pushToHistory);
-
     const handleResetProject = () => {
         if (!confirm(scriptLang === 'es' 
             ? "¿Estás seguro de que quieres reiniciar el proyecto? Esto no se puede deshacer."
@@ -64,12 +57,7 @@ export function WorkflowNavigation() {
                 setError(null);
                 await prepareAssemblyData();
                 
-                setStoreLayers(layers);
-                setStoreScenes(scenes);
-                setStoreTitle(title);
-                setStoreFormat(format);
-                setStoreDuration(durationInFrames);
-                pushStoreHistory();
+
                 
                 setCurrentPhase(3);
             } catch (err) {
