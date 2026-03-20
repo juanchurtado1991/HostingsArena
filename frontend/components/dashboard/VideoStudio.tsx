@@ -30,8 +30,8 @@ export function VideoStudio({ dict, lang }: VideoStudioProps) {
                     <WorkflowNavigation />
                     
                     <div className={cn(
-                        "relative pt-1 transition-all duration-500", 
-                        currentPhase === 3 ? "px-4 pb-2" : "px-8 pb-6 rounded-2xl overflow-hidden shadow-sm border border-black/5"
+                        "relative transition-all duration-500 h-full", 
+                        currentPhase === 3 ? "px-4 pb-2" : "px-4 md:px-8 pt-4 pb-8"
                     )}>
                         {currentPhase === 1 && <Phase1Ideation />}
                         {currentPhase === 2 && <Phase2Creative />}

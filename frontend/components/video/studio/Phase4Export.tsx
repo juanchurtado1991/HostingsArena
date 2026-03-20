@@ -61,7 +61,7 @@ export function Phase4Export() {
     } = useVideoStudio();
 
     return (
-        <div className="h-[calc(100vh-84px)] flex items-stretch gap-0 animate-in fade-in duration-500 overflow-hidden rounded-2xl border border-studio-border ring-1 ring-black/5 shadow-2xl relative bg-studio-surface/50 backdrop-blur-2xl">
+        <div className="min-h-[600px] lg:h-[calc(100vh-180px)] w-full max-w-5xl mx-auto flex items-stretch gap-0 animate-in fade-in duration-500 overflow-hidden rounded-[2rem] border border-studio-border shadow-[0_20px_60px_rgba(0,0,0,0.05)] relative bg-studio-surface/90 backdrop-blur-2xl">
             <div className="absolute -top-40 -right-40 w-96 h-96 bg-studio-accent/5 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-24 left-1/3 w-80 h-40 bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none" />
 
