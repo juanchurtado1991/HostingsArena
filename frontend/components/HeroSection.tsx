@@ -4,8 +4,10 @@ import { m, LazyMotion, domAnimation } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { GlobalSearch } from "./GlobalSearch";
+import { useTrackPageView } from "@/hooks/useTrackPageView";
 
 export function HeroSection({ dict, lang = 'en' }: { dict?: any, lang?: string }) {
+  useTrackPageView();
   return (
     <LazyMotion features={domAnimation} strict>
       <section className="relative pt-28 pb-12 flex flex-col items-center justify-start overflow-hidden">

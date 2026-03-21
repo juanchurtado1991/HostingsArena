@@ -6,12 +6,22 @@ export function MetricsViews({ activeView, data }: { activeView: string, data: A
         <div className="space-y-1.5">
             {activeView === "posts" && (
                 data.topPosts.length > 0 ? data.topPosts.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 md:px-4 py-2.5 rounded-xl hover:bg-muted/30 transition-colors group">
+                    <div key={i} className="flex items-center justify-between px-3 md:px-4 py-3 rounded-xl hover:bg-muted/30 transition-colors group">
                         <div className="flex items-center gap-3 min-w-0">
                             <span className="text-xs font-bold text-muted-foreground w-5 shrink-0">{i + 1}</span>
-                            <span className="text-xs md:text-sm truncate">{p.post_slug}</span>
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-xs md:text-sm truncate font-medium">{p.post_slug}</span>
+                                {p.last_viewed_at && (
+                                    <span className="text-[9px] text-muted-foreground">
+                                        Last seen: {new Date(p.last_viewed_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <span className="text-xs md:text-sm font-semibold tabular-nums shrink-0 ml-2">{p.views.toLocaleString()} <span className="text-muted-foreground text-[10px]">views</span></span>
+                        <span className="text-xs md:text-sm font-semibold tabular-nums shrink-0 ml-2 text-right">
+                            {p.views.toLocaleString()} 
+                            <span className="text-muted-foreground text-[10px] block md:inline md:ml-1">views</span>
+                        </span>
                     </div>
                 )) : <p className="text-sm text-muted-foreground text-center py-6">No post views tracked yet.</p>
             )}
@@ -88,24 +98,36 @@ export function MetricsViews({ activeView, data }: { activeView: string, data: A
             {activeView === "visitors" && (
                 data.recentActivity?.length > 0 ? (
                     <>
+                        {/* Mobile View */}
                         <div className="block md:hidden space-y-1.5">
-                            {data.recentActivity.map((v, i) => (
-                                <div key={i} className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
-                                    {v.device_type === 'mobile' ? <Smartphone className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> :
-                                        v.device_type === 'tablet' ? <Tablet className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> :
-                                            <Laptop className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>{v.type}</span>
-                                            {v.country && <img src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`} alt={v.country} className="w-3.5 h-2.5 object-cover rounded-[1px]" onError={(e) => e.currentTarget.style.display = 'none'} />}
-                                            <span className="text-[10px] text-muted-foreground truncate">{v.detail}</span>
+                            {data.recentActivity.map((v, i) => {
+                                const dateObj = v.created_at ? new Date(v.created_at) : null;
+                                const isValidDate = dateObj && !isNaN(dateObj.getTime());
+                                const dateStr = isValidDate ? dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—';
+                                const timeStr = isValidDate ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+
+                                return (
+                                    <div key={i} className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
+                                        {v.device_type === 'mobile' ? <Smartphone className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> :
+                                            v.device_type === 'tablet' ? <Tablet className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> :
+                                                <Laptop className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className={`text-[10px] font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>{v.type}</span>
+                                                {v.country && <img src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`} alt={v.country} className="w-3.5 h-2.5 object-cover rounded-[1px]" onError={(e) => e.currentTarget.style.display = 'none'} />}
+                                                <span className="text-[10px] text-muted-foreground truncate">{v.detail}</span>
+                                            </div>
+                                            <div className="text-[9px] text-muted-foreground/60">
+                                                {dateStr} · {timeStr}
+                                                {v.source ? ` · via ${v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}` : ''}
+                                            </div>
                                         </div>
-                                        <div className="text-[9px] text-muted-foreground/60">{new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {v.source ? `· via ${v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}` : ''}</div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
+                        {/* Desktop View */}
                         <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead className="text-xs text-muted-foreground border-b border-border/50">
@@ -118,43 +140,52 @@ export function MetricsViews({ activeView, data }: { activeView: string, data: A
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/30">
-                                    {data.recentActivity.map((v, i) => (
-                                        <tr key={i} className="hover:bg-muted/30 transition-colors">
-                                            <td className="px-4 py-2.5 text-muted-foreground text-xs whitespace-nowrap">
-                                                {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>
-                                                    {v.type === 'click' ? <MousePointerClick className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                    {v.type === 'click' ? "Click" : "View"}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-2.5 text-muted-foreground">
-                                                {v.device_type === 'mobile' ? <span title="Mobile"><Smartphone className="w-3.5 h-3.5" /></span> :
-                                                    v.device_type === 'tablet' ? <span title="Tablet"><Tablet className="w-3.5 h-3.5" /></span> :
-                                                        <span title="Desktop"><Laptop className="w-3.5 h-3.5" /></span>}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                {v.country ? (
-                                                    <span className="flex items-center gap-1.5 cursor-help" title={v.ip_address || "Unknown IP"}>
-                                                        <img
-                                                            src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`}
-                                                            alt={v.country}
-                                                            className="w-4 h-3 object-cover rounded-[1px]"
-                                                            onError={(e) => e.currentTarget.style.display = 'none'}
-                                                        />
-                                                        <span className="truncate max-w-[100px] text-xs">{getCountryName(v.country)}</span>
-                                                    </span>
-                                                ) : <span className="text-muted-foreground text-xs">—</span>}
-                                            </td>
-                                            <td className="px-4 py-2.5 text-xs">
-                                                <div className="flex flex-col max-w-[200px]">
-                                                    <span className="truncate font-medium" title={v.detail}>{v.detail}</span>
-                                                    {v.source && <span className="text-muted-foreground truncate" title={v.source}>via {v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}</span>}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {data.recentActivity.map((v, j) => {
+                                        const dateObj = v.created_at ? new Date(v.created_at) : null;
+                                        const isValidDate = dateObj && !isNaN(dateObj.getTime());
+                                        const dateStr = isValidDate ? dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—';
+                                        const timeStr = isValidDate ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+
+                                        return (
+                                            <tr key={j} className="hover:bg-muted/30 transition-colors">
+                                                <td className="px-4 py-2.5 text-muted-foreground text-[10px] whitespace-nowrap">
+                                                    <span className="font-bold text-foreground/70">{dateStr}</span>
+                                                    <br />
+                                                    {timeStr}
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${v.type === 'click' ? 'text-green-500' : 'text-blue-500'}`}>
+                                                        {v.type === 'click' ? <MousePointerClick className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        {v.type === 'click' ? "Click" : "View"}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-2.5 text-muted-foreground">
+                                                    {v.device_type === 'mobile' ? <span title="Mobile"><Smartphone className="w-3.5 h-3.5" /></span> :
+                                                        v.device_type === 'tablet' ? <span title="Tablet"><Tablet className="w-3.5 h-3.5" /></span> :
+                                                            <span title="Desktop"><Laptop className="w-3.5 h-3.5" /></span>}
+                                                </td>
+                                                <td className="px-4 py-2.5">
+                                                    {v.country ? (
+                                                        <span className="flex items-center gap-1.5 cursor-help" title={v.ip_address || "Unknown IP"}>
+                                                            <img
+                                                                src={`https://flagcdn.com/24x18/${v.country.toLowerCase()}.png`}
+                                                                alt={v.country}
+                                                                className="w-4 h-3 object-cover rounded-[1px]"
+                                                                onError={(e) => e.currentTarget.style.display = 'none'}
+                                                            />
+                                                            <span className="truncate max-w-[100px] text-xs">{getCountryName(v.country)}</span>
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground text-xs">—</span>}
+                                                </td>
+                                                <td className="px-4 py-2.5 text-xs">
+                                                    <div className="flex flex-col max-w-[200px]" title={`${v.detail} (${dateStr} ${timeStr})`}>
+                                                        <span className="truncate font-medium">{v.detail}</span>
+                                                        {v.source && <span className="text-muted-foreground truncate" title={v.source}>via {v.source.replace('https://', '').replace(/^(?:www\.)?([^/]+).*$/, '$1')}</span>}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

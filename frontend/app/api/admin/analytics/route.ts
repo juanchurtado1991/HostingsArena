@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
             endDate = endDateObj.toISOString();
         }
 
-        const IGNORED_IPS = ["190.150.105.226", "190.53.30.25"];
+        const IGNORED_IPS = ["190.150.105.226", "190.53.30.25", "::1", "127.0.0.1"];
 
         const [todayViews, weekViews, monthViews] = await Promise.all([
             supabase.from("page_views").select("id", { count: "exact", head: true }).not("ip_address", "in", `(${IGNORED_IPS.join(",")})`).gte("created_at", today),
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         // Fetch all raw views for the given date range to aggregate in JS
         const { data: pageViewsData } = await supabase
             .from("page_views")
-            .select("path, post_slug, referrer, country, created_at, user_agent")
+            .select("path, post_slug, referrer, country, created_at, user_agent, device_type, ip_address")
             .not("ip_address", "in", `(${IGNORED_IPS.join(",")})`)
             .gte("created_at", startDate)
             .lte("created_at", endDate);
@@ -49,13 +49,15 @@ export async function GET(request: NextRequest) {
         // Fetch all raw clicks for the given date range
         const { data: affiliateClicksData } = await supabase
             .from("affiliate_clicks")
-            .select("provider_name, created_at")
+            .select("provider_name, created_at, device_type, country, ip_address, position, target_url")
             .not("ip_address", "in", `(${IGNORED_IPS.join(",")})`)
             .gte("created_at", startDate)
             .lte("created_at", endDate);
 
         const views = pageViewsData || [];
         const clicks = affiliateClicksData || [];
+        const periodViews = views.length;
+        const periodClicks = clicks.length;
 
         // Avg visits per day for the selected timeframe
         const diffTime = Math.abs(new Date(endDate).getTime() - new Date(startDate).getTime());
@@ -78,17 +80,32 @@ export async function GET(request: NextRequest) {
         const { data: postsData } = await supabase.from('posts').select('slug');
         const validPostSlugs = new Set((postsData || []).map(p => p.slug));
 
-        // Aggregation: Top Posts
-        const postCounts: Record<string, number> = {};
-        views.forEach(v => {
+        // Aggregation: Top Posts (Historical - Not limited to period)
+        const { data: historicalPostViews } = await supabase
+            .from("page_views")
+            .select("post_slug, created_at, ip_address")
+            .not("post_slug", "is", null);
+
+        const postStats: Record<string, { views: number, last_viewed_at: string }> = {};
+        (historicalPostViews || []).forEach(v => {
             if (v.post_slug && validPostSlugs.has(v.post_slug)) {
-                postCounts[v.post_slug] = (postCounts[v.post_slug] || 0) + 1;
+                // Filter IPs in JS to safely handle NULL ip_address
+                if (v.ip_address && IGNORED_IPS.includes(v.ip_address)) return;
+
+                if (!postStats[v.post_slug]) {
+                    postStats[v.post_slug] = { views: 0, last_viewed_at: v.created_at };
+                }
+                postStats[v.post_slug].views++;
+                if (v.created_at > postStats[v.post_slug].last_viewed_at) {
+                    postStats[v.post_slug].last_viewed_at = v.created_at;
+                }
             }
         });
-        const topPosts = Object.entries(postCounts)
-            .map(([post_slug, views]) => ({ post_slug, views }))
+
+        const topPosts = Object.entries(postStats)
+            .map(([post_slug, stats]) => ({ post_slug, views: stats.views, last_viewed_at: stats.last_viewed_at }))
             .sort((a, b) => b.views - a.views)
-            .slice(0, 10);
+            .slice(0, 20); // Show more for better visibility
 
         // Aggregation: Daily Traffic
         const dailyTrafficMap: Record<string, { day: string, views: number }> = {};
@@ -122,9 +139,29 @@ export async function GET(request: NextRequest) {
             .map(([country, views]) => ({ country, views }))
             .sort((a, b) => b.views - a.views)
             .slice(0, 5);
-            
-         // Recent Activity
-         const recentActivity = views
+        
+        // Recent Activity - Combined views and clicks
+        const activityFromViews = views.map(v => ({
+            type: 'view' as const,
+            created_at: v.created_at,
+            country: v.country,
+            device_type: v.device_type,
+            detail: v.post_slug || v.path,
+            source: v.referrer,
+            ip_address: v.ip_address
+        }));
+
+        const activityFromClicks = clicks.map(c => ({
+            type: 'click' as const,
+            created_at: c.created_at,
+            country: c.country,
+            device_type: c.device_type,
+            detail: `${c.provider_name} (${c.position || 'direct'})`,
+            source: null,
+            ip_address: c.ip_address
+        }));
+
+        const recentActivity = [...activityFromViews, ...activityFromClicks]
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .slice(0, 50);
 
@@ -175,6 +212,8 @@ export async function GET(request: NextRequest) {
                 clicksWeek,
                 clicksMonth,
                 avgVisitsPerDay,
+                periodViews,
+                periodClicks,
             },
             topPages,
             topPosts,

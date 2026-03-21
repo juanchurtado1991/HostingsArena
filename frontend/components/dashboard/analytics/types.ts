@@ -1,3 +1,10 @@
+export type AnalyticsTimeframe = "1d" | "7d" | "30d" | "90d" | "12m" | "custom";
+
+export interface DateRange {
+    from: Date;
+    to: Date;
+}
+
 export interface AnalyticsData {
     summary: {
         today: number;
@@ -7,9 +14,11 @@ export interface AnalyticsData {
         clicksWeek?: number;
         clicksMonth?: number;
         avgVisitsPerDay?: number;
+        periodViews?: number;
+        periodClicks?: number;
     };
     topPages: { path: string; views: number }[];
-    topPosts: { post_slug: string; views: number }[];
+    topPosts: { post_slug: string; views: number; last_viewed_at: string }[];
     dailyTraffic: { day: string; views: number }[];
     topReferrers: { referrer: string; views: number }[];
     topCountries: { country: string; views: number }[];
