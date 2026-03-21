@@ -48,8 +48,8 @@ public/temp/
 public/uploads/
 public/voices/*.webm
 
-# Video Studio Build Artifacts
-public/video-bundle/
+# Video Studio Data (Massive JSON)
+public/data/*.json
 
 # Test scripts
 test_*.js
