@@ -20,15 +20,17 @@ async function run() {
     console.log("📦 Bundler returned path:", result);
     const bundleDest = path.join(process.cwd(), "public", "video-bundle");
     
-    // Recursive copy function
-    function copyDir(src, dest) {
+    // Recursive copy function with ignore support
+    function copyDir(src, dest, ignore = []) {
       if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
       const entries = fs.readdirSync(src, { withFileTypes: true });
       for (const entry of entries) {
+        if (ignore.includes(entry.name)) continue;
+        
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         if (entry.isDirectory()) {
-          copyDir(srcPath, destPath);
+          copyDir(srcPath, destPath, ignore);
         } else {
           fs.writeFileSync(destPath, fs.readFileSync(srcPath));
         }
@@ -40,7 +42,7 @@ async function run() {
         fs.rmSync(bundleDest, { recursive: true, force: true });
     }
     
-    copyDir(result, bundleDest);
+    copyDir(result, bundleDest, ["video-bundle"]);
     console.log("✅ Video bundle directory created at:", bundleDest);
 
     // --- Post-processing index.html ---
