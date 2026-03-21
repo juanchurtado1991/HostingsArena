@@ -5,6 +5,8 @@
 data/verified_data.json
 data/migrations/
 supabase/migrations/
+frontend/public/data/*.json
+frontend/public/video-bundle/
 
 # Scraper Logic (Ignore if doing frontend/video work)
 scrapers/

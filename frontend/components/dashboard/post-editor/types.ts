@@ -20,6 +20,7 @@ export interface Post {
     social_fb_text: string | null;
     social_li_text: string | null;
     social_hashtags: string[] | null;
+    updated_at?: string;
     title_es?: string | null;
     content_es?: string | null;
     excerpt_es?: string | null;

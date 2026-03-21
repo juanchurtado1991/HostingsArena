@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search, Image as ImageIcon, Film, PlusCircle, Upload, CheckCircle, AlertCircle, Loader2, Sparkles } from "lucide-react";
-import { ALL_MEDIA, getImageUrl, getRandomMedia, type MediaItem } from "@/components/video/mediaLibrary";
+import { ALL_MEDIA, getImageUrl, getRandomMedia, type MediaItem, loadMediaData, isMediaLibraryLoaded } from "@/components/video/mediaLibrary";
 
 interface MediaPickerProps {
     isOpen: boolean;
@@ -26,12 +26,20 @@ export function MediaPicker({ isOpen, onClose, onConfirm, activeSegmentId, curre
     const [brokenLinks, setBrokenLinks] = useState<Set<string>>(new Set());
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [libraryLoaded, setLibraryLoaded] = useState(isMediaLibraryLoaded());
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Load library on mount
+    useEffect(() => {
+        if (isOpen && !isMediaLibraryLoaded()) {
+            loadMediaData().then(() => setLibraryLoaded(true));
+        }
+    }, [isOpen]);
 
     // Reset pagination and selection state
     useEffect(() => { 
         setVisibleCount(30); 
-    }, [search, typeFilter, tab]);
+    }, [search, typeFilter, tab, libraryLoaded]);
 
     // Track loading state for preview
     useEffect(() => {

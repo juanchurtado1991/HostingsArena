@@ -285,6 +285,14 @@ export function getImageUrl(item: MediaItem, width: number, height: number): str
 
 export function getRandomMedia(preferVideo: boolean = false): MediaItem {
     const pool = preferVideo ? VIDEOS : IMAGES;
+    if (pool.length === 0) {
+        // Fallback item if not loaded
+        return {
+            type: 'image',
+            url: 'https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg',
+            keywords: ['technology', 'server']
+        };
+    }
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -296,6 +304,11 @@ export function findBestMediaBatch(
 ): MediaItem[] {
     const expandedTerms = expandKeywords(visual);
     const pool = preferVideo ? VIDEOS : IMAGES;
+
+    if (pool.length === 0) {
+        // Return a single random item as a batch if not loaded
+        return [getRandomMedia(preferVideo)];
+    }
 
     const scoredPool = pool
         .filter(item => !excludeUrls.has(item.url))
@@ -366,9 +379,57 @@ export function getFallbackUrl(index: number, width: number, height: number): st
     return `https://picsum.photos/seed/ha${index + 777}/${width}/${height}`;
 }
 
-import imagesData from '../../public/data/images.json';
-import videosData from '../../public/data/videos.json';
+// ═══════════════════════════════════════════════════════════════
+// DATA STORAGE & DYNAMIC LOADING
+// ═══════════════════════════════════════════════════════════════
 
-export const IMAGES: MediaItem[] = imagesData as MediaItem[];
-export const VIDEOS: MediaItem[] = videosData as MediaItem[];
-export const ALL_MEDIA: MediaItem[] = [...IMAGES, ...VIDEOS];
+export const IMAGES: MediaItem[] = [];
+export const VIDEOS: MediaItem[] = [];
+export const ALL_MEDIA: MediaItem[] = [];
+
+let isLoaded = false;
+
+/**
+ * Dynamically loads media data from JSON files.
+ * Mutates the exported arrays to ensure references remain stable.
+ */
+export async function loadMediaData(): Promise<void> {
+    if (isLoaded) return;
+
+    try {
+        const [imagesRes, videosRes] = await Promise.all([
+            fetch('/data/images.json'),
+            fetch('/data/videos.json')
+        ]);
+
+        if (!imagesRes.ok || !videosRes.ok) {
+            throw new Error(`Failed to fetch media data: ${imagesRes.status} / ${videosRes.status}`);
+        }
+
+        const imagesData = await imagesRes.json();
+        const videosData = await videosRes.json();
+
+        // Mutate existing arrays to preserve references
+        IMAGES.length = 0;
+        IMAGES.push(...(imagesData as MediaItem[]));
+        
+        VIDEOS.length = 0;
+        VIDEOS.push(...(videosData as MediaItem[]));
+        
+        ALL_MEDIA.length = 0;
+        ALL_MEDIA.push(...IMAGES, ...VIDEOS);
+
+        isLoaded = true;
+    } catch (error) {
+        console.error("Error loading media library:", error);
+    }
+}
+
+/**
+ * Returns whether the media library has been loaded.
+ */
+export function isMediaLibraryLoaded(): boolean {
+    return isLoaded;
+}
+
+

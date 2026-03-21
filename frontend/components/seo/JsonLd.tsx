@@ -1,4 +1,4 @@
-import { Post } from '@/components/dashboard/PostEditor';
+import { Post } from '@/components/dashboard/post-editor/types';
 
 interface JsonLdProps {
     post: Post;

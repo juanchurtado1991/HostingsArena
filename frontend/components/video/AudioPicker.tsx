@@ -7,7 +7,7 @@ import {
     Search, Music, Volume2, Play, Pause, 
     CheckCircle, X, Loader2, Waves, Activity, Upload, Sparkles
 } from "lucide-react";
-import { MUSIC_LIBRARY, SFX_LIBRARY, ALL_AUDIO, getRandomAudio, type AudioItem } from "@/components/video/audioLibrary";
+import { MUSIC_LIBRARY, SFX_LIBRARY, ALL_AUDIO, getRandomAudio, type AudioItem, loadAudioData, isAudioLibraryLoaded } from "@/components/video/audioLibrary";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +31,14 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [visibleCount, setVisibleCount] = useState(30);
+    const [libraryLoaded, setLibraryLoaded] = useState(isAudioLibraryLoaded());
+
+    // Load library on mount
+    useEffect(() => {
+        if (isOpen && !isAudioLibraryLoaded()) {
+            loadAudioData().then(() => setLibraryLoaded(true));
+        }
+    }, [isOpen]);
 
     const filteredAudio = useMemo(() => {
         const library = tab === 'music' ? MUSIC_LIBRARY : 
@@ -46,11 +54,12 @@ export function AudioPicker({ isOpen, onConfirm, onClose, selectedUrl, title = "
             item.label.toLowerCase().includes(search.toLowerCase()) ||
             item.keywords.some(k => k.toLowerCase().includes(search.toLowerCase()))
         );
-    }, [search, tab]);
+    }, [search, tab, libraryLoaded]);
 
+    // Reset pagination
     useEffect(() => {
         setVisibleCount(30);
-    }, [tab, search]);
+    }, [tab, search, libraryLoaded]);
 
     useEffect(() => {
         return () => {

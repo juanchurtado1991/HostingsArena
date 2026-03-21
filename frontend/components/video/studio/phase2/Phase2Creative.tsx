@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { Music, Mic, Play, Pause, Languages, Settings2, CheckCircle, Sparkles, Volume2, Trash } from 'lucide-react';
 import { ALL_AUDIO } from '@/components/video/audioLibrary';
-import { findBestMixedMediaBatch, type MediaItem } from '@/components/video/mediaLibrary';
+import { findBestMixedMediaBatch, type MediaItem, loadMediaData } from '@/components/video/mediaLibrary';
 import { SceneScriptEditor } from './SceneScriptEditor';
 
 export function Phase2Creative() {
@@ -49,8 +49,9 @@ export function Phase2Creative() {
 
     const genSegId = () => Math.random().toString(36).substr(2, 9);
 
-    const addExtraScene = (index: number) => {
+    const addExtraScene = async (index: number) => {
         const visual = "Technology news visualization, cinematic style";
+        await loadMediaData();
         const batch = findBestMixedMediaBatch(visual, 2, 2, new Set());
         const segs = batch.map((media: MediaItem) => ({ id: genSegId(), source: 'library' as const, type: media.type, url: media.url, durationPct: Math.round(100 / batch.length), motionEffect: 'ken-burns' as const }));
         const newScenes = [...scenes];

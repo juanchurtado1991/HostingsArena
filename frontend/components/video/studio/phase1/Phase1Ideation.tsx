@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useVideoStudio } from '@/contexts/VideoStudioContext';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, AlertTriangle, RotateCcw, Smartphone, Monitor } from 'lucide-react';
-import { findBestMixedMediaBatch, type MediaItem } from '@/components/video/mediaLibrary';
+import { findBestMixedMediaBatch, type MediaItem, loadMediaData } from '@/components/video/mediaLibrary';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { parseScript } from './scriptParser';
@@ -62,7 +62,11 @@ export function Phase1Ideation() {
                         const res = await fetch('/api/admin/video/assets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: searchQuery, type: 'both', count: 4 }) });
                         if (res.ok) { const { results } = await res.json(); if (results?.length > 0) batch = results.filter((r: MediaItem) => !usedUrls.has(r.url)); }
                     } catch (e) { logger.warn('Live Pexels search failed, falling back to static library', e); }
-                    if (batch.length === 0) batch = findBestMixedMediaBatch(s.visual, 2, 2, usedUrls);
+                    
+                    if (batch.length === 0) {
+                        await loadMediaData();
+                        batch = findBestMixedMediaBatch(s.visual, 2, 2, usedUrls);
+                    }
                     batch.forEach((m: MediaItem) => usedUrls.add(m.url));
                     const segs = batch.map((media: MediaItem) => ({ id: Math.random().toString(36).substr(2, 9), source: 'library' as const, type: media.type, url: media.url, durationPct: Math.round(100 / batch.length), motionEffect: 'ken-burns' as const }));
                     return { ...s, assetUrl: batch[0]?.url || undefined, assetType: batch[0]?.type || 'video', mediaSegments: segs.length > 0 ? segs : undefined, voiceUrl: undefined, titleCardEnabled: true };

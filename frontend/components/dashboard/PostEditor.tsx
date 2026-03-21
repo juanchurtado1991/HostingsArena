@@ -33,152 +33,8 @@ import { PostEditorContent } from "./post-editor/PostEditorContent";
 import { GenerationConfigModal } from "./post-editor/GenerationConfigModal";
 
 
-export interface Post {
-    id: string;
-    title: string;
-    slug: string;
-    content: string;
-    excerpt: string | null;
-    category: string | null;
-    status: string;
-    is_ai_generated: boolean;
-    ai_quality_score: number | null;
-    seo_title: string | null;
-    seo_description: string | null;
-    target_keywords: string[] | null;
-    related_provider_name: string | null;
-    image_prompt: string | null;
-    cover_image_url: string | null;
-    published_at: string | null;
-    created_at: string;
-    social_tw_text: string | null;
-    social_fb_text: string | null;
-    social_li_text: string | null;
-    social_hashtags: string[] | null;
-    updated_at?: string;
-    title_es?: string | null;
-    content_es?: string | null;
-    excerpt_es?: string | null;
-    seo_title_es?: string | null;
-    seo_description_es?: string | null;
-    social_tw_text_es?: string | null;
-    social_fb_text_es?: string | null;
-    social_li_text_es?: string | null;
-    social_hashtags_es?: string[] | null;
-    target_keywords_es?: string[] | null;
-}
-
-interface AffiliateLink {
-    id: string;
-    provider_name: string;
-    affiliate_link: string;
-    status: string;
-}
-
-const ResizableImage = (props: any) => {
-    const { node, updateAttributes, selected } = props;
-    const imgRef = useRef<HTMLImageElement>(null);
-    const [resizing, setResizing] = useState(false);
-
-    const { align = 'center', width = '100%' } = node.attrs;
-
-    const onMouseDown = (e: React.MouseEvent) => {
-        e.preventDefault();
-        setResizing(true);
-
-        const startX = e.clientX;
-        const startWidth = imgRef.current?.width || 0;
-
-        const onMouseMove = (moveEvent: MouseEvent) => {
-            const currentX = moveEvent.clientX;
-            const diffX = currentX - startX;
-            const newWidth = Math.max(50, startWidth + diffX);
-            updateAttributes({ width: `${newWidth}px` });
-        };
-
-        const onMouseUp = () => {
-            setResizing(false);
-            document.removeEventListener("mousemove", onMouseMove);
-            document.removeEventListener("mouseup", onMouseUp);
-        };
-
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-    };
-
-    const containerStyle: React.CSSProperties = {
-        width: width,
-        float: align === 'left' ? 'left' : align === 'right' ? 'right' : 'none',
-        margin: align === 'left' ? '0 1rem 0.5rem 0' : align === 'right' ? '0 0 0.5rem 1rem' : '1.5rem auto',
-        display: align === 'center' ? 'block' : 'inline-block',
-        clear: align === 'center' ? 'both' : 'none',
-    };
-
-    return (
-        <NodeViewWrapper style={containerStyle} className="relative leading-none transition-all group">
-            <img
-                ref={imgRef}
-                src={node.attrs.src}
-                alt={node.attrs.alt}
-                style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    cursor: resizing ? 'nwse-resize' : 'default',
-                }}
-                className={`rounded-lg transition-shadow ${selected ? 'ring-2 ring-primary shadow-xl' : 'shadow-sm'}`}
-            />
-            {selected && (
-                <div
-                    onMouseDown={onMouseDown}
-                    className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full cursor-nwse-resize border-2 border-white shadow-lg z-10 hover:scale-125 transition-transform"
-                    title="Drag to resize"
-                />
-            )}
-        </NodeViewWrapper>
-    );
-};
-
-const FontSize = Extension.create({
-    name: 'fontSize',
-    addGlobalAttributes() {
-        return [
-            {
-                types: ['textStyle'],
-                attributes: {
-                    fontSize: {
-                        default: null,
-                        parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
-                        renderHTML: attributes => {
-                            if (!attributes.fontSize) {
-                                return {}
-                            }
-                            return {
-                                style: `font-size: ${attributes.fontSize}`,
-                            }
-                        },
-                    },
-                },
-            },
-        ]
-    },
-    addCommands() {
-        return {
-            setFontSize: (fontSize: string) => ({ chain }: any) => {
-                return chain()
-                    .setMark('textStyle', { fontSize })
-                    .run()
-            },
-            unsetFontSize: () => ({ chain }: any) => {
-                return chain()
-                    .setMark('textStyle', { fontSize: null })
-                    .removeEmptyTextStyle()
-                    .run()
-            },
-        }
-    },
-})
-
+import { Post, AffiliateLink } from "./post-editor/types";
+import { usePostEditor } from "./post-editor/hooks/usePostEditor";
 
 function PostEditorModal({
     post,
@@ -188,701 +44,121 @@ function PostEditorModal({
 }: {
     post: Post | null;
     affiliateLinks: AffiliateLink[];
-    onSave: (data: Partial<Post>) => Promise<void>;
+    onSave: (data: Partial<Post>) => Promise<any>;
     onClose: () => void;
 }) {
-    const [title, setTitle] = useState(post?.title || "");
-    const [slug, setSlug] = useState(post?.slug || "");
-    const [excerpt, setExcerpt] = useState(post?.excerpt || "");
-    const [category, setCategory] = useState(post?.category || "");
-    const [seoTitle, setSeoTitle] = useState(post?.seo_title || "");
-    const [seoDesc, setSeoDesc] = useState(post?.seo_description || "");
-    const [keywords, setKeywords] = useState(post?.target_keywords?.join(", ") || "");
-    const [imagePrompt, setImagePrompt] = useState(post?.image_prompt || "");
-    const [status, setStatus] = useState(post?.status || "draft");
-    const [relatedProvider, setRelatedProvider] = useState(post?.related_provider_name || "");
-    const [saving, setSaving] = useState(false);
-    const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-    const [isAutoSaving, setIsAutoSaving] = useState(false);
-    const lastSavedSnapshotRef = useRef<string>("");
-    const editLangRef = useRef<'en' | 'es'>(post ? 'en' : 'en'); 
-    const isSwappingLangRef = useRef(false); 
-    const [scheduledDate, setScheduledDate] = useState<string>("");
-
-    useEffect(() => {
-        if (post?.published_at) {
-            const d = new Date(post.published_at);
-            const svTime = new Date(d.getTime() - 6 * 60 * 60 * 1000);
-            setScheduledDate(svTime.toISOString().slice(0, 16));
-        } else {
-            const d = new Date();
-            const svTime = new Date(d.getTime() - 6 * 60 * 60 * 1000);
-            setScheduledDate(svTime.toISOString().slice(0, 16));
-        }
-    }, [post]);
-
-    const getUtcPublishDate = () => {
-        if (!scheduledDate) return new Date().toISOString();
-        const dateObj = new Date(`${scheduledDate}:00-06:00`);
-        return dateObj.toISOString();
-    };
-
-    const [error, setError] = useState<string | null>(null);
-    const [activeSection, setActiveSection] = useState<"content" | "seo" | "social" | "image">("content");
-    const [coverImageUrl, setCoverImageUrl] = useState(post?.cover_image_url || "");
-    const [socialTw, setSocialTw] = useState(post?.social_tw_text || "");
-    const [socialFb, setSocialFb] = useState(post?.social_fb_text || "");
-    const [socialLi, setSocialLi] = useState(post?.social_li_text || "");
-    const [socialTags, setSocialTags] = useState(post?.social_hashtags?.join(" ") || "");
-    const [uploading, setUploading] = useState(false);
-    const [dragOver, setDragOver] = useState(false);
-    const [tick, setTick] = useState(0); 
-    const [editLang, setEditLang] = useState<'en' | 'es'>('en');
-    const [isTranslating, setIsTranslating] = useState(false);
-    const [contentEn, setContentEn] = useState(post?.content || "");
-    const [titleEs, setTitleEs] = useState(post?.title_es || "");
-    const [contentEs, setContentEs] = useState(post?.content_es || "");
-    const [excerptEs, setExcerptEs] = useState(post?.excerpt_es || "");
-    const [seoTitleEs, setSeoTitleEs] = useState(post?.seo_title_es || "");
-    const [seoDescEs, setSeoDescEs] = useState(post?.seo_description_es || "");
-    const [socialTwEs, setSocialTwEs] = useState(post?.social_tw_text_es || "");
-    const [socialFbEs, setSocialFbEs] = useState(post?.social_fb_text_es || "");
-    const [socialLiEs, setSocialLiEs] = useState(post?.social_li_text_es || "");
-    const [socialTagsEs, setSocialTagsEs] = useState(post?.social_hashtags_es?.join(" ") || "");
-    const [keywordsEs, setKeywordsEs] = useState(post?.target_keywords_es?.join(", ") || "");
-
-    const handleLangSwitch = (targetLang: 'en' | 'es') => {
-        if (targetLang === editLang || isSwappingLangRef.current) return;
-
-        isSwappingLangRef.current = true;
-        editLangRef.current = targetLang;
-        
-        if (editor) {
-            const currentHTML = editor.getHTML();
-            if (editLang === 'en') {
-                setContentEn(currentHTML);
-            } else {
-                setContentEs(currentHTML);
-            }
-
-            const nextHTML = targetLang === 'en' ? contentEn : contentEs;
-            if (editor.getHTML() !== nextHTML) {
-                editor.commands.setContent(nextHTML);
-            }
-        }
-
-        setEditLang(targetLang);
-        setTimeout(() => {
-            isSwappingLangRef.current = false;
-        }, 100);
-    };
-
-    const handleTranslate = async (manual = true) => {
-        if (isTranslating) return null;
-        try {
-            setIsTranslating(true);
-            setError(null);
-            const currentHTML = editor?.getHTML() || "";
-            let enContent = contentEn;
-            if (editLang === 'en') enContent = currentHTML;
-
-            const res = await fetch('/api/admin/posts/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    content: enContent,
-                    excerpt,
-                    seo_title: seoTitle,
-                    seo_description: seoDesc,
-                    social_tw_text: socialTw,
-                    social_fb_text: socialFb,
-                    social_li_text: socialLi,
-                    social_hashtags: socialTags ? socialTags.split(" ") : [],
-                    from: 'en',
-                    to: 'es'
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Translation failed');
-
-            const { translated } = data;
-            setTitleEs(translated.title);
-            setContentEs(translated.content);
-            setExcerptEs(translated.excerpt);
-            setSeoTitleEs(translated.seo_title);
-            setSeoDescEs(translated.seo_description);
-
-            setSocialTwEs(translated.social_tw_text || "");
-            setSocialFbEs(translated.social_fb_text || "");
-            setSocialLiEs(translated.social_li_text || "");
-            if (translated.social_hashtags) {
-                setSocialTagsEs(Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : translated.social_hashtags);
-            }
-            if (translated.target_keywords) {
-                setKeywordsEs(Array.isArray(translated.target_keywords) ? translated.target_keywords.join(", ") : translated.target_keywords);
-            }
-
-            if (editLang === 'es') {
-                editor?.commands.setContent(translated.content);
-            }
-            return translated;
-        } catch (err: any) {
-            console.error("Translation error:", err);
-            setError(err.message);
-            return null;
-        } finally {
-            setIsTranslating(false);
-        }
-    };
-
-    const handleGenerateSocial = async () => {
-        if (isTranslating) return;
-        try {
-            setIsTranslating(true); 
-            setError(null);
-
-            const contentToSend = editLang === 'en'
-                ? (editor?.getHTML() || contentEn)
-                : (contentEs || editor?.getHTML() || "");
-
-            const titleToSend = editLang === 'en' ? title : titleEs;
-
-            const res = await fetch('/api/admin/posts/generate-social', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: contentToSend,
-                    title: titleToSend,
-                    language: editLang,
-                    platform: 'all'
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Generation failed');
-
-            const { generated } = data;
-
-            if (editLang === 'en') {
-                setSocialTw(generated.twitter || "");
-                setSocialFb(generated.facebook || "");
-                setSocialLi(generated.linkedin || "");
-                if (generated.hashtags) {
-                    setSocialTags(Array.isArray(generated.hashtags) ? generated.hashtags.join(" ") : generated.hashtags);
-                }
-            } else {
-                setSocialTwEs(generated.twitter || "");
-                setSocialFbEs(generated.facebook || "");
-                setSocialLiEs(generated.linkedin || "");
-                if (generated.hashtags) {
-                    setSocialTagsEs(Array.isArray(generated.hashtags) ? generated.hashtags.join(" ") : generated.hashtags);
-                }
-            }
-
-        } catch (err: any) {
-            console.error("Social generation error:", err);
-            setError(err.message);
-        } finally {
-            setIsTranslating(false);
-        }
-    };
+    const {
+        title, setTitle, slug, setSlug, excerpt, setExcerpt, category, setCategory,
+        seoTitle, setSeoTitle, seoDesc, setSeoDesc, keywords, setKeywords,
+        imagePrompt, setImagePrompt, status, setStatus, relatedProvider, setRelatedProvider,
+        saving, lastSavedAt, isAutoSaving, error, activeSection, setActiveSection,
+        coverImageUrl, setCoverImageUrl, socialTw, setSocialTw, socialFb, setSocialFb, socialLi, setSocialLi, socialTags, setSocialTags,
+        uploading, editLang, isTranslating,
+        titleEs, setTitleEs, excerptEs, setExcerptEs,
+        seoTitleEs, setSeoTitleEs, seoDescEs, setSeoDescEs, socialTwEs, setSocialTwEs, socialFbEs, setSocialFbEs, socialLiEs, setSocialLiEs, socialTagsEs, setSocialTagsEs, keywordsEs, setKeywordsEs,
+        editor, scheduledDate, setScheduledDate,
+        handleLangSwitch, handleTranslate, handleGenerateSocial, handleSave,
+        dragOver, setDragOver, // from hook
+    } = usePostEditor(post, onSave);
 
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [publishStatus, setPublishStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [publishError, setPublishError] = useState<string | undefined>(undefined);
     const [indexingStatus, setIndexingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const [shouldIndexGoogle, setShouldIndexGoogle] = useState(true); 
+    const [shouldIndexGoogle, setShouldIndexGoogle] = useState(true);
 
-    const editor = useEditor({
-        immediatelyRender: false,
-        extensions: [
-            StarterKit.configure({
-                heading: { levels: [1, 2, 3] },
-            }),
-            Underline,
-            TextStyle,
-            Color,
-            Highlight.configure({ multicolor: true }),
-            TextAlign.configure({ types: ["heading", "paragraph"] }),
-            Link.configure({
-                openOnClick: false,
-                HTMLAttributes: { class: "text-primary underline hover:text-primary/80", target: "_blank", rel: "noopener noreferrer" },
-            }).extend({
-                addAttributes() {
-                    return {
-                        ...this.parent?.(),
-                        'data-provider': { default: null },
-                        'data-affiliate': { default: null },
-                    }
-                }
-            }),
-            Image.configure({
-                inline: true,
-                allowBase64: true,
-            }).extend({
-                addAttributes() {
-                    return {
-                        ...this.parent?.(),
-                        width: {
-                            default: '100%',
-                            parseHTML: element => element.getAttribute('width'),
-                            renderHTML: attributes => {
-                                if (!attributes.width) return {};
-                                return {
-                                    width: attributes.width,
-                                };
-                            },
-                        },
-                        align: {
-                            default: 'center',
-                            parseHTML: element => element.getAttribute('data-align') || 'center',
-                            renderHTML: attributes => ({
-                                'data-align': attributes.align,
-                                style: `
-                                    width: ${attributes.width || '100%'};
-                                    float: ${attributes.align === 'left' ? 'left' : attributes.align === 'right' ? 'right' : 'none'};
-                                    margin: ${attributes.align === 'left' ? '0 1rem 0.5rem 0' : attributes.align === 'right' ? '0 0 0.5rem 1rem' : '1.5rem auto'};
-                                    display: ${attributes.align === 'center' ? 'block' : 'inline-block'};
-                                    clear: ${attributes.align === 'center' ? 'both' : 'none'};
-                                `,
-                            }),
-                        },
-                        style: { default: null },
-                    }
-                },
-                addNodeView() {
-                    return ReactNodeViewRenderer(ResizableImage)
-                },
-            }),
-            FontSize,
-            Placeholder.configure({
-                placeholder: "Start writing your article here... Use the toolbar above to format text, add headings, or insert affiliate links.",
-            }),
-        ],
-        content: post?.content || "",
-        onUpdate: ({ editor }) => {
-            if (isSwappingLangRef.current) return;
+    const handlePublish = async () => {
+        setShowPublishModal(true);
+        setPublishStatus('loading');
+        setPublishError(undefined);
+        setIndexingStatus('idle');
+
+        try {
+            await handleSave(true);
             
-            const html = editor.getHTML();
-            if (editLangRef.current === 'en') {
-                setContentEn(html);
-            } else {
-                setContentEs(html);
+            // Check if it's scheduled for future
+            const isScheduledFuture = new Date(scheduledDate).getTime() > new Date().getTime();
+            
+            if (shouldIndexGoogle && !isScheduledFuture) {
+                setIndexingStatus('loading');
+                try {
+                    const idxRes = await fetch("/api/admin/posts/index-google", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
+                    });
+                    const idxData = await idxRes.json();
+                    if (idxRes.ok && idxData.success) setIndexingStatus('success');
+                    else {
+                        setIndexingStatus('error');
+                        setPublishError(idxData.message || idxData.error);
+                    }
+                } catch (idxErr) {
+                    setIndexingStatus('error');
+                }
             }
-            setTick(t => t + 1);
-        },
-        editorProps: {
-            attributes: {
-                class: "tiptap focus:outline-none min-h-[500px] px-8 py-6",
-            },
-        },
-    }, []);
-
-    useEffect(() => {
-        if (post) {
-            setTitle(post.title);
-            setSlug(post.slug);
-            setExcerpt(post.excerpt || "");
-            setCategory(post.category || "");
-            setSeoTitle(post.seo_title || "");
-            setSeoDesc(post.seo_description || "");
-            setKeywords(post.target_keywords?.join(", ") || "");
-            setImagePrompt(post.image_prompt || "");
-            setStatus(post.status);
-            setRelatedProvider(post.related_provider_name || "");
-            setCoverImageUrl(post.cover_image_url || "");
-            setSocialTw(post.social_tw_text || "");
-            setSocialFb(post.social_fb_text || "");
-            setSocialLi(post.social_li_text || "");
-            setSocialTags(post.social_hashtags?.join(" ") || "");
-            setTitleEs(post.title_es || "");
-            setExcerptEs(post.excerpt_es || "");
-            setSeoTitleEs(post.seo_title_es || "");
-            setSeoDescEs(post.seo_description_es || "");
-            setSocialTwEs(post.social_tw_text_es || "");
-            setSocialFbEs(post.social_fb_text_es || "");
-            setSocialLiEs(post.social_li_text_es || "");
-            setSocialTagsEs(post.social_hashtags_es?.join(" ") || "");
-            setKeywordsEs(post.target_keywords_es?.join(", ") || "");
-
-            const initialSnapshot = JSON.stringify({
-                title: post.title,
-                content: post.content,
-                content_es: post.content_es,
-                title_es: post.title_es,
-                slug: post.slug,
-                excerpt: post.excerpt,
-                category: post.category,
-                seo_title: post.seo_title,
-                seo_description: post.seo_description,
-                keywords: post.target_keywords?.join(","),
-            });
-            lastSavedSnapshotRef.current = initialSnapshot;
+            setPublishStatus('success');
+        } catch (err: any) {
+            setPublishStatus('error');
+            setPublishError(err.message);
         }
-    }, [post]); 
-
-    useEffect(() => {
-        if (post && editor) {
-            const contentToSet = editLang === 'en' ? (contentEn || post.content) : (contentEs || post.content_es);
-            if (contentToSet && editor.getText().trim() === "" && editor.getHTML() === "<p></p>") {
-                editor.commands.setContent(contentToSet);
-            }
-        }
-    }, [editor, post]); 
-
-    const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
-    const charCount = editor?.getText()?.length || 0;
-
-    useEffect(() => {
-        if (!post && title) {
-            setSlug(title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
-        }
-    }, [title, post]);
+    };
 
     const handleInsertAffiliate = (link: AffiliateLink) => {
         if (!editor) return;
-        editor
-            .chain()
-            .focus()
-            .insertContent({
-                type: 'text',
-                text: link.provider_name,
-                marks: [
-                    {
-                        type: 'link',
-                        attrs: {
-                            href: link.affiliate_link,
-                            target: '_blank',
-                            rel: 'noopener noreferrer',
-                            class: 'affiliate-link text-primary font-semibold',
-                            'data-provider': link.provider_name,
-                            'data-affiliate': 'true',
-                        },
-                    },
-                ],
-            })
-            .insertContent(" ") 
-            .run();
-    };
-
-    const handleImageUpload = async (file: File) => {
-        setUploading(true);
-        setError(null);
-        try {
-            const formData = new FormData();
-            formData.append("file", file);
-            const res = await fetch("/api/admin/posts/upload-image", {
-                method: "POST",
-                body: formData,
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Upload failed");
-            setCoverImageUrl(data.url);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Image upload failed");
-        } finally {
-            setUploading(false);
-        }
+        editor.chain().focus().insertContent({
+            type: 'text',
+            text: link.provider_name,
+            marks: [{
+                type: 'link',
+                attrs: {
+                    href: link.affiliate_link,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    class: 'affiliate-link text-primary font-semibold',
+                    'data-provider': link.provider_name,
+                    'data-affiliate': 'true',
+                },
+            }],
+        }).insertContent(" ").run();
     };
 
     const handleEditorImageUpload = async (file: File) => {
-        setUploading(true);
-        setError(null);
-        try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/admin/posts/upload-image", { method: "POST", body: formData });
+        const data = await res.json();
+        if (res.ok) editor?.chain().focus().setImage({ src: data.url, alt: file.name }).run();
+    };
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
             const formData = new FormData();
             formData.append("file", file);
-            const res = await fetch("/api/admin/posts/upload-image", {
-                method: "POST",
-                body: formData,
-            });
+            const res = await fetch("/api/admin/posts/upload-image", { method: "POST", body: formData });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Upload failed");
-
-            editor?.chain().focus().setImage({ src: data.url, alt: file.name }).run();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Image upload failed");
-        } finally {
-            setUploading(false);
+            if (res.ok) setCoverImageUrl(data.url);
         }
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setDragOver(false);
         const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith("image/")) handleImageUpload(file);
-    };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) handleImageUpload(file);
-    };
-
-    const performAutoSave = useCallback(async () => {
-        if (!post?.id || !title.trim() || isAutoSaving) return;
-        
-        const currentHTML = editor?.getHTML() || "";
-        const finalContentEn = editLang === 'en' ? currentHTML : contentEn;
-        const finalContentEs = editLang === 'es' ? currentHTML : contentEs;
-
-        const currentSnapshot = JSON.stringify({
-            title,
-            content: finalContentEn,
-            content_es: finalContentEs,
-            title_es: titleEs,
-            slug,
-            excerpt,
-            category,
-            seo_title: seoTitle,
-            seo_description: seoDesc,
-            keywords: keywords?.split(",").map(k => k.trim()).join(","),
-        });
-
-        if (currentSnapshot === lastSavedSnapshotRef.current) {
-            return;
-        }
-
-        setIsAutoSaving(true);
-        try {
-            await onSave({
-                id: post.id,
-                title,
-                slug,
-                content: finalContentEn,
-                excerpt,
-                category: category || null,
-                status: status || 'draft',
-                published_at: post.published_at || null,
-                seo_title: seoTitle || title,
-                seo_description: seoDesc || excerpt,
-                target_keywords: keywords ? keywords.split(",").map(k => k.trim()).filter(Boolean) : null,
-                related_provider_name: relatedProvider || null,
-                image_prompt: imagePrompt || null,
-                cover_image_url: coverImageUrl || null,
-                social_tw_text: socialTw || null,
-                social_fb_text: socialFb || null,
-                social_li_text: socialLi || null,
-                social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
-                title_es: titleEs || null,
-                content_es: finalContentEs || null,
-                excerpt_es: excerptEs || null,
-                seo_title_es: seoTitleEs || null,
-                seo_description_es: seoDescEs || null,
-                social_tw_text_es: socialTwEs || null,
-                social_fb_text_es: socialFbEs || null,
-                social_li_text_es: socialLiEs || null,
-                social_hashtags_es: socialTagsEs ? socialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
-                target_keywords_es: keywordsEs ? keywordsEs.split(",").map(k => k.trim()).filter(Boolean) : null,
-            });
-            
-            lastSavedSnapshotRef.current = currentSnapshot;
-            setLastSavedAt(new Date());
-        } catch (err) {
-            console.error("Auto-save failed:", err);
-        } finally {
-            setIsAutoSaving(false);
-        }
-    }, [
-        post?.id, post?.published_at, title, slug, contentEn, contentEs, editLang, editor,
-        excerpt, category, status, seoTitle, seoDesc, keywords, 
-        relatedProvider, imagePrompt, coverImageUrl, 
-        socialTw, socialFb, socialLi, socialTags,
-        titleEs, excerptEs, seoTitleEs, seoDescEs, 
-        socialTwEs, socialFbEs, socialLiEs, socialTagsEs, keywordsEs,
-        onSave, isAutoSaving
-    ]);
-
-    useEffect(() => {
-        if (!post?.id) return;
-
-        const timer = setTimeout(() => {
-            performAutoSave();
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [
-        title, slug, contentEn, contentEs, excerpt, category, 
-        seoTitle, seoDesc, keywords, relatedProvider, 
-        imagePrompt, coverImageUrl, socialTw, socialFb, 
-        socialLi, socialTags, titleEs, excerptEs, 
-        seoTitleEs, seoDescEs, socialTwEs, socialFbEs, 
-        socialLiEs, socialTagsEs, keywordsEs,
-        performAutoSave, post?.id
-    ]);
-
-    const handleSave = async (publish = false) => {
-        if (!title.trim() && editLang === 'en') {
-            setError("English Title is required");
-            return;
-        }
-        if (!titleEs.trim() && editLang === 'es') {
-            setError("Spanish Title is required");
-            return;
-        }
-        setError(null);
-        setSaving(true);
-
-        if (publish) {
-            setShowPublishModal(true);
-            setPublishStatus('loading');
-            setPublishError(undefined);
-        }
-
-        try {
-            const currentHTML = editor?.getHTML() || "";
-            const finalContentEn = editLang === 'en' ? currentHTML : contentEn;
-            let finalContentEs = editLang === 'es' ? currentHTML : contentEs;
-            let finalTitleEs = titleEs;
-            let finalExcerptEs = excerptEs;
-            let finalSeoTitleEs = seoTitleEs;
-            let finalSeoDescEs = seoDescEs;
-            let finalSocialTwEs = socialTwEs;
-            let finalSocialFbEs = socialFbEs;
-            let finalSocialLiEs = socialLiEs;
-            let finalSocialTagsEs = socialTagsEs;
-            let finalKeywordsEs = keywordsEs;
-
-            if (!titleEs.trim() && !finalContentEs.trim() && editLang === 'en') {
-                console.log("ES copy missing, auto-translating...");
-                const translated = await handleTranslate(false);
-                if (translated) {
-                    finalTitleEs = translated.title;
-                    finalContentEs = translated.content;
-                    finalExcerptEs = translated.excerpt;
-                    finalSeoTitleEs = translated.seo_title;
-                    finalSeoDescEs = translated.seo_description;
-                    finalSocialTwEs = translated.social_tw_text;
-                    finalSocialFbEs = translated.social_fb_text;
-                    finalSocialLiEs = translated.social_li_text;
-                    finalSocialTagsEs = Array.isArray(translated.social_hashtags) ? translated.social_hashtags.join(" ") : (translated.social_hashtags || "");
-                    finalKeywordsEs = Array.isArray(translated.target_keywords) ? translated.target_keywords.join(", ") : (translated.target_keywords || "");
-                    setKeywordsEs(finalKeywordsEs);
-                }
-            }
-
-            const savedPost = await onSave({
-                id: post?.id,
-                title,
-                slug,
-                content: finalContentEn,
-                excerpt,
-                category: category || null,
-                status: publish ? 'published' : (status || 'draft'),
-                published_at: publish ? getUtcPublishDate() : (post?.published_at || null),
-                seo_title: seoTitle || title,
-                seo_description: seoDesc || excerpt,
-                target_keywords: keywords ? keywords.split(",").map(k => k.trim()).filter(Boolean) : null,
-                related_provider_name: relatedProvider || null,
-                image_prompt: imagePrompt || null,
-                cover_image_url: coverImageUrl || null,
-                social_tw_text: socialTw || null,
-                social_fb_text: socialFb || null,
-                social_li_text: socialLi || null,
-                social_hashtags: socialTags ? socialTags.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
-                title_es: finalTitleEs || null,
-                content_es: finalContentEs || null,
-                excerpt_es: finalExcerptEs || null,
-                seo_title_es: finalSeoTitleEs || null,
-                seo_description_es: finalSeoDescEs || null,
-                social_tw_text_es: finalSocialTwEs || null,
-                social_fb_text_es: finalSocialFbEs || null,
-                social_li_text_es: finalSocialLiEs || null,
-                social_hashtags_es: finalSocialTagsEs ? finalSocialTagsEs.split(" ").map(t => t.startsWith("#") ? t : `#${t}`).filter(Boolean) : null,
-                target_keywords_es: finalKeywordsEs ? finalKeywordsEs.split(",").map(k => k.trim()).filter(Boolean) : null,
-            });
-
-            const baseUrl = `https://hostingsarena.com`;
-            const enLiveUrl = `${baseUrl}/en/news/${slug}`;
-            const esLiveUrl = `${baseUrl}/es/news/${slug}`;
-
-            if (publish) {
-                const updatedSocials: Partial<Post> = {};
-
-                const fixSocialLink = (text: string | null, liveUrl: string) => {
-                    if (!text) return null;
-                    const cleaned = text.replace(/https?:\/\/(www\.)?hostingsarena\.com(\/[a-z]{2})?\/news\/[^\s]+(?=\s|$)/g, '').trim();
-                    return `${cleaned}\n\n${liveUrl}`;
-                };
-
-                const newTwEn = fixSocialLink(socialTw, enLiveUrl);
-                const newFbEn = fixSocialLink(socialFb, enLiveUrl);
-                const newLiEn = fixSocialLink(socialLi, enLiveUrl);
-
-                if (newTwEn) { setSocialTw(newTwEn); updatedSocials.social_tw_text = newTwEn; }
-                if (newFbEn) { setSocialFb(newFbEn); updatedSocials.social_fb_text = newFbEn; }
-                if (newLiEn) { setSocialLi(newLiEn); updatedSocials.social_li_text = newLiEn; }
-
-                const newTwEs = fixSocialLink(socialTwEs, esLiveUrl);
-                const newFbEs = fixSocialLink(socialFbEs, esLiveUrl);
-                const newLiEs = fixSocialLink(socialLiEs, esLiveUrl);
-
-                if (newTwEs) { setSocialTwEs(newTwEs); updatedSocials.social_tw_text_es = newTwEs; }
-                if (newFbEs) { setSocialFbEs(newFbEs); updatedSocials.social_fb_text_es = newFbEs; }
-                if (newLiEs) { setSocialLiEs(newLiEs); updatedSocials.social_li_text_es = newLiEs; }
-
-                if (Object.keys(updatedSocials).length > 0) {
-                    await onSave({
-                        id: post?.id || (savedPost as any)?.post?.id,
-                        ...updatedSocials
-                    });
-                }
-            }
-
-            const postId = (savedPost as any)?.post?.id || post?.id;
-
-            if (publish && postId) {
-                const isScheduledFuture = new Date(getUtcPublishDate()).getTime() > new Date().getTime();
-
-                if (shouldIndexGoogle && !isScheduledFuture) {
-                    setIndexingStatus('loading');
-                    try {
-                        const idxRes = await fetch("/api/admin/posts/index-google", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ url: `https://hostingsarena.com/news/${slug}` })
-                        });
-
-                        const idxData = await idxRes.json();
-
-                        if (idxRes.ok && idxData.success) {
-                            setIndexingStatus('success');
-                        } else {
-                            console.error("Google Indexing failed:", idxData.message || idxData.error);
-                            setIndexingStatus('error');
-                            setPublishError(idxData.message || idxData.error);
-                        }
-                    } catch (idxErr) {
-                        console.error("Google Indexing trigger failed:", idxErr);
-                        setIndexingStatus('error');
-                    }
-                } else {
-                    setIndexingStatus('idle');
-                }
-
-                setPublishStatus('success');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Save failed");
-            if (publish) {
-                setPublishStatus('error');
-                setPublishError(err instanceof Error ? err.message : "Distribution failed");
-            }
-        } finally {
-            setSaving(false);
+        if (file && file.type.startsWith("image/")) {
+            const formData = new FormData();
+            formData.append("file", file);
+            const res = await fetch("/api/admin/posts/upload-image", { method: "POST", body: formData });
+            const data = await res.json();
+            if (res.ok) setCoverImageUrl(data.url);
         }
     };
 
-
+    const wordCount = editor?.getText()?.split(/\s+/).filter(Boolean).length || 0;
     const INPUT_CLASS = "w-full px-4 py-3 rounded-2xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-200 placeholder:text-muted-foreground/50";
-
-    const categories = [
-        "Security", "Performance", "Privacy", "Pricing",
-        "Technology", "Hosting Market", "VPN News", "Industry",
-        "Guide", "Comparison",
-    ];
-
+    
+    const categories = ["Security", "Performance", "Privacy", "Pricing", "Technology", "Hosting Market", "VPN News", "Industry", "Guide", "Comparison"];
     const sectionTabs = [
         { key: "content" as const, icon: <Type className="w-3.5 h-3.5" />, label: "Content" },
         { key: "seo" as const, icon: <Search className="w-3.5 h-3.5" />, label: "SEO" },
@@ -905,7 +181,7 @@ function PostEditorModal({
                     shouldIndexGoogle={shouldIndexGoogle}
                     setShouldIndexGoogle={setShouldIndexGoogle}
                     saving={saving}
-                    handleSave={handleSave}
+                    handleSave={handlePublish}
                     onClose={onClose}
                     wordCount={wordCount}
                     lastSavedAt={lastSavedAt}
@@ -1128,6 +404,7 @@ function PostEditorModal({
         </div>
     );
 }
+
 
 
 export function PostEditor({ onNavigateToAffiliates }: { onNavigateToAffiliates?: () => void }) {

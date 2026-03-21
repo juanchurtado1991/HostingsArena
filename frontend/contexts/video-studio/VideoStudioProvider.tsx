@@ -6,13 +6,21 @@ import { useStudioStore } from '@/store/useStudioStore';
 import { useAssembly } from './useAssembly';
 import { useRender } from './useRender';
 import { useClipOperations } from './useClipOperations';
-import type { Scene, Layer, VideoStudioContextValue } from './types';
+import { Scene, Layer, VideoStudioContextValue } from './types';
+import { loadMediaData } from '@/components/video/mediaLibrary';
+import { loadAudioData } from '@/components/video/audioLibrary';
 
 const VideoStudioContext = createContext<VideoStudioContextValue | undefined>(undefined);
 const STORAGE_KEY = "hostingarena_studio_v2";
 
 export function VideoStudioProvider({ children, initialLang = "en" }: { children: ReactNode, initialLang?: string }) {
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // Initial background load of heavy libraries
+    useEffect(() => {
+        loadMediaData();
+        loadAudioData();
+    }, []);
     const [title, setTitle] = useState("Tech News Summary");
     const [format, setFormat] = useState<'9:16' | '16:9'>("16:9");
     const [scriptLang, setScriptLang] = useState(initialLang);
