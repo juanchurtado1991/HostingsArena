@@ -23,6 +23,8 @@ export interface VideoPlayerProps {
     outroSfxUrl?: string;
     playing?: boolean;
     voiceSpeed?: number;
+    introDuration?: number;
+    outroDuration?: number;
     showSafeAreas?: boolean;
     // Note: currentTime y onTimeUpdate se manejan vía Zustand para evitar re-renders.
 }
@@ -38,8 +40,9 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
     transitionSfxUrl,
     outroSfxUrl,
     playing = false,
-
     voiceSpeed = 1,
+    introDuration = 6,
+    outroDuration = 15,
     showSafeAreas = false,
 }, ref) => {
     const playerRef = useRef<PlayerRef>(null);
@@ -299,7 +302,9 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         transitionSfxUrl: sanitize(transitionSfxUrl),
         outroSfxUrl: sanitize(outroSfxUrl),
         voiceSpeed,
-    }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, outroSfxUrl, voiceSpeed]);
+        introDuration,
+        outroDuration,
+    }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, outroSfxUrl, voiceSpeed, introDuration, outroDuration]);
 
     // UI Sync Feedback
     const [isSyncing, setIsSyncing] = useState(false);

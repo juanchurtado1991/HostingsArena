@@ -58,3 +58,4 @@ test_output.txt
 
 # Large JSON Data (Scraped)
 public/data/*.json
+!public/data/voices.json

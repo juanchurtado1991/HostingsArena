@@ -17,6 +17,8 @@ export interface CompositionProps {
     transitionSfxUrl?: string;
     outroSfxUrl?: string;
     voiceSpeed?: number;
+    introDuration?: number;
+    outroDuration?: number;
     baseUrl?: string;
 }
 
@@ -24,7 +26,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
     title, scenes, layers = [], format,
     bgMusicUrl = "/assets/bg-music.mp3", bgMusicVolume = 0.4,
     transitionSfxUrl = "/assets/click.mp3", outroSfxUrl,
-    voiceSpeed = 1, baseUrl = '',
+    voiceSpeed = 1, introDuration = 6, outroDuration = 15, baseUrl = '',
 }) => {
     const { fps, durationInFrames } = useVideoConfig();
     const isPreview = !baseUrl;
@@ -39,32 +41,16 @@ export const HostingComposition: React.FC<CompositionProps> = ({
         }
     }, [transitionSfxUrl, baseUrl]);
 
-    useEffect(() => {
-        const audioUrls = new Set<string>();
-        layers.forEach(layer => {
-            layer.clips.forEach(clip => {
-                if (clip.type === 'audio' || clip.type === 'music') {
-                    const resolved = resolveAsset(clip.src, baseUrl);
-                    if (resolved) audioUrls.add(resolved);
-                }
-            });
-        });
-        if (audioUrls.size > 0) {
-            console.log(`[AudioPrefetch] Proactively prefetching ${audioUrls.size} audio assets...`);
-            audioUrls.forEach(url => prefetch(url));
-        }
-    }, [layers, baseUrl]);
+    const introFrames = Math.round(introDuration * fps);
+    const outroFrames = Math.round(outroDuration * fps);
 
     const sceneTimings = useMemo(() => {
-        const introFrames = SyncEngine.getIntroFrames();
-        return SyncEngine.calculateTimings(scenes).map(t => ({
+        return SyncEngine.calculateTimingsCustom(scenes, introDuration, 5).map(t => ({
             startFrame: t.startFrame - introFrames, 
             durationFrames: t.durationInFrames 
         }));
-    }, [scenes]);
+    }, [scenes, introDuration, introFrames]);
 
-    const introFrames = SyncEngine.getIntroFrames();
-    const outroFrames = SyncEngine.getOutroFrames();
     const textColor = '#ffffff';
 
     const renderLayers = (activeLayers: Layer[]) => {
