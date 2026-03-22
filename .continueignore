@@ -1,28 +1,36 @@
-# .continueignore - HostingArena Optimization
-# Reduces context from 85k to ~50k tokens for better local LLM performance
+# .continueignore — HostingArena Token Reduction
+# Goal: reduce active LLM context window by ~40%
 
-# Massive Data Files (Keep schemas, ignore raw JSON)
-data/verified_data.json
-data/migrations/
-supabase/migrations/
-frontend/public/data/*.json
-frontend/public/video-bundle/
-
-# Scraper Logic (Ignore if doing frontend/video work)
-scrapers/
-venv/
-requirements.txt
-
-# Build and Dependencies
+# ── Build & Dependencies ────────────────────────────────────────
 node_modules/
 .next/
 dist/
 build/
+out/
+.turbo/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# Assets and Media
+# ── Generated / Bundle Artifacts ────────────────────────────────
+frontend/public/video-bundle/
+frontend/public/voices/previews/
+frontend/.antigravityignore
+
+# ── Large Static Data (fetched at runtime, not needed for coding)
+frontend/public/data/*.json
+data/verified_data.json
+data/migrations/
+supabase/migrations/
+
+# ── Scrapers (irrelevant during frontend/video work) ─────────────
+scrapers/
+venv/
+__pycache__/
+*.pyc
+requirements.txt
+
+# ── Binary & Media Assets ────────────────────────────────────────
 *.svg
 *.png
 *.jpg
@@ -34,13 +42,41 @@ pnpm-lock.yaml
 *.webm
 *.ogg
 *.ico
+*.woff
+*.woff2
+*.ttf
+*.eot
 
-# Environment and Secrets
+# ── Secrets & Environment ────────────────────────────────────────
 .env
 .env.*
+.env.local
+.env.production
 service_account.json
+*.pem
+*.key
 
-# Local Meta
+# ── IDE & Tool Configs (not code-relevant) ─────────────────────
 .agent/
 .cursor/
 .continue/
+.vscode/settings.json
+.idea/
+*.iml
+
+# ── Next.js / Vercel Infra (rarely read during coding) ──────────
+frontend/.vercel/
+frontend/vercel.json
+frontend/next-env.d.ts
+
+# ── Lock / Hash Files ────────────────────────────────────────────
+*.lock
+*.tsbuildinfo
+
+# ── Test Snapshots & Coverage ────────────────────────────────────
+__snapshots__/
+coverage/
+.nyc_output/
+
+# ── Git Internal ──────────────────────────────────────────────────
+.git/
