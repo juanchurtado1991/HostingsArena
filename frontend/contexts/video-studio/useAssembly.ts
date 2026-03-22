@@ -219,6 +219,8 @@ export function useAssembly(args: UseAssemblyArgs) {
             store.setFormat(format);
             store.setVoiceSpeed(voiceSpeed);
             store.setOutroSfxUrl(outroSfxUrl);
+            if (store.setBgMusicUrl) store.setBgMusicUrl(bgMusicUrl);
+            if (store.setBgMusicVolume) store.setBgMusicVolume(bgMusicVolume);
 
             
             pushToHistory(updatedScenes, finalLayers);

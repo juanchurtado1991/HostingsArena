@@ -20,6 +20,8 @@ interface TransientState {
     error: string | null;
     voiceSpeed: number;
     outroSfxUrl?: string;
+    bgMusicUrl?: string;
+    bgMusicVolume: number;
 }
 
 interface StudioState extends UndoableState, TransientState {
@@ -38,6 +40,8 @@ interface StudioState extends UndoableState, TransientState {
     setRenderStatus: (step: string, progress: number) => void;
     setVoiceSpeed: (speed: number) => void;
     setOutroSfxUrl: (url: string | undefined) => void;
+    setBgMusicUrl: (url: string | undefined) => void;
+    setBgMusicVolume: (volume: number) => void;
     resetStore: () => void;
 
     history: UndoableState[];
@@ -67,6 +71,8 @@ export const useStudioStore = create<StudioState>()(
         error: null,
         voiceSpeed: 1.0,
         outroSfxUrl: undefined,
+        bgMusicUrl: undefined,
+        bgMusicVolume: 0.15,
         history: [],
         historyIndex: -1,
 
@@ -95,6 +101,8 @@ export const useStudioStore = create<StudioState>()(
         setRenderStatus: (renderStep, renderProgress) => set({ renderStep, renderProgress }),
         setVoiceSpeed: (voiceSpeed) => set({ voiceSpeed }),
         setOutroSfxUrl: (outroSfxUrl) => set({ outroSfxUrl }),
+        setBgMusicUrl: (bgMusicUrl) => set({ bgMusicUrl }),
+        setBgMusicVolume: (bgMusicVolume) => set({ bgMusicVolume }),
         resetStore: () => {
             set({
                 ...initialUndoableState,
