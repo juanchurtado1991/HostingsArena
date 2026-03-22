@@ -75,3 +75,19 @@ export interface Scene {
     displayHeadline?: string;
     voiceSpeed?: number;
 }
+
+export interface StudioPreset {
+    id: string;
+    name: string;
+    createdAt: number;
+    selectedVoice: string;
+    voiceSpeed: number;
+    bgMusicUrl?: string;
+    bgMusicVolume: number;
+    introSfxUrl?: string;
+    outroSfxUrl?: string;
+    newsCardSfxUrl?: string;
+    introDuration: number;
+    newsCardDuration: number;
+    outroDuration: number;
+}

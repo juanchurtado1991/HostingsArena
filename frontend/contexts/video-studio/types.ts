@@ -1,22 +1,7 @@
-// Re-export canonical types from types/studio.ts
-export type { MediaSegment, Clip, Layer, Scene } from '@/types/studio';
+import type { Scene, Clip, Layer, MediaSegment, StudioPreset } from '@/types/studio';
+import React from 'react';
 
-// --- PRESETS ---
-export interface StudioPreset {
-    id: string;
-    name: string;
-    createdAt: number;
-    selectedVoice: string;
-    voiceSpeed: number;
-    bgMusicUrl?: string;
-    bgMusicVolume: number;
-    introSfxUrl?: string;
-    outroSfxUrl?: string;
-    newsCardSfxUrl?: string;
-    introDuration: number;
-    newsCardDuration: number;
-    outroDuration: number;
-}
+export type { MediaSegment, Clip, Layer, Scene, StudioPreset };
 
 export interface VideoStudioContextValue {
     title: string;
@@ -34,15 +19,15 @@ export interface VideoStudioContextValue {
     error: string | null;
     setError: (v: string | null) => void;
     isLoaded: boolean;
-    scenes: import('@/types/studio').Scene[];
-    setScenes: React.Dispatch<React.SetStateAction<import('@/types/studio').Scene[]>>;
-    updateScene: (index: number, updates: Partial<import('@/types/studio').Scene>) => void;
-    videoTrack?: import('@/types/studio').Clip[];
-    audioTrack?: import('@/types/studio').Clip[];
-    musicTrack?: import('@/types/studio').Clip[];
-    overlayTrack?: import('@/types/studio').Clip[];
-    layers: import('@/types/studio').Layer[];
-    setLayers: React.Dispatch<React.SetStateAction<import('@/types/studio').Layer[]>>;
+    scenes: Scene[];
+    setScenes: React.Dispatch<React.SetStateAction<Scene[]>>;
+    updateScene: (index: number, updates: Partial<Scene>) => void;
+    videoTrack?: Clip[];
+    audioTrack?: Clip[];
+    musicTrack?: Clip[];
+    overlayTrack?: Clip[];
+    layers: Layer[];
+    setLayers: React.Dispatch<React.SetStateAction<Layer[]>>;
     addLayer: () => void;
     removeLayer: (id: string) => void;
     reorderLayers: (newOrder: string[]) => void;
@@ -98,8 +83,8 @@ export interface VideoStudioContextValue {
         outputFormat: 'mp4' | 'webm' | 'mov';
     };
     setExportSettings: (v: any) => void;
-    addClip: (layerId: string, clip: Partial<import('@/types/studio').Clip>) => void;
-    updateClip: (clipId: string, updates: Partial<import('@/types/studio').Clip>) => void;
+    addClip: (layerId: string, clip: Partial<Clip>) => void;
+    updateClip: (clipId: string, updates: Partial<Clip>) => void;
     deleteClip: (clipId: string) => void;
     splitClip: (clipId: string, frame: number) => void;
     moveClip: (clipId: string, direction: 'left' | 'right') => void;
