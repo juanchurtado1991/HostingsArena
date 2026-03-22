@@ -1,6 +1,23 @@
 // Re-export canonical types from types/studio.ts
 export type { MediaSegment, Clip, Layer, Scene } from '@/types/studio';
 
+// --- PRESETS ---
+export interface StudioPreset {
+    id: string;
+    name: string;
+    createdAt: number;
+    selectedVoice: string;
+    voiceSpeed: number;
+    bgMusicUrl?: string;
+    bgMusicVolume: number;
+    introSfxUrl?: string;
+    outroSfxUrl?: string;
+    newsCardSfxUrl?: string;
+    introDuration: number;
+    newsCardDuration: number;
+    outroDuration: number;
+}
+
 export interface VideoStudioContextValue {
     title: string;
     setTitle: (v: string) => void;
@@ -49,6 +66,12 @@ export interface VideoStudioContextValue {
     setNewsCardSfxUrl: (v: string | undefined) => void;
     voiceSpeed: number;
     setVoiceSpeed: (v: number) => void;
+    introDuration: number;
+    setIntroDuration: (v: number) => void;
+    newsCardDuration: number;
+    setNewsCardDuration: (v: number) => void;
+    outroDuration: number;
+    setOutroDuration: (v: number) => void;
     isGeneratingScript: boolean;
     setIsGeneratingScript: (v: boolean) => void;
     isPreparingAssembly: boolean;

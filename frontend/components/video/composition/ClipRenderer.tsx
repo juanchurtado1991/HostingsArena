@@ -94,7 +94,7 @@ export const ClipRenderer: React.FC<{ clip: Clip, format: '9:16' | '16:9', title
     };
 
     const resolvedSfxSrc = clip.sfxUrl ? (resolveAsset(clip.sfxUrl, baseUrl) || clip.sfxUrl) : null;
-    const sfxDur = clip.sfxDurationFrames || 30;
+    const sfxDur = clip.sfxDurationFrames || 150;
     const sfxBaseVol = clip.sfxVolume ?? 0.8;
     const sfxFadeIn = clip.sfxFadeInFrames ?? 0;
     const sfxFadeOut = clip.sfxFadeOutFrames ?? 8;

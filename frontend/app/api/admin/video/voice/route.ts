@@ -124,8 +124,7 @@ export async function POST(request: Request) {
     let finalDuration = 0;
     let wordTimestamps: { word: string; start: number; end: number }[] = [];
     let finalFilePath = "";
-    let rawWebmPath = "";
-    let tempRemux = "";
+    let rawMp3Path = "";
     let metadataFilePath = "";
     let tempBase = "";
 
@@ -135,20 +134,21 @@ export async function POST(request: Request) {
             fs.mkdirSync(voicesDir, { recursive: true });
         }
         
-        // msedge-tts toFile() writes `audio.webm` inside the provided directory
+        // msedge-tts toFile() writes `audio.mp3` inside the provided directory when using MP3 format
         const timestamp = Date.now();
         const random = Math.floor(Math.random() * 10000);
         tempBase = path.join(voicesDir, `voice_temp_${timestamp}_${random}`);
         fs.mkdirSync(tempBase, { recursive: true });
 
-        rawWebmPath = path.join(tempBase, "audio.webm");
-        const finalFileName = `voice_${timestamp}_${random}.webm`;
+        rawMp3Path = path.join(tempBase, "audio.mp3");
+        const finalFileName = `voice_${timestamp}_${random}.mp3`;
         finalFilePath = path.join(voicesDir, finalFileName);
 
         console.log(`[EdgeTTS] Generating voice with ${voiceId}, text length: ${text.length} chars`);
 
         const tts = new MsEdgeTTS();
-        await tts.setMetadata(voiceId, OUTPUT_FORMAT.WEBM_24KHZ_16BIT_MONO_OPUS, {
+        // MP3 format: natively seekable, no FFmpeg required, works identically in local + production
+        await tts.setMetadata(voiceId, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3, {
             wordBoundaryEnabled: true,
             rate: finalRate
         } as any);
@@ -158,8 +158,8 @@ export async function POST(request: Request) {
         const result = await tts.toFile(tempBase, textToSpeak);
         metadataFilePath = result?.metadataFilePath || "";
         
-        if (!fs.existsSync(rawWebmPath)) {
-            throw new Error("Edge TTS did not generate the internal file.");
+        if (!fs.existsSync(rawMp3Path)) {
+            throw new Error("Edge TTS did not generate the internal MP3 file.");
         }
 
         // --- DURATION AND METADATA PROCESSING ---
@@ -192,46 +192,24 @@ export async function POST(request: Request) {
             console.warn(`[EdgeTTS] Metadata processing error:`, metaErr.message);
         }
 
-        // --- PHYSICAL DURATION AUTHORITY & TRIMMING ---
-        // Try to use FFmpeg if available (local dev), otherwise fallback to raw file + metadata duration
-        try {
-            tempRemux = tempBase + "_remux.webm";
-            
-            // 1. Strip silence from start and end. 
-            execSync(`ffmpeg -y -i "${rawWebmPath}" -af "silenceremove=start_periods=1:start_silence=0:start_threshold=-45dB:stop_periods=-1:stop_duration=0:stop_threshold=-45dB" -c:a libopus -b:a 48k "${tempRemux}"`, { stdio: 'ignore' });
-            
-            // 2. Measure the exact physical length of the trimmed file
-            const physicalDurStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${tempRemux}"`).toString().trim();
-            finalDuration = parseFloat(physicalDurStr);
-            
-            console.log(`[EdgeTTS] Physical spoken duration detected (FFmpeg): ${finalDuration.toFixed(3)}s`);
-            
-            // 3. Move to final destination
-            fs.copyFileSync(tempRemux, finalFilePath);
-
-        } catch (err: any) {
-            console.log(`[EdgeTTS] FFmpeg not available or failed (expected in Vercel). Falling back to raw file.`);
-            // Fallback: Just copy the raw file over directly
-            fs.copyFileSync(rawWebmPath, finalFilePath);
-            
-            // Fallback: Use logical duration parsed from word boundaries metadata, 
-            // plus a tiny buffer (0.1s) to account for natural trailing sound
-            finalDuration = logicalDuration > 0 ? logicalDuration + 0.1 : 0;
-            
-            if (finalDuration === 0) {
-               console.warn("[EdgeTTS] Metadata duration failed too. Using a rough estimate based on file size.");
-               const fallbackStats = fs.statSync(finalFilePath);
-               // Very rough estimate for 24kHz Mono Opus WebM (approx 32kbps)
-               // ~4KB per second. So bytes / 4000 = seconds roughly
-               finalDuration = Math.max((fallbackStats.size / 4000), 1.0);
-            }
-            
-            console.log(`[EdgeTTS] Fallback duration calculated: ${finalDuration.toFixed(3)}s`);
+        // --- DURATION & FILE ---
+        // MP3 files are natively seekable (no FFmpeg needed). Copy directly.
+        fs.copyFileSync(rawMp3Path, finalFilePath);
+        
+        // Use word boundary metadata for duration + 0.1s buffer for trailing audio
+        finalDuration = logicalDuration > 0 ? logicalDuration + 0.1 : 0;
+        
+        if (finalDuration === 0) {
+           console.warn("[EdgeTTS] Metadata duration unavailable. Estimating from file size.");
+           const fallbackStats = fs.statSync(finalFilePath);
+           // MP3 at 96kbps: ~12KB per second
+           finalDuration = Math.max((fallbackStats.size / 12000), 1.0);
         }
+        
+        console.log(`[EdgeTTS] MP3 generated, duration: ${finalDuration.toFixed(3)}s`);
 
         // Cleanup temp files
-        if (fs.existsSync(rawWebmPath)) fs.unlinkSync(rawWebmPath);
-        if (fs.existsSync(tempRemux)) fs.unlinkSync(tempRemux);
+        if (fs.existsSync(rawMp3Path)) fs.unlinkSync(rawMp3Path);
         if (metadataFilePath && fs.existsSync(metadataFilePath)) {
             fs.unlinkSync(metadataFilePath);
         }
@@ -250,7 +228,7 @@ export async function POST(request: Request) {
         const { error: uploadError } = await supabase.storage
             .from("images")
             .upload(storagePath, buffer, {
-                contentType: "audio/webm",
+                contentType: "audio/mpeg",
                 upsert: true,
             });
             
@@ -277,8 +255,7 @@ export async function POST(request: Request) {
         console.error(`[EdgeTTS] Fatal Error:`, err.message);
 
         // Cleanup any remaining temp files in case of an error
-        if (fs.existsSync(rawWebmPath)) fs.unlinkSync(rawWebmPath);
-        if (fs.existsSync(tempRemux)) fs.unlinkSync(tempRemux);
+        if (rawMp3Path && fs.existsSync(rawMp3Path)) fs.unlinkSync(rawMp3Path);
         if (metadataFilePath && fs.existsSync(metadataFilePath)) {
             fs.unlinkSync(metadataFilePath);
         }

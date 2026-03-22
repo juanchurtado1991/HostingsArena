@@ -51,7 +51,7 @@ export function parseScript(text: string, videoFormat: string = '16:9'): ParsedS
             if (speech && speech.length > 10) {
                 parsedScenes.push({
                     speech, visual,
-                    headline: extractField(fullBlock, 'Headline'),
+                    headline: extractField(fullBlock, 'Headline') || "LATEST UPDATE",
                     subHeadline: extractField(fullBlock, 'Subheadline'),
                     displayHeadline: extractField(fullBlock, 'DisplayHeadline'),
                     pexelsQuery: extractField(fullBlock, 'PexelsQuery'),

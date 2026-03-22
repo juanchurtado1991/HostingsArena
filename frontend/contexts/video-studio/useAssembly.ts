@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { logger } from '@/lib/logger';
-import { SyncEngine } from '@/lib/video-sync/SyncEngine';
+import { SyncEngine, type SceneTiming } from '@/lib/video-sync/SyncEngine';
 import { findBestMixedMediaBatch } from '@/components/video/mediaLibrary';
 import { useStudioStore } from '@/store/useStudioStore';
 import type { Scene, Layer, Clip } from './types';
@@ -18,6 +18,9 @@ interface UseAssemblyArgs {
     scriptLang: string;
     title: string;
     format: '9:16' | '16:9';
+    introDuration: number;
+    newsCardDuration: number;
+    outroDuration: number;
     setScenes: React.Dispatch<React.SetStateAction<Scene[]>>;
     setLayers: React.Dispatch<React.SetStateAction<Layer[]>>;
     setDurationInFrames: (v: number) => void;
@@ -31,7 +34,7 @@ export function useAssembly(args: UseAssemblyArgs) {
     const isPreparingRef = useRef(false);
 
     const prepareAssemblyData = useCallback(async () => {
-        const { scenes, selectedVoice, customVoiceUrl, bgMusicUrl, bgMusicVolume, voiceSpeed, introSfxUrl, outroSfxUrl, newsCardSfxUrl, scriptLang, title, format, setScenes, setLayers, setDurationInFrames, setError, setIsPreparingAssembly, setSyncEta, pushToHistory } = args;
+        const { scenes, selectedVoice, customVoiceUrl, bgMusicUrl, bgMusicVolume, voiceSpeed, introSfxUrl, outroSfxUrl, newsCardSfxUrl, scriptLang, title, format, introDuration, newsCardDuration, outroDuration, setScenes, setLayers, setDurationInFrames, setError, setIsPreparingAssembly, setSyncEta, pushToHistory } = args;
 
         if (scenes.length === 0 || isPreparingRef.current) return;
         isPreparingRef.current = true;
@@ -140,26 +143,28 @@ export function useAssembly(args: UseAssemblyArgs) {
                 }
             }
 
-            const timings = SyncEngine.calculateTimings(updatedScenes);
-            const introFrames = SyncEngine.getIntroFrames();
-            const outroFrames = SyncEngine.getOutroFrames();
-            const totalProjectFrames = SyncEngine.getTotalDurationInFrames(updatedScenes);
+            const timings = SyncEngine.calculateTimingsCustom(updatedScenes, introDuration, newsCardDuration);
+            const introFrames = Math.round(introDuration * SyncEngine.FPS);
+            const outroFrames = Math.round(outroDuration * SyncEngine.FPS);
+            const titleCardFrames = Math.round(newsCardDuration * SyncEngine.FPS);
+            const totalProjectFrames = timings.length > 0
+                ? timings[timings.length - 1].endFrame + outroFrames
+                : introFrames + outroFrames;
 
             const newVideoTrack: Clip[] = [];
             const newLowerThirdClips: Clip[] = [];
             const newAudioClips: Clip[] = [];
             const usedUrls = new Set<string>();
-            const titleCardFrames = SyncEngine.secondsToFrames(SyncEngine.TITLE_CARD_SECONDS);
 
             if (introFrames > 0) {
                 newVideoTrack.push({
                     id: 'c-intro', type: 'overlay', src: 'intro', startFrame: 0, durationInFrames: introFrames,
                     title: new Date().toLocaleDateString(scriptLang === 'es' ? 'es-ES' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase(),
-                    ...(introSfxUrl ? { sfxUrl: introSfxUrl, sfxDurationFrames: Math.min(introFrames, 60), sfxVolume: 0.8 } : {})
+                    ...(introSfxUrl ? { sfxUrl: introSfxUrl, sfxDurationFrames: Math.min(introFrames, 150), sfxVolume: 0.8 } : {})
                 });
             }
 
-            timings.forEach((timing, i) => {
+            timings.forEach((timing: SceneTiming, i: number) => {
                 const scene = updatedScenes[i];
                 const isTitleCardEnabled = scene.titleCardEnabled !== false;
 
@@ -171,7 +176,7 @@ export function useAssembly(args: UseAssemblyArgs) {
                 }
 
                 if (isTitleCardEnabled) {
-                    newVideoTrack.push({ id: `v-title-${i}`, type: 'overlay', src: 'news-card', title: scene.displayHeadline || scene.headline || scene.visual.split(',')[0], subtitle: scene.subHeadline, startFrame: timing.startFrame - titleCardFrames, durationInFrames: titleCardFrames, x: 50, y: 50, scale: 1, opacity: 1, ...(newsCardSfxUrl ? { sfxUrl: newsCardSfxUrl, sfxDurationFrames: Math.min(titleCardFrames, 45), sfxVolume: 0.7 } : {}) } as any);
+                    newVideoTrack.push({ id: `v-title-${i}`, type: 'overlay', src: 'news-card', title: scene.displayHeadline || scene.headline || title || "BREAKING NEWS", subtitle: scene.subHeadline, startFrame: timing.startFrame - titleCardFrames, durationInFrames: titleCardFrames, x: 50, y: 50, scale: 1, opacity: 1, ...(newsCardSfxUrl ? { sfxUrl: newsCardSfxUrl, sfxDurationFrames: Math.min(titleCardFrames, 150), sfxVolume: 0.7 } : {}) } as any);
                 }
 
                 const hasSegments = scene.mediaSegments && scene.mediaSegments.length > 0;

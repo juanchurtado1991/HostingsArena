@@ -8,7 +8,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { AlertCircle, TrendingUp, Zap } from "lucide-react";
 import { getCalculatorAffiliateLinks, getDefaultCompareProviders } from "@/lib/actions/affiliates";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
@@ -117,7 +116,6 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                         {dict.calculator.subtitle}
                     </p>
 
-                    {/* Stop the Bleeding Banner */}
                     <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-3 md:p-4 max-w-2xl mx-auto flex items-start md:items-center justify-center gap-2 md:gap-3">
                         <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 md:mt-0" />
                         <span className="font-bold text-sm md:text-lg text-left">
@@ -125,7 +123,6 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                         </span>
                     </div>
 
-                    {/* Category Tabs */}
                     <div className="flex justify-center mt-10">
                         <Tabs value={category} onValueChange={(v) => {
                             setCategory(v as "hosting" | "vpn");
@@ -142,7 +139,6 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                    {/* Controls Panel */}
                     <GlassCard className="lg:col-span-1 p-4 md:p-6 space-y-6 md:space-y-8 h-fit lg:sticky lg:top-24">
                         <div className="space-y-6">
                             {/* Year Selector */}
@@ -267,7 +263,6 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                             </div>
                         </GlassCard>
 
-                        {/* Money First: The Verdict */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <GlassCard className="p-6 border-l-4 border-l-destructive bg-destructive/5 flex flex-col justify-between">
                                 <div>

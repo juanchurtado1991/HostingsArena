@@ -1,127 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Bell, Trash2, Calendar, Clock, Plus, Send } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-
-interface Reminder {
-    id: string;
-    message: string;
-    mention_user: string | null;
-    scheduled_at: string;
-    status: 'pending' | 'sent' | 'failed';
-    is_recurring: boolean;
-    recurrence_pattern: 'daily' | 'weekly' | 'monthly' | null;
-    created_at: string;
-}
+import { Bell, Calendar, Plus, Send } from "lucide-react";
+import { useReminders } from "./reminders/useReminders";
+import { ReminderCard } from "./reminders/ReminderCard";
 
 export function RemindersManager() {
-    const [reminders, setReminders] = useState<Reminder[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-
-    const [message, setMessage] = useState("");
-    const [mention, setMention] = useState("");
-    const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
-    const [isRecurring, setIsRecurring] = useState(false);
-    const [pattern, setPattern] = useState("daily");
-
-    const getSVTimeString = (date: Date = new Date()) => {
-        return new Intl.DateTimeFormat('en-CA', { 
-            timeZone: 'America/El_Salvador',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        }).format(date);
-    };
-
-    useEffect(() => {
-        const svNowStr = getSVTimeString();
-        const [dPart, tPart] = svNowStr.split(', ');
-        
-        setDate(dPart);
-        setTime(tPart);
-
-        fetchReminders();
-    }, []);
-
-    const fetchReminders = async () => {
-        try {
-            const res = await fetch('/api/admin/slack/reminders');
-            const data = await res.json();
-            if (data.reminders) {
-                setReminders(data.reminders);
-            }
-        } catch (error) {
-            console.error("Error fetching reminders", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSchedule = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSubmitting(true);
-
-        try {
-            const [y, m, d] = date.split('-').map(Number);
-            const [h, min] = time.split(':').map(Number);
-            
-            const utcDate = new Date(Date.UTC(y, m - 1, d, h, min));
-            utcDate.setHours(utcDate.getHours() + 6);
-
-            const res = await fetch('/api/admin/slack/reminders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message,
-                    mention_user: mention ? `@${mention.replace('@', '')}` : null,
-                    scheduled_at: utcDate.toISOString(),
-                    is_recurring: isRecurring,
-                    recurrence_pattern: isRecurring ? pattern : null
-                })
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Error al agendar');
-            }
-
-            setMessage("");
-            setMention("");
-            fetchReminders();
-            alert("¡Recordatorio agendado con éxito!");
-
-        } catch (error: any) {
-            alert(error.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro de que quieres eliminar este recordatorio?")) return;
-        
-        try {
-            const res = await fetch(`/api/admin/slack/reminders?id=${id}`, {
-                method: 'DELETE'
-            });
-
-            if (!res.ok) throw new Error("Error al eliminar");
-            
-            setReminders(prev => prev.filter(r => r.id !== id));
-        } catch (error) {
-            alert("Error al eliminar recordatorio");
-        }
-    };
+    const {
+        reminders,
+        loading,
+        submitting,
+        message, setMessage,
+        mention, setMention,
+        date, setDate,
+        time, setTime,
+        isRecurring, setIsRecurring,
+        pattern, setPattern,
+        handleSchedule,
+        handleDelete
+    } = useReminders();
 
     const INPUT_CLASS = "w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all duration-200";
 
@@ -263,54 +162,13 @@ export function RemindersManager() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {reminders.map(reminder => {
-                            const dateObj = new Date(reminder.scheduled_at);
-                            const isPast = !reminder.is_recurring && (reminder.status === 'sent' || reminder.status === 'failed');
-                            
-                            return (
-                                <div key={reminder.id} className={`flex items-start md:items-center justify-between p-4 rounded-xl border transition-all ${isPast ? 'bg-white/[0.02] border-white/5 opacity-70' : 'bg-white/5 border-white/10 hover:border-primary/30'}`}>
-                                    <div className="flex-1 min-w-0 pr-4">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                                                reminder.is_recurring ? 'bg-blue-500/20 text-blue-400' :
-                                                reminder.status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 
-                                                reminder.status === 'sent' ? 'bg-emerald-500/20 text-emerald-400' : 
-                                                'bg-red-500/20 text-red-500'
-                                            }`}>
-                                                {reminder.is_recurring ? `RECURRENTE: ${reminder.recurrence_pattern}` : reminder.status}
-                                            </span>
-                                            {reminder.mention_user && (
-                                                <span className="text-[11px] font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full block truncate hidden md:block">
-                                                    Menciona a: {reminder.mention_user}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm font-medium line-clamp-2 md:line-clamp-1 break-words">{reminder.message}</p>
-                                    </div>
-
-                                    <div className="flex items-center gap-4 flex-shrink-0">
-                                        <div className="text-right hidden sm:block">
-                                            <div className="text-xs font-bold text-white flex items-center justify-end gap-1">
-                                                <Calendar className="w-3 h-3 text-muted-foreground" />
-                                                {format(dateObj, "MMM d, yyyy", { locale: es })}
-                                            </div>
-                                            <div className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
-                                                <Clock className="w-3 h-3" />
-                                                {format(dateObj, "h:mm a")}
-                                            </div>
-                                        </div>
-                                        
-                                        <button 
-                                            onClick={() => handleDelete(reminder.id)}
-                                            className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                            title="Eliminar Recordatorio"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {reminders.map(reminder => (
+                            <ReminderCard 
+                                key={reminder.id} 
+                                reminder={reminder} 
+                                onDelete={handleDelete} 
+                            />
+                        ))}
                     </div>
                 )}
             </GlassCard>

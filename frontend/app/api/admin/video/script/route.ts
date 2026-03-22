@@ -212,7 +212,13 @@ export async function POST(request: Request) {
             ${lang === 'es' ? `- ORTOGRAFÍA: Usa ortografía perfectamente correcta en español. NO uses "hacks" fonéticos. Escribe "Google", no "Gúgol". Escribe "Hardware", no "járduer".` : ''}
             
             MANDATORY OUTPUT FORMAT:
-            [Headline: 3-5 word high-impact headline] [Subheadline: 5-10 word supporting data] [DisplayHeadline: correctly spelled headline for display (only if different from Headline)] [Visual: cinematic shot description] [PexelsQuery: 2-4 word stock media search query] [Transition: crossfade|zoom|none] Spoken content.
+            [Headline: 3-5 word high-impact news headline] [Subheadline: 5-10 word supporting data] [DisplayHeadline: correctly spelled news headline for display (only if different from Headline)] [Visual: cinematic shot description] [PexelsQuery: 2-4 word stock media search query] [Transition: crossfade|zoom|none] Spoken content.
+            
+            STRICT RULES FOR HEADLINES:
+            1. Every scene MUST have a [Headline:].
+            2. The headline MUST be a public news title (e.g., "APPLE REVEALS M5 CHIP").
+            3. NEVER use a visual description as a headline (e.g., "Aerial view of Silicon Valley").
+            4. Headline and DisplayHeadline must be in the target language (${lang === 'es' ? 'Spanish' : 'English'}).
             
             EXAMPLE (Spanish):
             [Headline: RUPTURA CUÁNTICA DE GOOGLE] [Subheadline: Google confirma que el cifrado de 30 años ha sido vulnerado] [DisplayHeadline: RUPTURA CUÁNTICA DE GOOGLE] [Visual: Aerial view of Silicon Valley at golden hour with data streams] [PexelsQuery: silicon valley aerial technology] [Transition: crossfade] Google acaba de confirmarlo. La computación cuántica rompió oficialmente un estándar de cifrado de 30 años. Mientras el mundo cripto entra en pánico, el hardware necesario para esto ya está aquí.

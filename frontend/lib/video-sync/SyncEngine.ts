@@ -10,7 +10,7 @@ export class SyncEngine {
     static readonly INTRO_SECONDS = 6;
     static readonly OUTRO_SECONDS = 15;
     static readonly SCENE_PAUSE_SECONDS = 0.0;
-    static readonly TITLE_CARD_SECONDS = 3.0; 
+    static readonly TITLE_CARD_SECONDS = 5.0; 
     static readonly WORDS_PER_SECOND = 2.5;
 
     static estimateDuration(text: string, speed: number = 1.0): number {
@@ -35,9 +35,17 @@ export class SyncEngine {
     }
 
     static calculateTimings(scenes: { duration?: number, titleCardEnabled?: boolean }[]): SceneTiming[] {
-        const introFrames = this.getIntroFrames();
+        return this.calculateTimingsCustom(scenes, this.INTRO_SECONDS, this.TITLE_CARD_SECONDS);
+    }
+
+    static calculateTimingsCustom(
+        scenes: { duration?: number, titleCardEnabled?: boolean }[],
+        introDurationSec: number = this.INTRO_SECONDS,
+        newsCardDurationSec: number = this.TITLE_CARD_SECONDS
+    ): SceneTiming[] {
+        const introFrames = Math.round(introDurationSec * this.FPS);
+        const titleCardFrames = Math.round(newsCardDurationSec * this.FPS);
         const pauseFrames = this.secondsToFrames(this.SCENE_PAUSE_SECONDS);
-        const titleCardFrames = this.secondsToFrames(this.TITLE_CARD_SECONDS);
         let currentOffset = introFrames;
 
         return scenes.map((scene, index) => {

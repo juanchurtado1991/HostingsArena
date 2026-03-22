@@ -26,7 +26,6 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     '@remotion/bundler', 
-    '@remotion/renderer', 
     'remotion', 
     'esbuild',
     '@remotion/google-fonts',

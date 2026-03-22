@@ -20,7 +20,6 @@
     "@remotion/google-fonts": "^4.0.427",
     "@remotion/lottie": "^4.0.427",
     "@remotion/player": "^4.0.427",
-    "@remotion/renderer": "^4.0.427",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "@tiptap/extension-color": "^3.19.0",

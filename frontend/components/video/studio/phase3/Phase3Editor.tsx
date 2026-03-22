@@ -145,13 +145,32 @@ export function Phase3Editor() {
                 </TimelineContainer>
             </div>
 
-            <MediaPicker isOpen={isMediaPickerOpen} onClose={() => { setIsMediaPickerOpen(false); setAddingToTrack(null); setAddingToTrackType(null); }} currentFormat={format} activeSegmentId={selectedClipId || ""} onTriggerUpload={() => {}}
-                onConfirm={(item) => {
-                    const url = typeof item === 'string' ? item : item.url;
-                    const type = (typeof item !== 'string' && item.type) ? item.type : (url.match(/\.(mp4|webm|mov)(\?.*)?$/i) ? 'video' : 'image');
-                    if (selectedClip && addingToTrack === selectedClip.id) { updateClip(selectedClip.id, { src: url, type: type as Clip['type'] }); setAddingToTrack(null); setAddingToTrackType(null); setIsMediaPickerOpen(false); }
-                    else if (addingToTrack) { const newClip: Clip = { id: `${type}-${Date.now()}`, type: type as Clip['type'], src: url, startFrame: Math.round(currentTime * SyncEngine.FPS), durationInFrames: 150, x: 50, y: 50, scale: 1, opacity: 1 }; setLayers(layers.map(l => l.id === addingToTrack ? { ...l, clips: [...l.clips, newClip] } : l)); pushToHistory(); setAddingToTrack(null); setAddingToTrackType(null); setIsMediaPickerOpen(false); }
-                    else { setIsMediaPickerOpen(false); }
+            <MediaPicker 
+                isOpen={isMediaPickerOpen} 
+                onClose={() => { setIsMediaPickerOpen(false); setAddingToTrack(null); setAddingToTrackType(null); }} 
+                selectedUrl={selectedClip?.src}
+                onConfirm={(url, type, label) => {
+                    if (selectedClip && addingToTrack === selectedClip.id) { 
+                        updateClip(selectedClip.id, { src: url, type: type as Clip['type'] }); 
+                    } else if (addingToTrack) { 
+                        const newClip: Clip = { 
+                            id: `${type}-${Date.now()}`, 
+                            type: type as Clip['type'], 
+                            src: url, 
+                            startFrame: Math.round(currentTime * SyncEngine.FPS), 
+                            durationInFrames: 150, 
+                            x: 50, 
+                            y: 50, 
+                            scale: 1, 
+                            opacity: 1,
+                            title: label
+                        }; 
+                        setLayers(layers.map(l => l.id === addingToTrack ? { ...l, clips: [...l.clips, newClip] } : l)); 
+                        pushToHistory(); 
+                    }
+                    setAddingToTrack(null); 
+                    setAddingToTrackType(null); 
+                    setIsMediaPickerOpen(false);
                 }}
             />
 

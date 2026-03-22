@@ -40,6 +40,9 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     const [outroSfxUrl, setOutroSfxUrl] = useState<string>();
     const [newsCardSfxUrl, setNewsCardSfxUrl] = useState<string>();
     const [voiceSpeed, setVoiceSpeed] = useState(1.0);
+    const [introDuration, setIntroDuration] = useState(5);
+    const [newsCardDuration, setNewsCardDuration] = useState(4);
+    const [outroDuration, setOutroDuration] = useState(15);
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
     const [isPreparingAssembly, setIsPreparingAssembly] = useState(false);
     const [syncEta, setSyncEta] = useState(0);
@@ -129,6 +132,9 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                 if (data.selectedVoice) setSelectedVoice(data.selectedVoice);
                 if (data.customVoiceUrl) setCustomVoiceUrl(data.customVoiceUrl);
                 if (data.voiceSpeed) setVoiceSpeed(data.voiceSpeed);
+                if (data.introDuration) setIntroDuration(data.introDuration);
+                if (data.newsCardDuration) setNewsCardDuration(data.newsCardDuration);
+                if (data.outroDuration) setOutroDuration(data.outroDuration);
                 if (data.durationInFrames) setDurationInFrames(data.durationInFrames);
                 if (data.targetDuration) setTargetDuration(data.targetDuration);
             } catch (e) { console.error("Failed to load saved studio state:", e); }
@@ -153,10 +159,11 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         const stateToSave = {
             scenes, layers, durationInFrames, selectedVoice, format, currentPhase, scriptLang,
             title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl,
-            newsFocus, customVoiceUrl, voiceSpeed, targetDuration
+            newsFocus, customVoiceUrl, voiceSpeed, targetDuration,
+            introDuration, newsCardDuration, outroDuration
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    }, [scenes, layers, durationInFrames, selectedVoice, format, currentPhase, scriptLang, title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl, newsFocus, customVoiceUrl, voiceSpeed, targetDuration, isLoaded]);
+    }, [scenes, layers, durationInFrames, selectedVoice, format, currentPhase, scriptLang, title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl, newsFocus, customVoiceUrl, voiceSpeed, targetDuration, introDuration, newsCardDuration, outroDuration, isLoaded]);
 
     const updateScene = useCallback((index: number, updates: Partial<Scene>) => {
         setScenes(prev => { const next = [...prev]; next[index] = { ...next[index], ...updates }; return next; });
@@ -164,6 +171,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
 
     const { prepareAssemblyData } = useAssembly({
         scenes, selectedVoice, customVoiceUrl, bgMusicUrl, bgMusicVolume: bgMusicVolume, voiceSpeed, introSfxUrl, outroSfxUrl, newsCardSfxUrl, scriptLang, title, format,
+        introDuration, newsCardDuration, outroDuration,
         setScenes, setLayers, setDurationInFrames, setError, setIsPreparingAssembly: setIsPreparingAssembly, setSyncEta, pushToHistory,
     });
 
@@ -183,6 +191,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         durationInFrames, setDurationInFrames, selectedVoice, setSelectedVoice, customVoiceUrl, setCustomVoiceUrl,
         bgMusicUrl, setBgMusicUrl, bgMusicVolume, setBgMusicVolume, transitionSfxUrl, setTransitionSfxUrl,
         introSfxUrl, setIntroSfxUrl, outroSfxUrl, setOutroSfxUrl, newsCardSfxUrl, setNewsCardSfxUrl, voiceSpeed, setVoiceSpeed,
+        introDuration, setIntroDuration, newsCardDuration, setNewsCardDuration, outroDuration, setOutroDuration,
         isGeneratingScript, setIsGeneratingScript, isPreparingAssembly, syncEta, prepareAssemblyData,
         isGeneratingVideo, setIsGeneratingVideo, renderProgress, renderStep, renderEta, videoUrl, renderFinished, setRenderFinished, setVideoUrl,
         renderVideo, handleDownload: clipOps.handleDownload, isPlayingPreview, setIsPlayingPreview, exportSettings, setExportSettings,
@@ -191,6 +200,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     }), [
         title, format, scriptLang, newsFocus, targetDuration, currentPhase, error, isLoaded, scenes, layers, durationInFrames,
         selectedVoice, customVoiceUrl, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl,
+        introDuration, newsCardDuration, outroDuration,
         isGeneratingScript, isPreparingAssembly, syncEta, isGeneratingVideo, renderProgress, renderStep,
         renderEta, videoUrl, renderFinished, isPlayingPreview, historyIndex, history.length, exportSettings,
         updateScene, clipOps, prepareAssemblyData, renderVideo, undo, redo,

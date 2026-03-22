@@ -276,10 +276,35 @@ export function detectBrand(visual: string): { name: string; domain: string } | 
     return null;
 }
 
-export function getImageUrl(item: MediaItem, width: number, height: number): string {
+export function getImageUrl(item: MediaItem, width: number = 800, height: number = 600): string {
     if (item.url.includes('images.pexels.com')) {
-        return `${item.url}?auto=compress&cs=tinysrgb&w=${width}&h=${height}&fit=crop`;
+        // Use Pexels dynamic resizing
+        return `${item.url.split('?')[0]}?auto=compress&cs=tinysrgb&w=${width}&h=${height}&fit=crop`;
     }
+    return item.url;
+}
+
+/**
+ * Gets a fast-loading thumbnail for any media item.
+ * For videos, it derives the Pexels preview image URL.
+ */
+export function getMediaThumbnail(item: MediaItem): string {
+    if (item.type === 'image') return getImageUrl(item, 480, 270);
+    
+    // For Pexels videos, we can often guess the thumbnail URL from the ID
+    // Example: https://videos.pexels.com/video-files/7140928/7140928-hd_1920_1080_24fps.mp4
+    // Thumbnail: https://images.pexels.com/videos/7140928/free-video-7140928.jpg?auto=compress&cs=tinysrgb&h=480&w=800
+    if (item.url.includes('pexels.com/video-files/')) {
+        const parts = item.url.split('/');
+        // The ID is usually the second to last part or the part before the filename
+        // v1: .../video-files/7140928/7140928-hd...
+        const id = parts[parts.length - 2];
+        if (id && /^\d+$/.test(id)) {
+            return `https://images.pexels.com/videos/${id}/free-video-${id}.jpg?auto=compress&cs=tinysrgb&w=480&h=270&fit=crop`;
+        }
+    }
+    
+    // Fallback to a placeholder or the original URL
     return item.url;
 }
 
@@ -406,20 +431,30 @@ export async function loadMediaData(): Promise<void> {
             throw new Error(`Failed to fetch media data: ${imagesRes.status} / ${videosRes.status}`);
         }
 
-        const imagesData = await imagesRes.json();
-        const videosData = await videosRes.json();
+        const imagesData = await imagesRes.json() as MediaItem[];
+        const videosData = await videosRes.json() as MediaItem[];
+
+        // Runtime Deduplication by URL
+        const imagesMap = new Map<string, MediaItem>();
+        imagesData.forEach(item => imagesMap.set(item.url, item));
+        
+        const videosMap = new Map<string, MediaItem>();
+        videosData.forEach(item => videosMap.set(item.url, item));
+
+        console.log(`MediaLibrary: Loaded ${imagesData.length} images (Unique: ${imagesMap.size}) and ${videosData.length} videos (Unique: ${videosMap.size}).`);
 
         // Mutate existing arrays to preserve references
         IMAGES.length = 0;
-        IMAGES.push(...(imagesData as MediaItem[]));
+        IMAGES.push(...Array.from(imagesMap.values()));
         
         VIDEOS.length = 0;
-        VIDEOS.push(...(videosData as MediaItem[]));
+        VIDEOS.push(...Array.from(videosMap.values()));
         
         ALL_MEDIA.length = 0;
         ALL_MEDIA.push(...IMAGES, ...VIDEOS);
 
         isLoaded = true;
+
     } catch (error) {
         console.error("Error loading media library:", error);
     }

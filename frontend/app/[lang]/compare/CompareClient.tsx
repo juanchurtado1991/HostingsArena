@@ -1,14 +1,10 @@
 "use client";
 
-import { GlassCard } from "@/components/ui/GlassCard";
-import { formatCurrency } from "@/lib/utils";
 import { Check, X, AlertTriangle, ArrowRight, Shield, Database, Server, Zap, Globe, Coins, Search } from "lucide-react";
-import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useTrackPageView } from "@/hooks/useTrackPageView";
 import { ProviderSelector } from "@/components/ProviderSelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { ComparisonTable } from "@/components/comparisons/ComparisonTable";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getCalculatorAffiliateLinks, getDefaultCompareProviders } from "@/lib/actions/affiliates";
@@ -48,7 +44,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                 setP2Link(p2Link);
             });
 
-            // Update URL for Programmatic SEO seamlessly without triggering a full navigation
             if (p1.slug && p2.slug && !isInitialLoad) {
                 const newPath = `/${lang}/compare/${p1.slug}-vs-${p2.slug}`;
                 if (pathname !== newPath) {
@@ -58,13 +53,11 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
         }
     }, [p1, p2, lang, pathname, isInitialLoad]);
 
-    // Force sync state if initial props change (crucial for SPA navigation)
     useEffect(() => {
         if (initialDataA) setP1(initialDataA);
         if (initialDataB) setP2(initialDataB);
         if (initialCategory) setCategory(initialCategory);
         
-        // If data was provided via props, we don't need the initial client-side fetch flow
         if (initialDataA && initialDataB) {
             setIsInitialLoad(false);
         }
@@ -81,7 +74,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                 setCategory(cat);
             }
 
-            // Priority: Dynamic Route Slug -> URL Params -> Default
             const fetchA = async () => {
                 if (initialSlugA || providerA) {
                     try {
@@ -130,7 +122,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                 }
             };
 
-            // Run all pre-selections only if data wasn't provided server-side
             if (!initialDataA || !initialDataB) {
                 await Promise.all([fetchA(), fetchB(), fetchDefaults()]);
             }
@@ -148,8 +139,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
         <div className="min-h-screen pt-24 pb-12 px-6">
             <div className="max-w-7xl mx-auto">
 
-
-                {/* Header */}
                 <div className="text-center mb-12">
                     <div className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest mb-4">
                         {dict.compare.badge}
@@ -162,7 +151,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                     </p>
                 </div>
 
-                {/* Selection Area */}
                 <div className="max-w-4xl mx-auto mb-16">
                     <Tabs value={category} className="w-full" onValueChange={(v) => {
                         setCategory(v as "hosting" | "vpn");
@@ -177,7 +165,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center relative">
-                            {/* Provider 1 */}
                             <div className={`p-4 md:p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p1 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
                                 <ProviderSelector
                                     type={category}
@@ -186,14 +173,12 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                                 />
                             </div>
 
-                            {/* VS Badge */}
                             <div className="flex justify-center z-10 -my-2 md:my-0">
                                 <div className="h-12 w-12 rounded-full bg-primary text-white font-black italic flex items-center justify-center border-4 border-background shadow-lg">
                                     VS
                                 </div>
                             </div>
 
-                            {/* Provider 2 */}
                             <div className={`p-4 md:p-8 rounded-3xl border border-border/60 bg-card/30 text-center transition-all duration-300 ${p2 ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''}`}>
                                 <ProviderSelector
                                     type={category}
@@ -205,7 +190,6 @@ function CompareContent({ dict, lang, initialCategory, initialSlugA, initialSlug
                     </Tabs>
                 </div>
 
-                {/* Comparison Table (Money First) */}
                 {p1 && p2 ? (
                     <div className="animate-in slide-in-from-bottom-4 duration-700 fade-in">
                         <ComparisonTable data={[p1, p2]} title="Direct Comparison" type={category} affiliateUrls={[p1Link, p2Link]} />

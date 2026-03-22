@@ -29,6 +29,10 @@ pnpm-lock.yaml
 *.jpeg
 *.gif
 *.mp4
+*.mp3
+*.wav
+*.webm
+*.ogg
 *.ico
 
 # Environment and Secrets
