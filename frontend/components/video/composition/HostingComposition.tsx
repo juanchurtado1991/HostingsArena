@@ -24,13 +24,11 @@ export interface CompositionProps {
 
 export const HostingComposition: React.FC<CompositionProps> = ({ 
     title, scenes, layers = [], format,
-    bgMusicUrl = "/assets/bg-music.mp3", bgMusicVolume = 0.4,
     transitionSfxUrl = "/assets/click.mp3", outroSfxUrl,
-    voiceSpeed = 1, introDuration = 6, outroDuration = 15, baseUrl = '',
+     introDuration = 6, outroDuration = 15, baseUrl = '',
 }) => {
     const { fps, durationInFrames } = useVideoConfig();
     const isPreview = !baseUrl;
-    const frame = useCurrentFrame();
 
     useEffect(() => {
         if (transitionSfxUrl) {
@@ -41,16 +39,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
         }
     }, [transitionSfxUrl, baseUrl]);
 
-    const introFrames = Math.round(introDuration * fps);
     const outroFrames = Math.round(outroDuration * fps);
-
-    const sceneTimings = useMemo(() => {
-        return SyncEngine.calculateTimingsCustom(scenes, introDuration, 5).map(t => ({
-            startFrame: t.startFrame - introFrames, 
-            durationFrames: t.durationInFrames 
-        }));
-    }, [scenes, introDuration, introFrames]);
-
     const textColor = '#ffffff';
 
     const renderLayers = (activeLayers: Layer[]) => {
@@ -91,7 +80,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                                 playbackRate={1}
                                                 pauseWhenBuffering={true} 
                                                 acceptableTimeShiftInSeconds={0.5} 
-                                                useWebAudioApi={true} 
+                                                useWebAudioApi={isPreview} 
                                                 crossOrigin="anonymous"
                                                 onCanPlay={() => console.log(`[AudioLoader] Audio Ready (${clip.type}): ${clip.id}`)}
                                                 onError={(e) => console.error(`[AudioError] Failed to load ${clip.type}: ${assetUrl}`, e)}
