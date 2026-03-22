@@ -218,6 +218,8 @@ export function useAssembly(args: UseAssemblyArgs) {
             store.setTitle(title);
             store.setFormat(format);
             store.setVoiceSpeed(voiceSpeed);
+            store.setOutroSfxUrl(outroSfxUrl);
+
             
             pushToHistory(updatedScenes, finalLayers);
         } catch (err: any) {

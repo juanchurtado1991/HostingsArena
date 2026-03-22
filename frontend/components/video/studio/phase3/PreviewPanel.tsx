@@ -25,6 +25,7 @@ export function PreviewPanel({ showSafeAreas, setShowSafeAreas }: PreviewPanelPr
     const currentTime = useStudioStore(s => s.currentTime);
     const isPlayingPreview = useStudioStore(s => s.isPlayingPreview);
     const voiceSpeed = useStudioStore(s => s.voiceSpeed);
+    const outroSfxUrl = useStudioStore(s => s.outroSfxUrl);
     const setCurrentTime = useStudioStore(s => s.setCurrentTime);
     const setIsPlayingPreview = useStudioStore(s => s.setIsPlayingPreview);
     const fps = SyncEngine.FPS;
@@ -32,7 +33,7 @@ export function PreviewPanel({ showSafeAreas, setShowSafeAreas }: PreviewPanelPr
     return (
         <div className="lg:col-span-8 flex flex-col min-h-0">
             <div className="bg-transparent rounded-3xl overflow-hidden border border-black/5 shadow-2xl flex-1 relative group ring-1 ring-black/5 min-h-0">
-                <VideoPlayer title={title} scenes={scenes} layers={layers} format={format} durationInFrames={durationInFrames} playing={isPlayingPreview} voiceSpeed={voiceSpeed} showSafeAreas={showSafeAreas} />
+                <VideoPlayer title={title} scenes={scenes} layers={layers} format={format} durationInFrames={durationInFrames} playing={isPlayingPreview} voiceSpeed={voiceSpeed} outroSfxUrl={outroSfxUrl} showSafeAreas={showSafeAreas} />
                 <CanvasEditor />
 
                 <div className="absolute top-6 right-6 flex gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 z-[80]">

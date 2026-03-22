@@ -297,8 +297,9 @@ export const VideoPlayer = memo(forwardRef<PlayerRef, VideoPlayerProps>(({
         bgMusicUrl: sanitize(bgMusicUrl),
         bgMusicVolume,
         transitionSfxUrl: sanitize(transitionSfxUrl),
+        outroSfxUrl: sanitize(outroSfxUrl),
         voiceSpeed,
-    }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, voiceSpeed]);
+    }), [title, sanitizedScenes, sanitizedLayers, format, bgMusicUrl, bgMusicVolume, transitionSfxUrl, outroSfxUrl, voiceSpeed]);
 
     // UI Sync Feedback
     const [isSyncing, setIsSyncing] = useState(false);
