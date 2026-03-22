@@ -81,7 +81,7 @@ export const HostingComposition: React.FC<CompositionProps> = ({
                                             key={clip.id} 
                                             from={clip.startFrame} 
                                             durationInFrames={clip.durationInFrames}
-                                            premountFor={90} 
+                                            premountFor={30} 
                                         >
                                             <Audio 
                                                 key={`audio-${clip.id}`}
