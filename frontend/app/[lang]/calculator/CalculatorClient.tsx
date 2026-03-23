@@ -1,16 +1,14 @@
 "use client";
 
-import { GlassCard } from "@/components/ui/GlassCard";
 import { formatCurrency } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useTrackPageView } from "@/hooks/useTrackPageView";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ProviderSelector } from "@/components/ProviderSelector";
+import { CalculatorChart } from "@/components/calculator/CalculatorChart";
+import { CalculatorControls } from "@/components/calculator/CalculatorControls";
+import { CalculatorResults } from "@/components/calculator/CalculatorResults";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, TrendingUp, Zap } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { getCalculatorAffiliateLinks, getDefaultCompareProviders } from "@/lib/actions/affiliates";
-import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 
 interface CalculatorClientProps {
     dict: any;
@@ -139,173 +137,33 @@ export default function CalculatorClient({ dict, lang }: CalculatorClientProps) 
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                    <GlassCard className="lg:col-span-1 p-4 md:p-6 space-y-6 md:space-y-8 h-fit lg:sticky lg:top-24">
-                        <div className="space-y-6">
-                            {/* Year Selector */}
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground mb-2 block">{dict.calculator.projection_period}</label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {[1, 3, 5, 10].map((y) => (
-                                        <Button
-                                            key={y}
-                                            variant={years === y ? "default" : "outline"}
-                                            onClick={() => setYears(y)}
-                                            size="sm"
-                                            className={years === y ? "bg-primary text-primary-foreground font-bold" : ""}
-                                        >
-                                            {y}Y
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="border-t border-border pt-6">
-                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                    {dict.calculator.provider_a_trap}
-                                </h3>
-                                <div className="space-y-4">
-                                    <ProviderSelector
-                                        type={category}
-                                        selectedProvider={provider1.provider_name !== "Loading..." ? provider1 : null}
-                                        onSelect={(p) => {
-                                            if (p) {
-                                                const renewalPrice = p.renewal_price || p.renewal_price_monthly || (p.pricing_monthly * 2) || 0;
-                                                setProvider1({
-                                                    ...provider1,
-                                                    id: p.id,
-                                                    provider_name: p.provider_name,
-                                                    initial: Number(p.pricing_monthly) || 0,
-                                                    renewal: Number(renewalPrice),
-                                                    website_url: p.website_url || ""
-                                                });
-                                            }
-                                        }}
-                                    />
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-xs text-muted-foreground">{dict.calculator.intro}</label>
-                                            <input type="number" value={provider1.initial} onChange={e => setProvider1({ ...provider1, initial: Number(e.target.value) })} className="w-full bg-background border rounded px-2 py-1 text-sm" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-muted-foreground">{dict.calculator.renewal}</label>
-                                            <input type="number" value={provider1.renewal} onChange={e => setProvider1({ ...provider1, renewal: Number(e.target.value) })} className="w-full bg-background border border-destructive/50 text-destructive font-bold rounded px-2 py-1 text-sm" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="border-t border-border pt-6">
-                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                    {dict.calculator.provider_b_savior}
-                                </h3>
-                                <div className="space-y-4">
-                                    <ProviderSelector
-                                        type={category}
-                                        selectedProvider={provider2.provider_name !== "Loading..." ? provider2 : null}
-                                        onSelect={(p) => {
-                                            if (p) {
-                                                const renewalPrice = p.renewal_price || p.renewal_price_monthly || (p.pricing_monthly * 2) || 0;
-                                                setProvider2({
-                                                    ...provider2,
-                                                    id: p.id,
-                                                    provider_name: p.provider_name,
-                                                    initial: Number(p.pricing_monthly) || 0,
-                                                    renewal: Number(renewalPrice),
-                                                    website_url: p.website_url || ""
-                                                });
-                                            }
-                                        }}
-                                    />
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-xs text-muted-foreground">{dict.calculator.intro}</label>
-                                            <input type="number" value={provider2.initial} onChange={e => setProvider2({ ...provider2, initial: Number(e.target.value) })} className="w-full bg-background border rounded px-2 py-1 text-sm" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-muted-foreground">{dict.calculator.renewal}</label>
-                                            <input type="number" value={provider2.renewal} onChange={e => setProvider2({ ...provider2, renewal: Number(e.target.value) })} className="w-full bg-background border border-green-500/50 text-green-600 font-bold rounded px-2 py-1 text-sm" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </GlassCard>
+                    <CalculatorControls 
+                        dict={dict} 
+                        category={category} 
+                        years={years} 
+                        setYears={setYears} 
+                        provider1={provider1} 
+                        setProvider1={setProvider1} 
+                        provider2={provider2} 
+                        setProvider2={setProvider2} 
+                    />
 
                     {/* Chart & Results */}
                     <div className="lg:col-span-2 space-y-6">
-                        <GlassCard className="p-4 md:p-6 md:p-8 min-h-[300px] flex flex-col justify-center relative overflow-hidden">
-                            <div className="absolute top-3 right-3 text-xs font-mono text-muted-foreground/20 pointer-events-none hidden md:block">
-                                PREDICTIVE MODEL v2.1
-                            </div>
-                            <div className="h-[220px] md:h-[350px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={data}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                                        <XAxis dataKey="month" tickFormatter={(val) => `${Math.floor(val / 12)}Y`} stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis tickFormatter={(val) => `$${val}`} stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                border: '1px solid #e2e8f0',
-                                                borderRadius: '8px',
-                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                            }}
-                                            formatter={(value: any) => [`$${value}`, '']}
-                                            labelFormatter={(label) => `Month ${label}`}
-                                        />
-                                        <Legend verticalAlign="top" height={36} />
-                                        <Line name={provider1.provider_name} type="monotone" dataKey={provider1.provider_name} stroke="#ef4444" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                                        <Line name={provider2.provider_name} type="monotone" dataKey={provider2.provider_name} stroke="#22c55e" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </GlassCard>
+                        <CalculatorChart data={data} provider1Name={provider1.provider_name} provider2Name={provider2.provider_name} />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <GlassCard className="p-6 border-l-4 border-l-destructive bg-destructive/5 flex flex-col justify-between">
-                                <div>
-                                    <div className="text-sm font-medium text-destructive mb-1 uppercase tracking-wider">{dict.calculator.loser}</div>
-                                    <h3 className="text-2xl font-bold text-foreground mb-4">{loser}</h3>
-                                    <div className="text-4xl font-black text-destructive/80 mb-2">
-                                        {formatCurrency(Math.max(p1Total, p2Total))}
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">{dict.calculator.total_cost.replace('{years}', years.toString())}</p>
-                                </div>
-                            </GlassCard>
-
-                            <GlassCard className="p-6 border-l-4 border-l-green-500 bg-green-500/5 relative overflow-hidden flex flex-col justify-between">
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <TrendingUp className="w-24 h-24" />
-                                </div>
-
-                                <div>
-                                    <div className="text-sm font-medium text-green-600 mb-1 uppercase tracking-wider flex items-center gap-2">
-                                        <Zap className="w-4 h-4 fill-current" /> {dict.calculator.winner}
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-foreground mb-4">{winner}</h3>
-                                    <div className="text-4xl font-black text-green-600 mb-2">
-                                        {formatCurrency(Math.min(p1Total, p2Total))}
-                                    </div>
-                                    <p className="text-sm text-green-700/80 font-medium">
-                                        {dict.calculator.you_save.replace('{amount}', formatCurrency(diff))}
-                                    </p>
-                                </div>
-
-                                <div className="mt-6">
-                                    <AffiliateButton 
-                                        size="lg" 
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg shadow-green-500/20" 
-                                        providerName={winner}
-                                        visitUrl={winner === provider1.provider_name ? p1Link : p2Link}
-                                        position="calculator-winner"
-                                    >
-                                        {dict.calculator.switch_to.replace('{provider}', winner)}
-                                    </AffiliateButton>
-                                </div>
-                            </GlassCard>
-                        </div>
+                        <CalculatorResults
+                            dict={dict}
+                            loser={loser}
+                            winner={winner}
+                            p1Total={p1Total}
+                            p2Total={p2Total}
+                            diff={diff}
+                            years={years}
+                            provider1Name={provider1.provider_name}
+                            p1Link={p1Link}
+                            p2Link={p2Link}
+                        />
                     </div>
                 </div>
             </div>

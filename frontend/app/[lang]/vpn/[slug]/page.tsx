@@ -15,6 +15,9 @@ import { PerformanceBadge } from "@/components/ui/PerformanceBadge";
 import { ProsConsSection } from "@/components/ui/ProsConsSection";
 import { AffiliateButton } from "@/components/conversion/AffiliateButton";
 import Link from "next/link";
+import { VpnHero } from "@/components/vpn/VpnHero";
+import { VpnSpecs } from "@/components/vpn/VpnSpecs";
+import { VpnSidebar } from "@/components/vpn/VpnSidebar";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; lang: string }> }) {
     const { slug, lang } = await params;
@@ -137,73 +140,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                 discount={renewalHikePercent > 0 ? "Save BIG" : undefined}
             />
 
-            {/* HERO SECTION */}
-            <div className="relative pt-16 pb-16 overflow-hidden">
-                {/* Immersive Background */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-blue-500/5 via-transparent to-transparent -z-10" />
-                <div className="absolute top-20 left-[10%] w-72 h-72 bg-blue-500/10 rounded-full blur-[120px] -z-10 animate-pulse" />
-                <div className="absolute top-40 right-[15%] w-96 h-96 bg-cyan-500/10 rounded-full blur-[150px] -z-10" />
-
-                <div className="container mx-auto px-4 relative z-10">
-                    <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-                        {isBadProvider && (
-                            <div className="w-full mb-8 bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-2xl flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
-                                <AlertTriangle className="w-5 h-5" />
-                                <span className="font-bold">Caution: We detected slower speeds during our recent testing.</span>
-                            </div>
-                        )}
-
-                        <Badge variant="secondary" className="mb-6 bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20 transition-all rounded-full px-4 py-1.5 flex items-center gap-2">
-                            <ShieldCheck className="w-3.5 h-3.5 fill-current" />
-                            Privacy Verified Review
-                        </Badge>
-
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-foreground text-balance">
-                            {provider.provider_name} <span className="text-muted-foreground font-light">VPN</span>
-                        </h1>
-
-                        <p className="text-xl md:text-2xl text-muted-foreground font-light leading-relaxed mb-12 max-w-2xl text-balance">
-                            In-depth privacy and speed audit based on real-world global server benchmarks.
-                        </p>
-
-                        {/* Feature Badges */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-12">
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <div className="text-3xl font-black text-blue-500">
-                                    {provider.pricing_monthly && provider.pricing_monthly > 0 ? `$${provider.pricing_monthly}` : "Deal"}
-                                </div>
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Monthly</div>
-                            </GlassCard>
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <PerformanceBadge grade={speedGrade} size="md" />
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Speed Index</div>
-                            </GlassCard>
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <div className="text-3xl font-black text-foreground">
-                                    {provider.server_count && provider.server_count > 0 ? provider.server_count.toLocaleString() : 'Global'}
-                                </div>
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{provider.server_count && provider.server_count > 0 ? 'Servers' : 'Network'}</div>
-                            </GlassCard>
-                            <GlassCard className="p-4 flex flex-col items-center justify-center gap-2" hoverEffect={false}>
-                                <div className={cn("text-3xl font-black", hasRefund ? "text-green-500" : "text-destructive")}>
-                                    {hasRefund ? `${provider.money_back_days}d` : 'None'}
-                                </div>
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Refund</div>
-                            </GlassCard>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <AffiliateButton
-                                size="lg"
-                                className="h-16 px-12 text-xl shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                                providerName={provider.provider_name}
-                                visitUrl={affiliateUrl}
-                                position="hero_main"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <VpnHero provider={provider} isBadProvider={isBadProvider} speedGrade={speedGrade} hasRefund={hasRefund} affiliateUrl={affiliateUrl} />
 
             {/* CONTENT GRID */}
             <div className="container mx-auto px-4 max-w-6xl">
@@ -235,57 +172,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                         <ProsConsSection pros={pros} cons={cons} title="Expert Assessment" />
 
                         {/* PERFORMANCE METRICS */}
-                        <section className="space-y-6">
-                            <h3 className="text-2xl font-bold tracking-tight">Performance Benchmarks</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="p-6 rounded-2xl bg-secondary/30 border border-border/50 flex justify-between items-center group hover:border-blue-500/30 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                                            <Zap size={20} />
-                                        </div>
-                                        <span className="font-medium">Avg. Speed</span>
-                                    </div>
-                                    <span className="font-bold text-lg">
-                                        {provider.avg_speed_mbps && provider.avg_speed_mbps > 0 ? `${provider.avg_speed_mbps} Mbps` : 'High Traffic'}
-                                    </span>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-secondary/30 border border-border/50 flex justify-between items-center group hover:border-blue-500/30 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500 group-hover:scale-110 transition-transform">
-                                            <Database size={20} />
-                                        </div>
-                                        <span className="font-medium">Server Network</span>
-                                    </div>
-                                    <span className="font-bold text-lg">
-                                        {provider.server_count && provider.server_count > 0 ? `${provider.server_count.toLocaleString()} Nodes` : 'Global Grid'}
-                                    </span>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-secondary/30 border border-border/50 flex justify-between items-center group hover:border-blue-500/30 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                                            <Monitor size={20} />
-                                        </div>
-                                        <span className="font-medium">Streaming</span>
-                                    </div>
-                                    <span className="font-bold text-lg text-green-500 flex items-center gap-1.5">
-                                        <CheckCircle2 size={18} /> Optimized
-                                    </span>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-secondary/30 border border-border/50 flex justify-between items-center group hover:border-blue-500/30 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                                            <Smartphone size={20} />
-                                        </div>
-                                        <span className="font-medium">Device Limit</span>
-                                    </div>
-                                    <span className="font-bold text-lg">
-                                        {provider.simultaneous_connections && provider.simultaneous_connections > 0
-                                            ? (provider.simultaneous_connections === 999 ? 'Unlimited' : `${provider.simultaneous_connections} Devices`)
-                                            : 'Multiple Devices'}
-                                    </span>
-                                </div>
-                            </div>
-                        </section>
+                        <VpnSpecs provider={provider} />
 
                         {/* ANALYSIS */}
                         <section className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
@@ -344,76 +231,7 @@ export default async function VpnDetailPage({ params }: { params: Promise<{ slug
                     </div>
 
                     {/* RIGHT COLUMN: SIDEBAR */}
-                    <aside className="lg:col-span-4 space-y-8">
-                        <div className="sticky top-24 space-y-6">
-                            <GlassCard className="p-8 border-blue-500/20 shadow-2xl shadow-blue-500/10 relative overflow-hidden group">
-                                <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl transition-all group-hover:scale-150" />
-
-                                <h3 className="text-xl font-black mb-6 tracking-tight flex items-center justify-between">
-                                    Plans & Pricing
-                                    <Key className="w-5 h-5 text-blue-500" />
-                                </h3>
-
-                                <div className="space-y-4 mb-8">
-                                    <div className="flex justify-between items-center p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">Monthly</span>
-                                            <span className="text-2xl font-black text-foreground">
-                                                {provider.pricing_monthly && provider.pricing_monthly > 0 ? `$${provider.pricing_monthly}` : "Special"}
-                                            </span>
-                                        </div>
-                                        <Badge variant="outline" className="text-[10px] font-bold">Base</Badge>
-                                    </div>
-
-                                    {provider.pricing_yearly && provider.pricing_yearly > 0 && (
-                                        <div className="flex justify-between items-center p-4 rounded-2xl bg-green-500/5 border border-green-500/20 ring-1 ring-green-500/30">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-green-600 uppercase">1-Year Savings</span>
-                                                <span className="text-2xl font-black text-foreground">${(provider.pricing_yearly / 12).toFixed(2)}<span className="text-sm font-normal">/mo</span></span>
-                                            </div>
-                                            <Badge className="bg-green-500 text-white text-[10px] font-black">BEST VALUE</Badge>
-                                        </div>
-                                    )}
-
-                                    {provider.pricing_2year && provider.pricing_2year > 0 && (
-                                        <div className="flex justify-between items-center p-4 rounded-2xl bg-secondary/30 border border-border/50">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-muted-foreground uppercase">2-Year Term</span>
-                                                <span className="text-xl font-black text-foreground">${(provider.pricing_2year / 24).toFixed(2)}<span className="text-sm font-normal">/mo</span></span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <AffiliateButton
-                                    size="lg"
-                                    className="w-full h-16 text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
-                                    providerName={provider.provider_name}
-                                    visitUrl={affiliateUrl}
-                                    position="sidebar_summary"
-                                >
-                                    CLAIM OFFER
-                                </AffiliateButton>
-
-                                <p className="text-[10px] text-center text-muted-foreground mt-4 font-bold uppercase tracking-widest opacity-50">
-                                    Prices updated: {new Date().toLocaleDateString()}
-                                </p>
-                            </GlassCard>
-
-                            {/* Privacy Features List (Short) */}
-                            <div className="px-4 space-y-4">
-                                <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                                    <Shield className="w-4 h-4 text-blue-500" /> AES-256 Bit Encryption
-                                </div>
-                                <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                                    <Lock className="w-4 h-4 text-blue-500" /> Automatic Kill Switch
-                                </div>
-                                <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                                    <Globe className="w-4 h-4 text-blue-500" /> RAM-Only Server Network
-                                </div>
-                            </div>
-                        </div>
-                    </aside>
+                    <VpnSidebar provider={provider} affiliateUrl={affiliateUrl} />
                 </div>
             </div>
         </main>
