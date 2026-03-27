@@ -13,6 +13,7 @@ import { usePresets } from './usePresets';
 import { ALL_AUDIO } from '@/components/video/audioLibrary';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+import { StudioPhaseHeader } from '../common/StudioPhaseHeader';
 import type { StudioPreset } from '@/contexts/video-studio/types';
 
 function Stepper({ value, onChange, min = 1, max = 60 }: { value: number; onChange: (v: number) => void; min?: number; max?: number }) {
@@ -172,30 +173,28 @@ export function ConfigCard() {
         : selectedVoice ? selectedVoice.replace('Neural', '').replace(/-/g, ' ').trim() : 'Not selected';
 
     return (
-        <>
-            <div className="glass-card border-studio-border overflow-hidden">
-                <div className="flex items-center justify-between px-8 py-6 border-b border-studio-border">
-                    <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-studio-accent/10 rounded-2xl text-studio-accent border border-studio-accent/15">
-                            <Bookmark className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Studio Preset Manager</h3>
-                            <p className="text-[10px] text-zinc-400 mt-0.5">Click any setting to change it. Save a preset to capture everything at once.</p>
-                        </div>
-                    </div>
-                    <button
+        <div className="px-2 space-y-6 pb-20">
+            <StudioPhaseHeader 
+                icon={Sparkles}
+                title="Creative Studio Presets"
+                subtitle="Configure your voice and music identity at once"
+                action={
+                    <Button
+                        variant="ghost"
                         onClick={() => setIsSaving(!isSaving)}
                         className={cn(
-                            "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest border transition-all",
+                            "h-12 rounded-full font-bold tracking-tight text-xs uppercase px-8 transition-all shadow-sm flex items-center gap-3",
                             isSaving
-                                ? "bg-studio-accent text-white border-transparent shadow-lg shadow-studio-accent/25"
-                                : "bg-studio-surface text-zinc-600 border-studio-border hover:border-studio-accent/40 hover:text-studio-accent"
+                                ? "bg-studio-accent text-white border-transparent shadow-[0_4px_16px_rgba(0,122,255,0.3)] hover:opacity-90"
+                                : "bg-zinc-100/80 border border-zinc-200/50 hover:border-studio-accent text-zinc-500 hover:text-studio-accent hover:bg-zinc-200/50"
                         )}>
-                        <BookmarkPlus className="w-3.5 h-3.5" />
-                        Save Preset
-                    </button>
-                </div>
+                        <BookmarkPlus className={cn("w-5 h-5", isSaving ? "animate-pulse" : "")} /> 
+                        {isSaving ? "Cancel Saving" : "Save Preset"}
+                    </Button>
+                }
+            />
+
+            <div className="glass-card border-studio-border overflow-hidden">
 
                 <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-100">
 
@@ -365,6 +364,6 @@ export function ConfigCard() {
                 }
             />
             <input type="file" ref={voiceInputRef} className="hidden" accept="audio/*" onChange={handleFileUpload} />
-        </>
+        </div>
     );
 }

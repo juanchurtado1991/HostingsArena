@@ -23,6 +23,8 @@ interface UseClipOperationsArgs {
     setDurationInFrames: (v: number) => void;
     setHistory: React.Dispatch<React.SetStateAction<{ scenes: Scene[]; layers: Layer[] }[]>>;
     setHistoryIndex: React.Dispatch<React.SetStateAction<number>>;
+    setAgentMessages: (v: any[]) => void;
+    setAgentThreadId: (v: string | undefined) => void;
     videoUrl: string | null;
     title: string;
 }
@@ -141,6 +143,8 @@ export function useClipOperations(args: UseClipOperationsArgs) {
         args.setHistory([]);
         args.setHistoryIndex(-1);
         useStudioStore.getState().resetStore();
+        args.setAgentMessages([]);
+        args.setAgentThreadId(undefined);
         localStorage.removeItem("hostingarena_studio_v2");
         localStorage.removeItem('hostingarena_editor_draft');
         clearAssetCache();

@@ -16,6 +16,8 @@ export interface VideoStudioContextValue {
     setTargetDuration: (v: number) => void;
     currentPhase: number;
     setCurrentPhase: (v: number) => void;
+    studioStep: 'scenes' | 'editor' | 'export';
+    setStudioStep: (v: 'scenes' | 'editor' | 'export') => void;
     error: string | null;
     setError: (v: string | null) => void;
     isLoaded: boolean;
@@ -93,4 +95,12 @@ export interface VideoStudioContextValue {
     canUndo: boolean;
     canRedo: boolean;
     resetProject: () => void;
+    agentMessages: any[];
+    setAgentMessages: React.Dispatch<React.SetStateAction<any[]>>;
+    isAssetPickerOpen: boolean;
+    setIsAssetPickerOpen: (v: boolean) => void;
+    activePickerTarget?: string;
+    setActivePickerTarget: (v: string | undefined) => void;
+    agentThreadId?: string;
+    setAgentThreadId: (v: string | undefined) => void;
 }

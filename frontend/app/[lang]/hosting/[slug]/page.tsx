@@ -180,7 +180,7 @@ export default async function HostingDetailPage({ params, searchParams }: { para
                         <HostingSpecs provider={provider} />
 
                         {/* PLAN COMPARISON */}
-                        <HostingPlans allPlans={allPlans} provider={provider} />
+                        <HostingPlans allPlans={allPlans || []} provider={provider} />
 
                         {/* Top Competitors (Programmatic SEO Internal Links) */}
                         {alternativesData && alternativesData.length > 0 && (

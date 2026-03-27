@@ -74,6 +74,7 @@ export interface Scene {
     subHeadline?: string;
     displayHeadline?: string;
     voiceSpeed?: number;
+    sfxUrl?: string;
 }
 
 export interface StudioPreset {

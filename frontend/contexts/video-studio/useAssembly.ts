@@ -97,6 +97,12 @@ export function useAssembly(args: UseAssemblyArgs) {
             };
 
             const sceneAudioData = await Promise.all(validScenes.map(async (scene, i) => {
+                // SKIP generation if voice already exists for this exact text
+                if (scene.voiceUrl && scene.speech === scene.lastSyncedSpeech) {
+                    console.log(`[StudioVoice] Reusing cached voice for scene ${i}`);
+                    return { url: scene.voiceUrl, wordTimestamps: scene.wordTimestamps || [], duration: scene.duration || 3 };
+                }
+
                 let res = await generateVoice(scene.speech, selectedVoice);
                 if (!res.ok) {
                     const fallback = FALLBACK_VOICES[voiceLang] || FALLBACK_VOICES.en;
@@ -115,33 +121,42 @@ export function useAssembly(args: UseAssemblyArgs) {
             const updatedScenes = [...scenes];
             let activeValidIdx = 0;
             
-            for (let i = 0; i < updatedScenes.length; i++) {
-                const scene = updatedScenes[i];
+            // PARALLEL checking/fetching of missing assets if still needed
+            await Promise.all(updatedScenes.map(async (scene, i) => {
                 const isSpeechless = !scene.speech.trim();
                 const sceneDurationSec = isSpeechless ? 3 : (sceneAudioData[activeValidIdx]?.duration || 3);
                 
                 let dynamicAssetUrl = scene.assetUrl;
                 if (!dynamicAssetUrl && scene.speech.trim()) {
                     try {
-                        const assetRes = await fetch('/api/admin/video/assets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: scene.visual || scene.speech, type: 'both', count: 1 }) });
+                        const assetRes = await fetch('/api/admin/video/assets', { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ query: scene.visual || scene.speech, type: 'both', count: 1 }) 
+                        });
                         if (assetRes.ok) {
                             const assetData = await assetRes.json();
-                            if (assetData.results?.length > 0) {
-                                dynamicAssetUrl = assetData.results[0].url;
-                                console.log(`[Studio Context] Fetched dynamic asset for scene ${i}: ${dynamicAssetUrl}`);
-                            }
+                            if (assetData.results?.length > 0) dynamicAssetUrl = assetData.results[0].url;
                         }
-                    } catch (e) { console.warn(`[Studio Context] Failed to fetch dynamic asset for scene ${i}`, e); }
+                    } catch (e) { console.warn(`[Studio Context] Failed dynamic fetch for scene ${i}`, e); }
                 }
 
                 if (!isSpeechless) {
                     const audioData = sceneAudioData[activeValidIdx];
-                    updatedScenes[i] = { ...scene, voiceUrl: audioData.url, wordTimestamps: audioData.wordTimestamps, duration: sceneDurationSec, assetUrl: dynamicAssetUrl || scene.visual, titleCardEnabled: true };
+                    updatedScenes[i] = { 
+                        ...scene, 
+                        voiceUrl: audioData.url, 
+                        wordTimestamps: audioData.wordTimestamps, 
+                        duration: sceneDurationSec, 
+                        assetUrl: dynamicAssetUrl || scene.visual, 
+                        lastSyncedSpeech: scene.speech, // Cache key
+                        titleCardEnabled: true 
+                    };
                     activeValidIdx++;
                 } else {
                     updatedScenes[i] = { ...scene, duration: 1, assetUrl: dynamicAssetUrl || scene.visual };
                 }
-            }
+            }));
 
             const timings = SyncEngine.calculateTimingsCustom(updatedScenes, introDuration, newsCardDuration);
             const introFrames = Math.round(introDuration * SyncEngine.FPS);

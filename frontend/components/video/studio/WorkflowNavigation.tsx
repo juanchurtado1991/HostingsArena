@@ -10,10 +10,9 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 const PHASES = [
-    { id: 1, label: "Scripting & Ideation" },
-    { id: 2, label: "Storyboard & Assets" },
-    { id: 3, label: "Visual Flow & Sync" },
-    { id: 4, label: "Render & Export" }
+    { id: 1, label: "Ideation & Creative" },
+    { id: 2, label: "Visual Flow & Sync" },
+    { id: 3, label: "Render & Export" }
 ];
 
 export function WorkflowNavigation() {
@@ -38,7 +37,7 @@ export function WorkflowNavigation() {
     };
 
     const handleProceed = async () => {
-        if (currentPhase === 2) {
+        if (currentPhase === 1) {
             const hasVoice = (selectedVoice !== 'custom' && selectedVoice) || (selectedVoice === 'custom' && customVoiceUrl);
             const hasMusic = !!bgMusicUrl;
 
@@ -56,15 +55,12 @@ export function WorkflowNavigation() {
             try {
                 setError(null);
                 await prepareAssemblyData();
-                
-
-                
-                setCurrentPhase(3);
+                setCurrentPhase(2);
             } catch (err) {
                 console.error("Assembly preparation blocked due to error.");
             }
         } else {
-            setCurrentPhase(Math.min(4, currentPhase + 1));
+            setCurrentPhase(Math.min(3, currentPhase + 1));
         }
     };
 
@@ -95,11 +91,11 @@ export function WorkflowNavigation() {
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 bg-studio-accent/10 px-3 py-1.5 rounded-full border border-studio-accent/20 shrink-0">
                             <span className="text-[8px] font-black text-studio-accent uppercase tracking-[0.25em]">
-                                {currentPhase}/4
+                                {currentPhase}/3
                             </span>
                         </div>
                         <h3 className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-900/90 hidden xl:block">
-                            {PHASES[currentPhase - 1].label}
+                            {PHASES[currentPhase - 1]?.label}
                         </h3>
                     </div>
 
@@ -131,20 +127,20 @@ export function WorkflowNavigation() {
                     <Button
                         variant="ghost"
                         className="h-8 px-4 rounded-full text-[8px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 hover:bg-black/5 border border-transparent transition-all"
-                        onClick={() => setCurrentPhase(Math.max(2, currentPhase - 1))}
-                        disabled={isGeneratingVideo || isPreparingAssembly || currentPhase <= 2}
+                        onClick={() => setCurrentPhase(Math.max(1, currentPhase - 1))}
+                        disabled={isGeneratingVideo || isPreparingAssembly || currentPhase <= 1}
                     >
                         Back
                     </Button>
                     <Button
                         className={cn(
                             "h-9 px-5 rounded-full text-[8px] font-black uppercase tracking-[0.15em] gap-2 transition-all active:scale-95 text-white",
-                            currentPhase === 4 
+                            currentPhase === 3 
                                 ? "bg-zinc-100 text-zinc-400 cursor-not-allowed border border-zinc-200" 
                                 : "bg-studio-accent hover:opacity-90 shadow-[0_4px_16px_rgba(0,122,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,122,255,0.4)]"
                         )}
                         onClick={handleProceed}
-                        disabled={currentPhase === 4 || isGeneratingVideo || isPreparingAssembly || (currentPhase === 1 && scenes.length === 0)}
+                        disabled={currentPhase === 3 || isGeneratingVideo || isPreparingAssembly || (currentPhase === 1 && scenes.length === 0)}
                     >
                         {isPreparingAssembly ? (
                             <span className="flex items-center gap-2">
@@ -153,7 +149,7 @@ export function WorkflowNavigation() {
                             </span>
                         ) : (
                             <>
-                                {currentPhase === 3 ? 'Export' : 'Next'}
+                                {currentPhase === 2 ? 'Export' : 'Next'}
                                 <ChevronRight className="w-3 h-3 stroke-[3px]" />
                             </>
                         )}

@@ -19,11 +19,18 @@ interface TransientState {
     renderStep: string;
     error: string | null;
     voiceSpeed: number;
+    scriptLang: string;
     outroSfxUrl?: string;
     bgMusicUrl?: string;
     bgMusicVolume: number;
     introDuration: number;
     outroDuration: number;
+    // Agent State
+    agentStatus: 'idle' | 'thinking' | 'waiting_approval' | 'processing';
+    currentUIPhase: 'setup' | 'creative' | 'editor' | 'export';
+    agentLogs: string[];
+    agentMessages: any[];
+    threadId: string;
 }
 
 interface StudioState extends UndoableState, TransientState {
@@ -34,6 +41,7 @@ interface StudioState extends UndoableState, TransientState {
     setTitle: (title: string) => void;
     setFormat: (format: '9:16' | '16:9') => void;
     setDurationInFrames: (duration: number) => void;
+    setScriptLang: (lang: string) => void;
 
     setCurrentTime: (time: number) => void;
     setIsPlayingPreview: (isPlaying: boolean) => void;
@@ -46,6 +54,15 @@ interface StudioState extends UndoableState, TransientState {
     setBgMusicVolume: (volume: number) => void;
     setIntroDuration: (duration: number) => void;
     setOutroDuration: (duration: number) => void;
+    
+    // Agent Actions
+    setAgentStatus: (status: 'idle' | 'thinking' | 'waiting_approval' | 'processing') => void;
+    setCurrentUIPhase: (phase: 'setup' | 'creative' | 'editor' | 'export') => void;
+    addAgentLog: (log: string) => void;
+    setAgentMessages: (messages: any[] | ((prev: any[]) => any[])) => void;
+    setThreadId: (id: string) => void;
+    syncWithAgentSnapshot: (snapshot: any) => void;
+    
     resetStore: () => void;
 
     history: UndoableState[];
@@ -74,11 +91,17 @@ export const useStudioStore = create<StudioState>()(
         renderStep: "",
         error: null,
         voiceSpeed: 1.0,
+        scriptLang: "en",
         outroSfxUrl: undefined,
         bgMusicUrl: undefined,
         bgMusicVolume: 0.15,
         introDuration: 6,
         outroDuration: 15,
+        agentStatus: 'idle',
+        currentUIPhase: 'setup',
+        agentLogs: [],
+        agentMessages: [],
+        threadId: "",
         history: [],
         historyIndex: -1,
 
@@ -99,6 +122,7 @@ export const useStudioStore = create<StudioState>()(
         setTitle: (title) => set({ title }),
         setFormat: (format) => set({ format }),
         setDurationInFrames: (durationInFrames) => set({ durationInFrames }),
+        setScriptLang: (scriptLang) => set({ scriptLang }),
 
         setCurrentTime: (currentTime) => set({ currentTime }),
         setIsPlayingPreview: (isPlayingPreview) => set({ isPlayingPreview }),
@@ -111,6 +135,26 @@ export const useStudioStore = create<StudioState>()(
         setBgMusicVolume: (bgMusicVolume) => set({ bgMusicVolume }),
         setIntroDuration: (introDuration) => set({ introDuration }),
         setOutroDuration: (outroDuration) => set({ outroDuration }),
+
+        setAgentStatus: (agentStatus) => set({ agentStatus }),
+        setCurrentUIPhase: (currentUIPhase) => set({ currentUIPhase }),
+        addAgentLog: (log) => set((state) => ({ agentLogs: [...state.agentLogs, log] })),
+        setAgentMessages: (messages) => set((state) => ({ 
+            agentMessages: typeof messages === 'function' ? (messages as any)(state.agentMessages) : messages 
+        })),
+        setThreadId: (threadId) => set({ threadId }),
+        
+        syncWithAgentSnapshot: (snapshot) => {
+            if (!snapshot) return;
+            set((state) => ({
+                ...state,
+                ...snapshot,
+                agentStatus: state.agentStatus,
+                threadId: state.threadId
+            }));
+            get().pushToHistory();
+        },
+
         resetStore: () => {
             set({
                 ...initialUndoableState,
@@ -118,10 +162,15 @@ export const useStudioStore = create<StudioState>()(
                 isPlayingPreview: false,
                 selectedClipId: null,
                 voiceSpeed: 1.0,
+                scriptLang: "en",
                 isGeneratingVideo: false,
                 renderProgress: 0,
                 renderStep: "",
                 error: null,
+                agentLogs: [],
+                agentMessages: [],
+                threadId: "",
+                currentUIPhase: 'setup',
                 history: [],
                 historyIndex: -1,
             });

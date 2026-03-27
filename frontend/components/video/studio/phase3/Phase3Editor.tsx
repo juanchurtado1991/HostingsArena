@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStudioStore } from '@/store/useStudioStore';
 import { useVideoStudio } from '@/contexts/VideoStudioContext';
@@ -7,15 +9,21 @@ import { TrackLayer } from '@/components/video/timeline/TrackLayer';
 import { MediaBlock } from '@/components/video/timeline/MediaBlock';
 import { MediaPicker } from '@/components/video/MediaPicker';
 import { AudioPicker } from '@/components/video/AudioPicker';
-import { Music, Mic, Film } from 'lucide-react';
+import { Music, Mic, Film, Clock, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { TrackHeader } from '@/components/video/timeline/TrackHeader';
 import { SyncEngine } from '@/lib/video-sync/SyncEngine';
 import { PreviewPanel } from './PreviewPanel';
 import { ClipInspector } from './ClipInspector';
+import { TimeTravelModal } from './TimeTravelModal';
 
 const STORAGE_KEY = 'hostingarena_editor_draft';
 
-export function Phase3Editor() {
+interface Phase3EditorProps {
+    isGlobalShell?: boolean;
+}
+
+export function Phase3Editor({ isGlobalShell = false }: Phase3EditorProps) {
     const layers = useStudioStore(s => s.layers);
     const scenes = useStudioStore(s => s.scenes);
     const title = useStudioStore(s => s.title);
@@ -39,7 +47,17 @@ export function Phase3Editor() {
     const historyIndex = useStudioStore(s => s.historyIndex);
     const history = useStudioStore(s => s.history);
 
-    const { layers: ctxLayers, scenes: ctxScenes, title: ctxTitle, format: ctxFormat, durationInFrames: ctxDuration, setLayers: setCtxLayers, setScenes: setCtxScenes } = useVideoStudio();
+    const { 
+        layers: ctxLayers, 
+        scenes: ctxScenes, 
+        title: ctxTitle, 
+        format: ctxFormat, 
+        durationInFrames: ctxDuration, 
+        setLayers: setCtxLayers, 
+        setScenes: setCtxScenes,
+        prepareAssemblyData,
+        isPreparingAssembly
+    } = useVideoStudio();
 
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -48,12 +66,22 @@ export function Phase3Editor() {
     const [addingToTrack, setAddingToTrack] = useState<string | null>(null);
     const [addingToTrackType, setAddingToTrackType] = useState<'media' | 'audio' | null>(null);
     const [showSafeAreas, setShowSafeAreas] = useState(false);
+    const [showTimeTravelModal, setShowTimeTravelModal] = useState(false);
     const [dragState, setDragState] = useState<{ clipId: string; mode: 'move' | 'resize-left' | 'resize-right'; initialFrame: number; initialDur: number; initialX: number; } | null>(null);
 
     const pxPerSec = 100;
     const fps = SyncEngine.FPS;
     const canUndo = historyIndex > 0;
     const canRedo = historyIndex < history.length - 1;
+
+    // --- AUTO-ASSEMBLY WHEN LANDING WITHOUT LAYERS ---
+    useEffect(() => {
+        console.log("[Phase3Editor] MOUNTED. Scenes:", scenes.length, "Layers:", layers.length);
+        if (scenes.length > 0 && layers.length === 0 && !isPreparingAssembly) {
+            console.log("[Phase3Editor] Auto-triggering assembly for 5min video...");
+            prepareAssemblyData();
+        }
+    }, [scenes.length, layers.length, isPreparingAssembly, prepareAssemblyData]);
 
     // --- Effects for draft persistence & context sync ---
     useEffect(() => {
@@ -128,10 +156,42 @@ export function Phase3Editor() {
     ));
 
     return (
-        <div className="flex flex-col gap-3 h-[calc(100vh-84px)] select-none animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <div className={cn(
+            "flex flex-col gap-3 select-none animate-in fade-in slide-in-from-bottom-8 duration-1000 relative",
+            isGlobalShell ? "h-full" : "h-[calc(100vh-84px)]"
+        )}>
+            {/* OVERLAY DE ENSAMBLADO AUTOMÁTICO - Menos intrusivo */}
+            {isPreparingAssembly && (
+                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-500 rounded-3xl">
+                    <div className="p-10 flex flex-col items-center text-center space-y-6 glass-card bg-white/10 border-white/20 shadow-2xl scale-90">
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full border-4 border-studio-accent/20 border-t-studio-accent animate-spin" />
+                            <Film className="absolute inset-0 m-auto w-6 h-6 text-studio-accent animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">Ensamblando Producción...</h3>
+                            <p className="text-zinc-300 text-[10px] font-medium uppercase tracking-widest opacity-70">
+                                Sincronizando audio y visuales técnica... Esto puede tardar unos segundos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0 overflow-hidden">
                 <PreviewPanel showSafeAreas={showSafeAreas} setShowSafeAreas={setShowSafeAreas} />
-                <ClipInspector selectedClip={selectedClip || null} onDelete={handleDelete} onReplaceAsset={handleReplaceAsset} onAttachSfx={handleAttachSfx} />
+                <div className="lg:col-span-4 flex flex-col gap-2">
+                    {/* Botones AI para Fase 3 */}
+                    <div className="flex gap-2">
+                        <button onClick={() => setShowTimeTravelModal(true)} className="flex items-center gap-1.5 px-3 h-8 rounded-xl bg-zinc-100 hover:bg-studio-accent/10 text-zinc-500 hover:text-studio-accent border border-zinc-200 hover:border-studio-accent/30 text-[9px] font-black uppercase tracking-widest transition-all">
+                            <Clock className="w-3.5 h-3.5" /> History
+                        </button>
+                        <button onClick={() => alert('AI Optimize: Análisis en desarrollo')} className="flex items-center gap-1.5 px-3 h-8 rounded-xl bg-studio-accent/5 hover:bg-studio-accent/15 text-studio-accent border border-studio-accent/20 text-[9px] font-black uppercase tracking-widest transition-all">
+                            <Sparkles className="w-3.5 h-3.5" /> AI Optimize
+                        </button>
+                    </div>
+                    <ClipInspector selectedClip={selectedClip || null} onDelete={handleDelete} onReplaceAsset={handleReplaceAsset} onAttachSfx={handleAttachSfx} />
+                </div>
             </div>
 
             <div className="flex-none">
@@ -183,6 +243,7 @@ export function Phase3Editor() {
                     setAddingToTrack(null); setAddingToTrackType(null); setIsAudioPickerOpen(false);
                 }}
             />
+            <TimeTravelModal isOpen={showTimeTravelModal} onClose={() => setShowTimeTravelModal(false)} threadId={typeof window !== 'undefined' ? (localStorage.getItem('va_thread_id') ?? '') : ''} />
         </div>
     );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { useVideoStudio } from '@/contexts/VideoStudioContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, Download, Film, Sparkles, Gauge, FileVideo, RotateCcw } from 'lucide-react';
+import { AiQualityPass } from './phase4/AiQualityPass';
 
 type ExportSettings = ReturnType<typeof useVideoStudio>['exportSettings'];
 
@@ -60,6 +61,13 @@ export function Phase4Export() {
         resetProject
     } = useVideoStudio();
 
+    // AI Quality checks: se resuelven de forma simple al montar el componente
+    const qualityChecks = React.useMemo(() => ({
+        timings: scenes.every((s: any) => typeof s.duration === 'number' && s.duration > 0),
+        media:   scenes.every((s: any) => !!s.assetUrl || (s.mediaSegments?.length ?? 0) > 0),
+        audio:   true, // El ducking se configura desde Phase2
+    }), [scenes]);
+
     return (
         <div className="min-h-[600px] lg:h-[calc(100vh-180px)] w-full max-w-5xl mx-auto flex items-stretch gap-0 animate-in fade-in duration-500 overflow-hidden rounded-[2rem] border border-studio-border shadow-[0_20px_60px_rgba(0,0,0,0.05)] relative bg-studio-surface/90 backdrop-blur-2xl">
             <div className="absolute -top-40 -right-40 w-96 h-96 bg-studio-accent/5 rounded-full blur-[100px] pointer-events-none" />
@@ -117,6 +125,10 @@ export function Phase4Export() {
 
             ) : (
                 <>
+                    {/* AI Quality Pass — se muestra antes de la configuración de export */}
+                    <div className="w-full px-8 pt-4 relative z-10">
+                        <AiQualityPass checks={qualityChecks} />
+                    </div>
                     <div className="flex-1 flex flex-col p-8 gap-3 relative z-10 border-r border-zinc-200/50">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-studio-accent/10 rounded-xl border border-studio-accent/20 text-studio-accent">

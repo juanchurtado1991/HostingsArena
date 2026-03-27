@@ -1,3 +1,5 @@
+"use client";
+
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Image, Film, Mic, Music, Sparkles, Layers, Globe, Star } from 'lucide-react';

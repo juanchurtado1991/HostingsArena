@@ -1,18 +1,30 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { useVideoStudio } from '@/contexts/VideoStudioContext';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, AlertTriangle, RotateCcw, Smartphone, Monitor } from 'lucide-react';
+import { Sparkles, Loader2, AlertTriangle, RotateCcw, Smartphone, Monitor, ArrowRight } from 'lucide-react';
 import { findBestMixedMediaBatch, type MediaItem, loadMediaData } from '@/components/video/mediaLibrary';
+import { SyncEngine } from '@/lib/video-sync/SyncEngine';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { parseScript } from './scriptParser';
+import type { AgentStatus } from "@/hooks/useVideoAgent";
+import { useVideoAgent } from '@/hooks/useVideoAgent';
+import { AiDirectorPanel } from './AiDirectorPanel';
+import { SceneScriptEditor } from '../phase2/SceneScriptEditor';
+import { ConfigCard } from '../phase2/ConfigCard';
+import { AssetPreloader } from '../common/AssetPreloader';
 
 export function Phase1Ideation() {
     const { 
         title, setTitle, format, setFormat, scriptLang, setScriptLang, newsFocus, setNewsFocus, 
-        setScenes, setCurrentPhase, isGeneratingScript, setIsGeneratingScript,
+        scenes, setScenes, setCurrentPhase, isGeneratingScript, setIsGeneratingScript,
         error, setError, targetDuration, setTargetDuration,
+        setStudioStep, prepareAssemblyData, studioStep
     } = useVideoStudio();
+
+    const agent = useVideoAgent();
 
     const [rssHeadlines, setRssHeadlines] = useState<{ title: string; source: string; link?: string; date?: string }[]>([]);
     const [rssLoading, setRssLoading] = useState(false);
@@ -28,8 +40,133 @@ export function Phase1Ideation() {
             .finally(() => setRssLoading(false));
     }, []);
 
+    // AUTO-START AGENT (ZERO-TURN)
+    useEffect(() => {
+        if (agent.messages.length === 0 && agent.status === 'idle' && studioStep === 'scenes') {
+            console.log("[Phase1Ideation] Triggering Zero-Turn Silent Agent Start...");
+            agent.startAgent("hola", true);
+        }
+    }, [agent.messages.length, agent.status, studioStep]);
+
     const decodeHtml = (html: string): string => {
         try { const txt = document.createElement('textarea'); txt.innerHTML = html; return txt.value; } catch { return html; }
+    };
+
+    const [isEnriching, setIsEnriching] = useState(false);
+    
+    const fetchAssetsForScenes = async (parsedScenes: any[]) => {
+        setIsEnriching(true);
+        const usedUrls = new Set<string>();
+        try {
+            return await Promise.all(parsedScenes.map(async (s) => {
+                const duration = s.duration || SyncEngine.estimateDuration(s.speech);
+                const clipCount = Math.max(1, Math.ceil(duration / 5));
+                let batch: MediaItem[] = [];
+                
+                try {
+                    const res = await fetch('/api/admin/video/assets', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ query: s.pexelsQuery || s.visual, type: 'both', count: clipCount }) 
+                    });
+                    if (res.ok) { 
+                        const { results } = await res.json(); 
+                        if (results?.length > 0) batch = results.filter((r: MediaItem) => !usedUrls.has(r.url)).slice(0, clipCount); 
+                    }
+                } catch { 
+                    await loadMediaData(); 
+                    batch = findBestMixedMediaBatch(s.visual, Math.ceil(clipCount/2), Math.floor(clipCount/2), usedUrls); 
+                }
+                batch.forEach((m: MediaItem) => usedUrls.add(m.url));
+                const segs = batch.map((media: MediaItem, midx: number) => ({ 
+                    id: Math.random().toString(36).substr(2, 9), 
+                    source: 'library' as const, 
+                    type: media.type, 
+                    url: media.url, 
+                    durationPct: midx === batch.length - 1 
+                        ? 100 - (Math.floor(100 / batch.length) * (batch.length - 1)) 
+                        : Math.floor(100 / batch.length), 
+                    motionEffect: 'ken-burns' as const 
+                }));
+                return { 
+                    ...s,
+                    headline: s.mainHeadline || s.headline, // MAPEADO CORRECTO PARA LA UI
+                    assetUrl: batch[0]?.url, 
+                    assetType: batch[0]?.type || 'video', 
+                    mediaSegments: segs.length > 0 ? segs : undefined, 
+                    voiceUrl: undefined, 
+                    titleCardEnabled: true 
+                };
+            }));
+        } finally {
+            setIsEnriching(false);
+        }
+    };
+
+    // Cuando el agente termina de generar, parseamos el guion para mostrar las tarjetas inmediatamente
+    useEffect(() => {
+        if (agent.status === 'waiting_approval' && agent.script) {
+            let parsed;
+            try {
+                const trimmed = agent.script.trim();
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    const data = JSON.parse(trimmed);
+                    parsed = data.scenes || data;
+                } else {
+                    parsed = parseScript(agent.script, format);
+                }
+                // Iniciamos la búsqueda de assets en segundo plano
+                fetchAssetsForScenes(parsed).then(scenesWithMedia => {
+                    setScenes(scenesWithMedia as any);
+                });
+            } catch (e) {
+                console.error("Agent script parse failed:", e);
+            }
+        }
+    }, [agent.status, agent.script, format, setScenes]);
+
+
+    // Inicia el agente en lugar del flujo estático
+    const handleGenerateWithAgent = async () => {
+        await agent.startAgent(newsFocus);
+    };
+
+    const handleParseAndAdvance = async (rawScript: string) => {
+        setIsGeneratingScript(true);
+        setError(null);
+        try {
+            let parsed;
+            const trimmed = rawScript.trim();
+            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                const data = JSON.parse(trimmed);
+                parsed = data.scenes || data;
+            } else {
+                parsed = parseScript(rawScript, format);
+            }
+            
+            const scenesWithMedia = await fetchAssetsForScenes(parsed);
+            setScenes(scenesWithMedia as any);
+            // Ya no avanzamos automáticamente. El usuario debe confirmar.
+        } catch (err: any) { 
+            setError(err.message || 'Could not generate content.'); 
+        } finally { 
+            setIsGeneratingScript(false); 
+        }
+    };
+
+    // ELIMINADA LA AUTO-APROBACIÓN (HITL real)
+    
+    const handleConfirmScenes = async () => {
+        setIsGeneratingScript(true);
+        try {
+            setStudioStep('editor');
+            await prepareAssemblyData();
+            agent.approveScript(); // Notifica al Agente que avanzamos
+        } catch (err: any) {
+            setError(err.message || "Error al ensamblar el video");
+        } finally {
+            setIsGeneratingScript(false);
+        }
     };
 
     const handleGenerateScript = async () => {
@@ -42,134 +179,114 @@ export function Phase1Ideation() {
             });
             const data = await response.json();
             if (!response.ok) { setError(data.details || data.error || "Failed to generate script"); return; }
-
-            if (data.failedFeeds?.length > 0) {
-                const msg = scriptLang === 'es'
-                    ? `⚠️ Algunos feeds RSS fallaron: ${data.failedFeeds.join(', ')}. El script se generó con ${data.newsCount} noticias de: ${data.sources?.join(', ')}`
-                    : `⚠️ Some RSS feeds failed: ${data.failedFeeds.join(', ')}. Script generated from ${data.newsCount} articles from: ${data.sources?.join(', ')}`;
-                alert(msg);
-            } else if (data.sources && data.newsCount) {
-                console.log(`[Script] Generated from ${data.newsCount} articles: ${data.sources.join(', ')}`);
-            }
-
             if (data.script) {
-                const parsed = parseScript(data.script, format);
-                const usedUrls = new Set<string>();
-                const scenesWithMedia = await Promise.all(parsed.map(async (s, i) => {
-                    let batch: MediaItem[] = [];
-                    const searchQuery = s.pexelsQuery || s.visual;
-                    try {
-                        const res = await fetch('/api/admin/video/assets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: searchQuery, type: 'both', count: 4 }) });
-                        if (res.ok) { const { results } = await res.json(); if (results?.length > 0) batch = results.filter((r: MediaItem) => !usedUrls.has(r.url)); }
-                    } catch (e) { logger.warn('Live Pexels search failed, falling back to static library', e); }
-                    
-                    if (batch.length === 0) {
-                        await loadMediaData();
-                        batch = findBestMixedMediaBatch(s.visual, 2, 2, usedUrls);
-                    }
-                    batch.forEach((m: MediaItem) => usedUrls.add(m.url));
-                    const segs = batch.map((media: MediaItem) => ({ id: Math.random().toString(36).substr(2, 9), source: 'library' as const, type: media.type, url: media.url, durationPct: Math.round(100 / batch.length), motionEffect: 'ken-burns' as const }));
-                    return { ...s, assetUrl: batch[0]?.url || undefined, assetType: batch[0]?.type || 'video', mediaSegments: segs.length > 0 ? segs : undefined, voiceUrl: undefined, titleCardEnabled: true };
-                }));
-                setScenes(scenesWithMedia);
-                setCurrentPhase(2);
+                await handleParseAndAdvance(data.script);
             }
-        } catch (err: any) { logger.error("Error generating script: ", err); setError(err.message || "Could not generate content."); }
+        } catch (err: any) { setError(err.message || "Could not generate content."); }
         finally { setIsGeneratingScript(false); }
     };
 
+    const removeScene = (index: number) => {
+        if (scenes.length <= 1) return;
+        const newScenes = [...scenes]; newScenes.splice(index, 1); setScenes(newScenes);
+    };
+
+    const duplicateScene = (index: number) => {
+        const source = scenes[index];
+        const dup = { ...source, mediaSegments: source.mediaSegments?.map((s: any) => ({ ...s, id: Math.random().toString(36).substr(2, 9) })) };
+        const newScenes = [...scenes]; newScenes.splice(index + 1, 0, dup); setScenes(newScenes);
+    };
+
+    const addExtraScene = async (index: number) => {
+        const visual = "Technology news visualization, cinematic style";
+        const newScenes = [...scenes];
+        newScenes.splice(index + 1, 0, { speech: "Escribe la narración para este bloque aquí...", visual, transition: 'crossfade', duration: 5, titleCardEnabled: true } as any);
+        setScenes(newScenes);
+    };
+
+    const handleRegenerateVisual = (index: number, feedback: string) => {
+        const scene = scenes[index];
+        const fullFeedback = `En la escena ${index + 1} ("${scene.speech.substring(0, 30)}..."), cambia el visual. Feedback del usuario: ${feedback}`;
+        agent.rejectScript(fullFeedback);
+    };
+
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto">
-            <div className="glass-card p-6 space-y-6 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-studio-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent border border-studio-accent/20 shadow-[0_0_15px_rgba(70,130,255,0.1)]">
-                        <Sparkles className="w-7 h-7" />
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="text-xl font-bold tracking-tight text-zinc-900">Phase 1: Retention Scripting</h2>
-                        <p className="text-[11px] text-zinc-500 font-medium mt-1">Define your hook and news context. Act as the Executive Producer.</p>
-                    </div>
-                    <div className="flex gap-1 bg-zinc-100/80 p-1.5 rounded-2xl border border-zinc-200/50 backdrop-blur-2xl">
-                        <button onClick={() => setFormat("9:16")} className={cn("flex items-center gap-2 h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", format === "9:16" ? "bg-studio-accent text-white shadow-[0_0_15px_rgba(0,122,255,0.4)]" : "text-zinc-500 hover:text-zinc-900")}><Smartphone className="w-4 h-4" /> 9:16</button>
-                        <button onClick={() => setFormat("16:9")} className={cn("flex items-center gap-2 h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", format === "16:9" ? "bg-studio-accent text-white shadow-[0_0_15px_rgba(0,122,255,0.4)]" : "text-zinc-500 hover:text-zinc-900")}><Monitor className="w-4 h-4" /> 16:9</button>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em] px-2 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-studio-accent shadow-[0_0_8px_rgba(0,122,255,0.4)]" /> Global Intelligence Feed
-                        </h3>
-                        {rssSources.length > 0 && (
-                            <span className="text-[9px] font-bold text-zinc-600 tracking-wider">
-                                {rssSources.join(' · ')}
-                                {rssFailedFeeds.length > 0 && <span className="text-red-500/60 ml-1"> · ⚠️ {rssFailedFeeds.join(', ')}</span>}
-                            </span>
-                        )}
-                    </div>
-                    <div className="max-h-[180px] overflow-y-auto rounded-2xl border border-zinc-200/50 bg-white/40 backdrop-blur-md divide-y divide-zinc-100/50 custom-scrollbar">
-                        {rssLoading ? (
-                            <div className="flex flex-col items-center justify-center py-8 gap-3 text-zinc-600"><Loader2 className="w-5 h-5 animate-spin text-studio-accent" /><span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Fetching World Intelligence...</span></div>
-                        ) : rssHeadlines.length === 0 ? (
-                            <div className="flex items-center justify-center py-8 text-zinc-500 text-[10px] font-bold uppercase tracking-widest">No headlines available. Check your internet connection.</div>
-                        ) : (
-                            rssHeadlines.slice(0, 25).map((h, i) => (
-                                <div key={i} className="flex items-start gap-4 px-5 py-4 hover:bg-white/60 transition-all cursor-default group">
-                                    <span className={cn("text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shrink-0 mt-0.5 border", h.source === 'TechCrunch' ? 'bg-green-500/10 text-green-400 border-green-500/20' : h.source === 'The Verge' ? 'bg-studio-accent/10 text-studio-accent border-studio-accent/20' : h.source === 'Ars Technica' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : h.source === 'Hacker News' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-studio-surface text-zinc-400 border-studio-border')}>{h.source.slice(0, 5)}</span>
-                                    <span className="text-sm text-zinc-600 font-medium leading-relaxed group-hover:text-zinc-900 transition-colors">{decodeHtml(h.title)}</span>
-                                    {h.date && <span className="text-[10px] font-mono text-zinc-700 shrink-0 mt-0.5">{Math.round((Date.now() - new Date(h.date).getTime()) / 3600000)}h</span>}
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.25em] px-2">Project Name</h3>
-                    <div className="relative group">
-                        <input className="w-full bg-zinc-50 border border-black/10 rounded-2xl px-6 py-5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:ring-4 focus:ring-studio-accent/10 focus:border-studio-accent/20 transition-all outline-none" placeholder="e.g. Apple M5 Chip News, Weekly Tech Roundup..." value={title} onChange={(e) => setTitle(e.target.value)} />
-                        <div className="absolute inset-0 rounded-2xl pointer-events-none border border-studio-accent/0 group-focus-within:border-studio-accent/10 transition-all" />
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.25em] px-2">Strategic Focus</h3>
-                    <div className="relative group">
-                        <input className="w-full bg-zinc-50 border border-black/10 rounded-2xl px-6 py-5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:ring-4 focus:ring-studio-accent/10 focus:border-studio-accent/20 transition-all outline-none" placeholder="e.g. AI breakthroughs, cybersecurity, startups..." value={newsFocus} onChange={(e) => setNewsFocus(e.target.value)} />
-                        <div className="absolute inset-0 rounded-2xl pointer-events-none border border-studio-accent/0 group-focus-within:border-studio-accent/10 transition-all" />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-black/5">
-                    <div className="space-y-4">
-                        <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.25em] px-2">Neural Translation</h3>
-                        <div className="flex bg-zinc-100/80 p-1.5 rounded-2xl border border-zinc-200/50">
-                            <button onClick={() => setScriptLang("en")} className={cn("flex-1 py-4 rounded-xl transition-all text-[10px] font-bold uppercase tracking-[0.2em]", scriptLang === "en" ? "bg-studio-accent text-white shadow-xl shadow-studio-accent/30" : "text-zinc-500 hover:text-zinc-900")}>English</button>
-                            <button onClick={() => setScriptLang("es")} className={cn("flex-1 py-4 rounded-xl transition-all text-[10px] font-bold uppercase tracking-[0.2em]", scriptLang === "es" ? "bg-studio-accent text-white shadow-xl shadow-studio-accent/30" : "text-zinc-500 hover:text-zinc-900")}>Español</button>
+        <div className="h-full flex flex-col space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto overflow-hidden relative">
+            <AssetPreloader scenes={scenes} />
+            
+            {/* OVERLAY DE GENERACIÓN / ENRIQUECIMIENTO / PROCESAMIENTO AGENTICO */}
+            {(isGeneratingScript || isEnriching || agent.status === 'thinking') && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-500 rounded-3xl m-4">
+                    <div className="p-10 flex flex-col items-center text-center space-y-6">
+                        <div className="relative">
+                            <div className="w-24 h-24 rounded-full border-4 border-studio-accent/20 border-t-studio-accent animate-spin" />
+                            <Sparkles className="absolute inset-0 m-auto w-8 h-8 text-studio-accent animate-pulse" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-black text-white uppercase tracking-tighter">
+                                {isEnriching ? "Enriqueciendo Escenas..." : 
+                                 agent.status === 'thinking' ? "Procesando Solicitud..." : "Generando Guion..."}
+                            </h3>
+                            <p className="text-zinc-400 text-sm font-medium animate-pulse">
+                                {isEnriching 
+                                    ? "Buscando los mejores clips para tu video de 5 minutos..." 
+                                    : agent.status === 'thinking' 
+                                    ? "El Director IA está ejecutando tus instrucciones técnicos..."
+                                    : "El Director AI está redactando tu historia..."}
+                            </p>
+                        </div>
+                        <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-studio-accent animate-[shimmer_2s_infinite] w-[40%]" />
                         </div>
                     </div>
-                    <div className="space-y-4">
-                        <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.25em] px-2">Target Duration</h3>
-                        <div className="flex bg-zinc-100/80 p-1.5 rounded-2xl border border-zinc-200/50">
-                            {[{ label: '1', value: 60 }, { label: '5', value: 300 }, { label: '10', value: 600 }, { label: '15', value: 900 }, { label: '20', value: 1200 }, { label: '25', value: 1500 }, { label: '30', value: 1800 }].map(opt => (
-                                <button key={opt.value} onClick={() => setTargetDuration(opt.value)} className={cn("flex-1 py-4 rounded-xl transition-all text-[10px] font-bold uppercase tracking-[0.2em]", targetDuration === opt.value ? "bg-studio-accent text-white shadow-xl shadow-studio-accent/30" : "text-zinc-500 hover:text-zinc-900")}>{opt.label}<span className="text-[8px] ml-0.5 opacity-60">min</span></button>
-                            ))}
+                </div>
+            )}
+
+            {/* Header del Paso 1 */}
+            <div className="flex-none flex items-center gap-5 p-6 glass-card bg-white/5 border-white/10 mt-4 mx-4 relative overflow-hidden">
+                <div className="w-12 h-12 rounded-2xl bg-studio-accent/10 flex items-center justify-center text-studio-accent border border-studio-accent/20">
+                    <Sparkles className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Paso 1: Validación de Escenas</h2>
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1 italic">Revisa y ajusta el guion visual antes de ensamblar el video final.</p>
+                </div>
+
+                {/* BOTÓN DE RESPALDO: Navegar al Editor si el Agente está listo */}
+                {agent.status === 'waiting_approval' && scenes.length > 0 && (
+                    <button 
+                        onClick={handleConfirmScenes}
+                        className="px-6 h-12 rounded-2xl bg-studio-accent text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-studio-accent/20 animate-in slide-in-from-right-4 hover:scale-105 transition-all flex items-center gap-2 group"
+                    >
+                        <span>Entrar al Editor</span>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-20">
+                {scenes.length === 0 && !isGeneratingScript ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-6">
+                        <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-studio-accent/20 animate-pulse">
+                            <Loader2 className="w-10 h-10 animate-spin" />
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-white">Esperando al Director...</h3>
+                            <p className="text-zinc-500 text-xs max-w-sm mx-auto">Escribe el foco de tu noticia en el sidebar y presiona el botón de acción para que el Agente comience a trabajar.</p>
                         </div>
                     </div>
-                    <div className="flex flex-col justify-end gap-4">
-                        {error && (
-                            <div className="bg-red-500/5 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-wider p-4 rounded-[1.25rem] flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <div className="flex-1"><span className="font-black block mb-1">Engine Error</span><span className="opacity-80">{error}</span></div>
-                            </div>
-                        )}
-                        <Button onClick={handleGenerateScript} disabled={isGeneratingScript || rssHeadlines.length === 0 || !title.trim()} className={cn("w-full h-16 rounded-2xl text-[11px] font-bold uppercase tracking-wider gap-3 transition-all active:scale-95 text-white", error ? "bg-amber-500 hover:bg-amber-600 text-black" : "bg-studio-accent hover:opacity-90 shadow-lg shadow-studio-accent/20")}>
-                            {isGeneratingScript ? <Loader2 className="w-5 h-5 animate-spin" /> : error ? <RotateCcw className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
-                            {error ? "Retry Neural Synth" : "Craft Retention Script"}
-                        </Button>
+                ) : (
+                    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8">
+                        <SceneScriptEditor 
+                            onAddScene={addExtraScene} 
+                            onDuplicateScene={duplicateScene} 
+                            onRemoveScene={removeScene} 
+                        />
+                        <div className="max-w-4xl mx-auto pt-10 border-t border-white/5">
+                             <ConfigCard />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

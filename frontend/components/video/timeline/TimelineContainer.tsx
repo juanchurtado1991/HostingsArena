@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo, useRef, useEffect, useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { TrackLayer } from './TrackLayer';

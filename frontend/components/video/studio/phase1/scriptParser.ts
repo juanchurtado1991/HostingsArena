@@ -36,6 +36,26 @@ const cleanSpeech = (block: string): string => {
 };
 
 export function parseScript(text: string, videoFormat: string = '16:9'): ParsedScene[] {
+    // Intentar parsear como JSON directo (formato del Agente)
+    try {
+        const cleanText = text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        const data = JSON.parse(cleanText);
+        
+        if (data.scenes && Array.isArray(data.scenes)) {
+            return data.scenes.map((s: any) => ({
+                speech: s.narration || s.speech || "",
+                visual: s.visual_description || s.visual || "Technology background",
+                headline: s.headline || s.title || "",
+                subHeadline: s.subHeadline || "",
+                pexelsQuery: s.pexelsQuery || s.visual_description || s.visual || "",
+                transition: (s.transition && validTransitions.includes(s.transition)) ? s.transition : 'crossfade',
+                duration: s.duration || calcDuration(s.narration || s.speech || ""),
+            }));
+        }
+    } catch (e) {
+        // No es JSON o falló, continuar con el parsing regex tradicional
+    }
+
     const sceneRegex = /\[Visual:\s*(.*?)\]/gi;
     const visualMatches = [...text.matchAll(sceneRegex)];
 
@@ -77,7 +97,7 @@ export function parseScript(text: string, videoFormat: string = '16:9'): ParsedS
         } else {
             const allText = cleanSpeech(text);
             const sentences = allText.split(/(?<=[.!?])\s+/).filter(s => s.length > 5);
-            const SENTENCES_PER_SCENE = 4;
+            const SENTENCES_PER_SCENE = 8;
             for (let i = 0; i < sentences.length; i += SENTENCES_PER_SCENE) {
                 const chunk = sentences.slice(i, i + SENTENCES_PER_SCENE).join(' ');
                 parsedScenes.push({ speech: chunk, visual: "Technology news background, cinematic lighting", transition: i === 0 ? 'none' : 'crossfade', duration: calcDuration(chunk) });
@@ -85,7 +105,7 @@ export function parseScript(text: string, videoFormat: string = '16:9'): ParsedS
         }
     }
 
-    const MAX_WORDS_PER_SCENE = 400;
+    const MAX_WORDS_PER_SCENE = 800;
     const finalScenes: ParsedScene[] = [];
     const seenSentences = new Set<string>();
 
@@ -104,9 +124,16 @@ export function parseScript(text: string, videoFormat: string = '16:9'): ParsedS
             sentences.forEach((sentence, idx) => {
                 currentChunk.push(sentence);
                 currentWords += sentence.split(/\s+/).length;
-                if (currentWords >= 120 || idx === sentences.length - 1) {
+                if (currentWords >= 250 || idx === sentences.length - 1) {
                     const chunkSpeech = currentChunk.join(' ');
-                    finalScenes.push({ speech: chunkSpeech, visual: scene.visual, transition: finalScenes.length === 0 ? scene.transition : 'crossfade', duration: calcDuration(chunkSpeech) });
+                    finalScenes.push({ 
+                        speech: chunkSpeech, 
+                        visual: scene.visual, 
+                        transition: finalScenes.length === 0 ? scene.transition : 'crossfade', 
+                        duration: calcDuration(chunkSpeech),
+                        headline: scene.headline,
+                        subHeadline: scene.subHeadline
+                    });
                     currentChunk = [];
                     currentWords = 0;
                 }

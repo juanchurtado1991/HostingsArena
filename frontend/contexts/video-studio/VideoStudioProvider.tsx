@@ -53,9 +53,53 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [renderFinished, setRenderFinished] = useState(false);
     const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+    const [studioStep, setStudioStep] = useState<'scenes' | 'editor' | 'export'>('scenes');
+    const [agentMessages, setAgentMessages] = useState<any[]>([]);
     const [exportSettings, setExportSettings] = useState<VideoStudioContextValue["exportSettings"]>({
         resolution: '1080p', quality: 'balanced', speed: 'fast', fps: '30', outputFormat: 'mp4',
     });
+
+    const [isAssetPickerOpen, setIsAssetPickerOpen] = useState(false);
+    const [activePickerTarget, setActivePickerTarget] = useState<string | undefined>();
+    const [agentThreadId, setAgentThreadId] = useState<string | undefined>();
+
+    // --- Sincronización Automática con el Agente (Operador de Comandos) ---
+    const currentUIPhase = useStudioStore(s => s.currentUIPhase);
+    const storeTitle = useStudioStore(s => s.title);
+    const storeFormat = useStudioStore(s => s.format);
+    const storeLang = useStudioStore(s => s.scriptLang);
+
+    useEffect(() => {
+        if (!isLoaded) return;
+        
+        // Mapeo Agente Phase -> Studio Step UI
+        if (currentUIPhase === 'setup' || currentUIPhase === 'creative') {
+            if (studioStep !== 'scenes') setStudioStep('scenes');
+        } else if (currentUIPhase === 'editor') {
+            if (studioStep !== 'editor') setStudioStep('editor');
+        } else if (currentUIPhase === 'export') {
+            if (studioStep !== 'export') setStudioStep('export');
+        }
+        
+        // Sincronizar metadatos y ESCENAS si han cambiado por el Agente (Zustand -> Context)
+        const storeScenes = useStudioStore.getState().scenes;
+        if (storeScenes && storeScenes.length > 0) {
+            // Solo sincronizamos si el número de escenas cambió o si el contenido de texto es distinto
+            // pero EVITAMOS sobreescribir si la diferencia es que el contexto ya tiene mediaSegments
+            const contextHasMedia = scenes.some(s => s.mediaSegments && s.mediaSegments.length > 0);
+            const contextText = scenes.map(s => s.speech).join("");
+            const storeText = storeScenes.map(s => s.speech).join("");
+
+            if (scenes.length === 0 || (contextText !== storeText && !contextHasMedia)) {
+                setScenes(storeScenes as any);
+            }
+        }
+        
+        if (storeTitle !== title) setTitle(storeTitle);
+        if (storeFormat !== format) setFormat(storeFormat);
+        if (storeLang !== scriptLang) setScriptLang(storeLang);
+
+    }, [currentUIPhase, isLoaded, studioStep, storeTitle, storeFormat, storeLang]);
 
     interface HistoryItem { scenes: Scene[]; layers: Layer[]; }
     const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -88,27 +132,16 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         if (item) { setScenes(item.scenes); setLayers(item.layers); setHistoryIndex(nextIndex); }
     }, [history, historyIndex]);
 
+    // --- ÚNICO EFECTO DE RESTAURACIÓN DE ESTADO (Mount) ---
     useEffect(() => {
-        if (layers.length > 0) {
-            const newDuration = SyncEngine.getClipsDurationInFrames(layers);
-            if (newDuration !== durationInFrames) setDurationInFrames(newDuration);
-        }
-    }, [layers, durationInFrames]);
-
-    useEffect(() => {
-        if (isLoaded && history.length === 0 && scenes.length > 0) {
-            setHistory([{ scenes: [...scenes], layers: [...layers] }]);
-            setHistoryIndex(0);
-        }
-    }, [isLoaded, scenes, layers, history.length]);
-
-    useEffect(() => {
-        const savedState = localStorage.getItem(STORAGE_KEY);
-        if (savedState) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
             try {
-                const data = JSON.parse(savedState);
+                const data = JSON.parse(saved);
+                console.log("[StudioContext] Restoring state...", data.studioStep);
+                
                 if (data.scenes) setScenes(data.scenes);
-                if (data.layers) { setLayers(data.layers); }
+                if (data.layers) setLayers(data.layers);
                 else if (data.videoTrack) {
                     const legacyLayers = [
                         { id: 'l1', name: 'Imagen / Video', clips: data.videoTrack || [] },
@@ -118,26 +151,35 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
                     ].filter(l => l.clips.length > 0);
                     setLayers(legacyLayers);
                 }
-                if (data.format) setFormat(data.format);
-                if (data.currentPhase) setCurrentPhase(data.currentPhase);
-                if (data.scriptLang) setScriptLang(data.scriptLang);
+                
                 if (data.title) setTitle(data.title);
+                if (data.format) setFormat(data.format);
+                if (data.scriptLang) setScriptLang(data.scriptLang);
+                if (data.currentPhase) setCurrentPhase(data.currentPhase);
+                if (data.durationInFrames) setDurationInFrames(data.durationInFrames);
+                if (data.selectedVoice) setSelectedVoice(data.selectedVoice);
+                if (data.customVoiceUrl) setCustomVoiceUrl(data.customVoiceUrl);
                 if (data.bgMusicUrl) setBgMusicUrl(data.bgMusicUrl);
                 if (data.bgMusicVolume !== undefined) setBgMusicVolume(data.bgMusicVolume);
                 if (data.transitionSfxUrl) setTransitionSfxUrl(data.transitionSfxUrl);
                 if (data.introSfxUrl) setIntroSfxUrl(data.introSfxUrl);
                 if (data.outroSfxUrl) setOutroSfxUrl(data.outroSfxUrl);
                 if (data.newsCardSfxUrl) setNewsCardSfxUrl(data.newsCardSfxUrl);
-                if (data.newsFocus) setNewsFocus(data.newsFocus);
-                if (data.selectedVoice) setSelectedVoice(data.selectedVoice);
-                if (data.customVoiceUrl) setCustomVoiceUrl(data.customVoiceUrl);
                 if (data.voiceSpeed) setVoiceSpeed(data.voiceSpeed);
                 if (data.introDuration) setIntroDuration(data.introDuration);
                 if (data.newsCardDuration) setNewsCardDuration(data.newsCardDuration);
                 if (data.outroDuration) setOutroDuration(data.outroDuration);
-                if (data.durationInFrames) setDurationInFrames(data.durationInFrames);
                 if (data.targetDuration) setTargetDuration(data.targetDuration);
-            } catch (e) { console.error("Failed to load saved studio state:", e); }
+                if (data.newsFocus) setNewsFocus(data.newsFocus);
+                if (data.agentThreadId) setAgentThreadId(data.agentThreadId);
+                
+                // IMPORTANTE: Solo restauramos studioStep si no estamos sincronizando con el Agente
+                if (data.studioStep) setStudioStep(data.studioStep);
+                if (data.agentMessages) setAgentMessages(data.agentMessages);
+
+            } catch (e) {
+                console.error("[StudioContext] Restoration failed:", e);
+            }
         }
         setIsLoaded(true);
     }, []);
@@ -160,10 +202,11 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
             scenes, layers, durationInFrames, selectedVoice, format, currentPhase, scriptLang,
             title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl,
             newsFocus, customVoiceUrl, voiceSpeed, targetDuration,
-            introDuration, newsCardDuration, outroDuration
+            introDuration, newsCardDuration, outroDuration,
+            studioStep, agentMessages, exportSettings, agentThreadId
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    }, [scenes, layers, durationInFrames, selectedVoice, format, currentPhase, scriptLang, title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl, newsFocus, customVoiceUrl, voiceSpeed, targetDuration, introDuration, newsCardDuration, outroDuration, isLoaded]);
+    }, [scenes, layers, durationInFrames, selectedVoice, format, currentPhase, scriptLang, title, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl, newsFocus, customVoiceUrl, voiceSpeed, targetDuration, introDuration, newsCardDuration, outroDuration, studioStep, agentMessages, exportSettings, isLoaded]);
 
     const updateScene = useCallback((index: number, updates: Partial<Scene>) => {
         setScenes(prev => { const next = [...prev]; next[index] = { ...next[index], ...updates }; return next; });
@@ -181,7 +224,7 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
     });
 
     const clipOps = useClipOperations({
-        scenes, setScenes, setLayers, pushToHistory, setTitle, setBgMusicUrl, setBgMusicVolume, setTransitionSfxUrl, setIntroSfxUrl, setOutroSfxUrl, setNewsCardSfxUrl, setNewsFocus, setCustomVoiceUrl, setSelectedVoice, setCurrentPhase, setError, setDurationInFrames, setHistory, setHistoryIndex, videoUrl, title,
+        scenes, setScenes, setLayers, pushToHistory, setTitle, setBgMusicUrl, setBgMusicVolume, setTransitionSfxUrl, setIntroSfxUrl, setOutroSfxUrl, setNewsCardSfxUrl, setNewsFocus, setCustomVoiceUrl, setSelectedVoice, setCurrentPhase, setError, setDurationInFrames, setHistory, setHistoryIndex, videoUrl, title, setAgentMessages, setAgentThreadId
     });
 
     const value: VideoStudioContextValue = useMemo(() => ({
@@ -195,15 +238,20 @@ export function VideoStudioProvider({ children, initialLang = "en" }: { children
         isGeneratingScript, setIsGeneratingScript, isPreparingAssembly, syncEta, prepareAssemblyData,
         isGeneratingVideo, setIsGeneratingVideo, renderProgress, renderStep, renderEta, videoUrl, renderFinished, setRenderFinished, setVideoUrl,
         renderVideo, handleDownload: clipOps.handleDownload, isPlayingPreview, setIsPlayingPreview, exportSettings, setExportSettings,
+        studioStep, setStudioStep,
         addClip: clipOps.addClip, updateClip: clipOps.updateClip, deleteClip: clipOps.deleteClip, splitClip: clipOps.splitClip, moveClip: clipOps.moveClip,
         undo, redo, canUndo: historyIndex > 0, canRedo: historyIndex < history.length - 1, resetProject: clipOps.resetProject,
+        agentMessages, setAgentMessages,
+        isAssetPickerOpen, setIsAssetPickerOpen, activePickerTarget, setActivePickerTarget,
+        agentThreadId, setAgentThreadId
     }), [
         title, format, scriptLang, newsFocus, targetDuration, currentPhase, error, isLoaded, scenes, layers, durationInFrames,
         selectedVoice, customVoiceUrl, bgMusicUrl, bgMusicVolume, transitionSfxUrl, introSfxUrl, outroSfxUrl, newsCardSfxUrl,
         introDuration, newsCardDuration, outroDuration,
         isGeneratingScript, isPreparingAssembly, syncEta, isGeneratingVideo, renderProgress, renderStep,
-        renderEta, videoUrl, renderFinished, isPlayingPreview, historyIndex, history.length, exportSettings,
-        updateScene, clipOps, prepareAssemblyData, renderVideo, undo, redo,
+        renderEta, videoUrl, renderFinished, isPlayingPreview,        historyIndex, history.length, exportSettings,
+        studioStep, updateScene, clipOps, prepareAssemblyData, renderVideo, undo, redo,
+        isAssetPickerOpen, activePickerTarget, agentThreadId
     ]);
 
     return <VideoStudioContext.Provider value={value}>{children}</VideoStudioContext.Provider>;
